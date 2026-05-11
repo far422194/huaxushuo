@@ -2,10 +2,6 @@
 
 English · [简体中文](./README.md)
 
-![Editor preview](docs/images/editor.png)
-
-
-
 **Huaxushuo** turns your line of thought into a visible, intuitive demo — an interactive website. It doesn't chase elaborate visuals; it stays simple and direct so the deck becomes the cue card for your talk, **letting you focus on what you're actually saying** instead of getting stuck producing slides or images. The path from *idea → talk* becomes more graceful.
 
 ```bash
@@ -13,6 +9,8 @@ English · [简体中文](./README.md)
 npx @huaxushuo/cli init huaxushuo
 cd huaxushuo && pnpm dev
 ```
+
+![Editor preview](docs/images/editor.png)
 
 ## Why Huaxushuo
 

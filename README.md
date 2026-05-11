@@ -2,10 +2,6 @@
 
 [English](./README.en.md) · 简体中文
 
-![alt 文本](docs/images/editor.png)
-
-
-
 **华胥说**：将思维逻辑转化为可见且直观的演示说明（交互式网站），它不追求复杂的呈现形式，只考虑用简单、直观的呈现成为你讲解的腹稿，**让你专注讲解工作本身**，不会让制作环节（制作PPT、制作图片等方式）成为阻碍，从构思→讲解**变得更加优雅**。
 
 ```bash
@@ -13,6 +9,8 @@
 npx @huaxushuo/cli init huaxushuo
 cd huaxushuo && pnpm dev
 ```
+
+![alt 文本](docs/images/editor.png)
 
 ## 为什么用华胥说
 
