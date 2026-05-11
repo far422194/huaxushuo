@@ -1,0 +1,17 @@
+{
+  "name": "huaxushuo-llm-proxy-worker",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Cloudflare Worker LLM 透传代理：让浏览器调用 LLM API 时绕过 CORS / 稳定性问题",
+  "main": "src/worker.ts",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240117.0",
+    "typescript": "^5.3.0",
+    "wrangler": "^3.25.0"
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "version": "1.0",
+  "meta": {
+    "title": "极简单页 — Hero + CTA",
+    "description": "最小可渲染示例：1 页，含按钮跳外链",
+    "aspectRatio": "16:9"
+  },
+  "theme": {
+    "mode": "light",
+    "colors": {
+      "bg": "#0f172a",
+      "fg": "#ffffff",
+      "primary": "#22d3ee",
+      "accent": "#f472b6",
+      "muted": "#94a3b8"
+    },
+    "fonts": { "heading": "Inter", "body": "Inter" },
+    "radius": "lg"
+  },
+  "variables": {},
+  "slides": [
+    {
+      "id": "s1",
+      "layout": "hero",
+      "transition": "fade",
+      "background": {
+        "type": "gradient",
+        "from": "#0f172a",
+        "to": "#1e3a8a",
+        "angle": 135
+      },
+      "blocks": [
+        { "type": "badge", "text": "2026 春季新品", "tone": "accent" },
+        { "type": "heading", "level": 1, "text": "重新定义产品演示" },
+        { "type": "text", "text": "用一句自然语言生成可交互的发布站。" },
+        {
+          "type": "button",
+          "label": "了解更多 →",
+          "variant": "primary",
+          "onClick": { "action": "openLink", "url": "https://example.com" }
+        }
+      ]
+    }
+  ]
+}

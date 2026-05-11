@@ -1,0 +1,293 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body, #root {
+    height: 100%;
+    margin: 0;
+  }
+  body {
+    font-family: theme("fontFamily.sans");
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/*
+ * HXS Utility Classes —— 30 个白名单视觉变体
+ * 内联到 index.css 是因为 CSS @import 必须在所有 @rule 之前；放在 @tailwind 之后会被 PostCSS 忽略
+ * 元数据见 shared/dsl/utilities.ts
+ */
+
+/* ============ 表面 / 毛玻璃 ============
+ * 玻璃色按 --hxs-bg 主题变量 color-mix 取半透：light 主题呈现浅玻璃、dark 主题呈现深玻璃
+ * 文字色继承 --hxs-fg，自然与底色对比；避免"暗主题 + 写死白半透 → 浅卡浅字"低对比度
+ * 老浏览器无 backdrop-filter 时回落到更高不透明度
+ */
+.hxs-frost {
+  background-color: color-mix(in srgb, var(--hxs-bg) 65%, transparent) !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hxs-frost { background-color: color-mix(in srgb, var(--hxs-bg) 88%, transparent) !important; }
+}
+
+/* 强制深色毛玻璃（不论主题）：用于 light 主题下需要反差暗块的场景 */
+.hxs-frost-dark {
+  background-color: rgba(15, 23, 42, 0.45) !important;
+  color: #f8fafc !important;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hxs-frost-dark { background-color: rgba(15, 23, 42, 0.85) !important; }
+}
+
+.hxs-frost-strong {
+  background-color: color-mix(in srgb, var(--hxs-bg) 60%, transparent) !important;
+  backdrop-filter: blur(40px) saturate(140%);
+  -webkit-backdrop-filter: blur(40px) saturate(140%);
+}
+
+.hxs-translucent {
+  background-color: color-mix(in srgb, var(--hxs-bg) 75%, transparent) !important;
+}
+
+/* ============ 阴影 ============ */
+.hxs-shadow-none { box-shadow: none !important; }
+.hxs-shadow-sm   { box-shadow: 0 4px 12px -4px rgba(15, 23, 42, 0.10) !important; }
+.hxs-shadow-md   { box-shadow: 0 12px 30px -8px rgba(15, 23, 42, 0.18) !important; }
+.hxs-shadow-lg   { box-shadow: 0 24px 60px -16px rgba(15, 23, 42, 0.25) !important; }
+.hxs-shadow-glow {
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--hxs-primary) 30%, transparent),
+    0 0 60px -10px var(--hxs-primary) !important;
+}
+
+/* ============ 边框 ============ */
+.hxs-border       { border: 1px solid var(--hxs-primary) !important; }
+.hxs-border-thick { border: 2px solid var(--hxs-primary) !important; }
+.hxs-no-border    { border: 0 !important; }
+
+/* 卡片左侧 5px 高亮竖条（Notion / 小红书 风格关键 utility）
+ * 仅设 border-left，不加 padding-left —— 让竖条紧贴 block 容器边缘
+ * 内容与竖条的间距由 block 自己的内边距（如 card 的 p-7）保证；空隙就是 padding 没背景导致的视觉灾难
+ */
+.hxs-bar-l-primary { border-left: 5px solid var(--hxs-primary) !important; }
+.hxs-bar-l-accent  { border-left: 5px solid var(--hxs-accent) !important; }
+.hxs-bar-l-success { border-left: 5px solid var(--hxs-success) !important; }
+.hxs-bar-l-warning { border-left: 5px solid var(--hxs-warning) !important; }
+.hxs-bar-l-danger  { border-left: 5px solid var(--hxs-danger) !important; }
+.hxs-bar-l-info    { border-left: 5px solid var(--hxs-info) !important; }
+.hxs-bar-l-rainbow {
+  border-left: 5px solid transparent !important;
+  border-image: linear-gradient(180deg, var(--hxs-warning), var(--hxs-info), var(--hxs-success)) 1 !important;
+}
+
+/* ============ 形状 ============ */
+.hxs-rounded-full  { border-radius: 9999px !important; }
+.hxs-rounded-sharp { border-radius: 0 !important; }
+
+/* ============ 底纹 ============ */
+.hxs-bg-grid {
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--hxs-fg) 8%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--hxs-fg) 8%, transparent) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.hxs-bg-dots {
+  background-image: radial-gradient(color-mix(in srgb, var(--hxs-fg) 16%, transparent) 1.2px, transparent 1.2px);
+  background-size: 18px 18px;
+}
+.hxs-bg-diagonal {
+  background-image: repeating-linear-gradient(
+    45deg,
+    transparent 0,
+    transparent 8px,
+    color-mix(in srgb, var(--hxs-fg) 6%, transparent) 8px,
+    color-mix(in srgb, var(--hxs-fg) 6%, transparent) 10px
+  );
+}
+.hxs-bg-noise {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.18 0'/></filter><rect width='200' height='200' filter='url(%23n)'/></svg>");
+  background-size: 200px 200px;
+}
+.hxs-bg-radial {
+  background-image: radial-gradient(
+    circle at 50% 30%,
+    color-mix(in srgb, var(--hxs-primary) 30%, transparent) 0%,
+    transparent 60%
+  );
+}
+/* 右上角角落光晕（Gamma 风格）：大块椭圆柔光从右上向画面内辐射 */
+.hxs-bg-corner-glow {
+  background-image: radial-gradient(
+    ellipse 80% 60% at 100% 0%,
+    color-mix(in srgb, var(--hxs-primary) 35%, transparent) 0%,
+    color-mix(in srgb, var(--hxs-primary) 12%, transparent) 35%,
+    transparent 70%
+  );
+}
+
+/* ============ 文字 ============ */
+/* hxs-text-gradient 必须应用在内层文字元素（heading/text 等）上，不可放在容器 div */
+/* 渲染器侧已自动把它从 BlockWrap 的 outer 移到内层文字 */
+.hxs-text-gradient {
+  background-image: linear-gradient(135deg, var(--hxs-primary), var(--hxs-accent, var(--hxs-primary))) !important;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  /* 防止应用到 block 元素时背景占整行；内联块更适合"渐变文字" */
+  display: inline-block;
+}
+.hxs-text-glow {
+  text-shadow: 0 0 24px color-mix(in srgb, var(--hxs-primary) 60%, transparent);
+}
+.hxs-tracking-wide { letter-spacing: 0.08em !important; }
+
+/* ============ 间距 ============ */
+.hxs-pad-tight { padding: 1rem !important; }
+.hxs-pad-loose { padding: 3.5rem !important; }
+
+/* ============ 动画 ============ */
+@keyframes hxs-pulse-anim {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+@keyframes hxs-float-anim {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-6px); }
+}
+.hxs-animate-pulse { animation: hxs-pulse-anim 2.4s ease-in-out infinite; }
+.hxs-animate-float { animation: hxs-float-anim 3.2s ease-in-out infinite; }
+
+/* hover-lift 与 rotate/tilted 共存：用 CSS var 把当前 tilt 角度叠加到 hover 的 translate 上 */
+.hxs-hover-lift {
+  transition: transform 220ms cubic-bezier(0.34, 1.4, 0.64, 1), box-shadow 220ms ease;
+}
+.hxs-hover-lift:hover {
+  transform: var(--hxs-tilt, ) translateY(-6px);
+  box-shadow: 0 30px 70px -16px rgba(15, 23, 42, 0.30);
+}
+
+/* ============ 旋转 / 倾斜 ============ */
+/* 用 --hxs-tilt 变量声明角度，让 hover-lift 在 hover 时能保留 tilt 同时叠加 translate */
+.hxs-rotate-1     { --hxs-tilt: rotate(1deg);   transform: var(--hxs-tilt); }
+.hxs-rotate-neg-1 { --hxs-tilt: rotate(-1deg);  transform: var(--hxs-tilt); }
+.hxs-tilted       { --hxs-tilt: rotate(-3deg);  transform: var(--hxs-tilt); }
+
+/* ============ 新增动画 ============ */
+/* shimmer：::after 完全覆盖父级（不修改父级 overflow，避免破坏 slide 滚动）；
+   高光由 background-image 中央的 gradient 实现，靠 background-position 滚动让高光横扫；
+   gradient 两侧是 transparent，边界外完全透明，不会有任何残留白条 */
+@keyframes hxs-shimmer-anim {
+  0%   { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
+}
+/* 父级若不是 absolute（即非 slide 容器，是 BlockWrap 等普通元素）则启用 overflow: hidden 裁剪 ::after。
+   slide motion.div 自带 .absolute，被 :not(.absolute) 跳过，保留其 overflow-y-auto 滚动 */
+.hxs-animate-shimmer {
+  isolation: isolate;
+  /* outer wrap 默认无圆角，inner（card/button）用 var(--hxs-radius) 圆角，
+     必须让 outer 同步圆角，否则 ::after 在 outer 矩形上扫描时
+     亮带会经过 inner 圆角外的"角部小三角"，露出白边。
+     若用户加了 hxs-rounded-full / hxs-rounded-sharp，那些类的 !important 会覆盖此值 */
+  border-radius: var(--hxs-radius, 0);
+}
+.hxs-animate-shimmer:not(.absolute) {
+  overflow: hidden;
+}
+.hxs-animate-shimmer::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background-image: linear-gradient(
+    100deg,
+    transparent 0%,
+    transparent 42%,
+    rgba(255, 255, 255, 0.5) 50%,
+    transparent 58%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  background-repeat: no-repeat;
+  background-position: -150% 0;
+  animation: hxs-shimmer-anim 2.6s linear infinite;
+  pointer-events: none;
+  z-index: 1;
+  /* 继承父级圆角 + GPU 层提升，让圆角处 anti-aliasing 与父级对齐 */
+  border-radius: inherit;
+  will-change: background-position;
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+@keyframes hxs-glow-pulse-anim {
+  0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--hxs-primary) 40%, transparent); }
+  50%      { box-shadow: 0 0 36px 10px color-mix(in srgb, var(--hxs-primary) 25%, transparent); }
+}
+.hxs-animate-glow-pulse {
+  animation: hxs-glow-pulse-anim 2.4s ease-in-out infinite;
+}
+
+@keyframes hxs-bounce-soft-anim {
+  0%, 100% { transform: scale(1); }
+  20%      { transform: scale(0.94); }
+  45%      { transform: scale(1.06); }
+  70%      { transform: scale(0.98); }
+}
+.hxs-animate-bounce-soft {
+  animation: hxs-bounce-soft-anim 0.9s cubic-bezier(0.34, 1.5, 0.64, 1) 1;
+}
+
+@keyframes hxs-gradient-flow-anim {
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
+}
+/* gradient-flow 是文字效果，须放在文字元素上（与 hxs-text-gradient 互斥） */
+.hxs-animate-gradient-flow {
+  background-image: linear-gradient(
+    90deg,
+    var(--hxs-primary),
+    var(--hxs-accent, var(--hxs-primary)),
+    var(--hxs-primary)
+  ) !important;
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  animation: hxs-gradient-flow-anim 4s linear infinite;
+  display: inline-block;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hxs-animate-pulse,
+  .hxs-animate-float,
+  .hxs-animate-glow-pulse,
+  .hxs-animate-bounce-soft,
+  .hxs-animate-gradient-flow {
+    animation: none !important;
+  }
+  .hxs-animate-shimmer::after {
+    animation: none !important;
+    background-image: none !important;
+  }
+  .hxs-hover-lift {
+    transition: none !important;
+  }
+}
+
+/* ============ 进度条流动动画（不在白名单，仅 ChatPanel/Home 进度条用） ============ */
+@keyframes hxs-progress-flow-anim {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+.hxs-progress-flow {
+  animation: hxs-progress-flow-anim 1.2s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hxs-progress-flow { animation: none !important; }
+}

@@ -1,0 +1,4 @@
+{
+  "outputLangInstruction": "## Output language requirement (highest priority, second only to aspect-ratio and page-count hard constraints)\nAll user-visible text in the generated deck (heading, text, list, badge, button label, card titles, etc.) MUST be in **English**. Translate user input to English even if it is provided in another language. If the user message explicitly requests another language, follow the user.",
+  "creativeSectionTitle": "## Reference example and visual design principles"
+}

@@ -1,0 +1,159 @@
+{
+  "version": "1.0",
+  "meta": {
+    "title": "Lumen — a thinking tool",
+    "aspectRatio": "auto"
+  },
+  "theme": {
+    "mode": "dark",
+    "colors": {
+      "bg": "#0a0e1a",
+      "fg": "#f8fafc",
+      "primary": "#a78bfa",
+      "accent": "#22d3ee",
+      "muted": "#64748b"
+    },
+    "fonts": { "heading": "Inter", "body": "Inter" },
+    "radius": "lg"
+  },
+  "variables": {},
+  "slides": [
+    {
+      "id": "",
+      "layout": "quote",
+      "transition": "fade",
+      "background": {
+        "type": "gradient",
+        "from": "#0a0e1a",
+        "to": "#1e1b4b",
+        "angle": 135
+      },
+      "utilities": ["hxs-bg-grid"],
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "A great tool should disappear.", "magicId": "tagline" },
+        { "type": "text", "text": "— Lumen design philosophy", "align": "center" }
+      ]
+    },
+    {
+      "id": "",
+      "layout": "hero",
+      "transition": "magic",
+      "background": {
+        "type": "image",
+        "url": "https://picsum.photos/seed/dark-cosmos-purple/1280/720",
+        "opacity": 0.45
+      },
+      "utilities": ["hxs-bg-radial"],
+      "blocks": [
+        { "type": "badge", "text": "Spring 2026", "tone": "accent" },
+        { "type": "heading", "level": 1, "text": "Lumen", "utilities": ["hxs-text-gradient", "hxs-text-glow"], "magicId": "tagline" },
+        { "type": "text", "text": "A writing space where thinking happens naturally.", "align": "center" },
+        { "type": "button", "label": "Get started", "variant": "primary", "onClick": { "action": "next" }, "utilities": ["hxs-shadow-glow"] }
+      ]
+    },
+    {
+      "id": "",
+      "layout": "two-column",
+      "transition": "fade",
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "An industrial-grade writing surface", "column": "left" },
+        { "type": "text", "text": "Deep-blue palette with monospaced telemetry — long-form writing without anxiety.", "column": "left" },
+        { "type": "image", "url": "https://picsum.photos/seed/code-editor-night/800/600", "alt": "Lumen workspace", "fit": "cover", "column": "right", "utilities": ["hxs-shadow-lg"] }
+      ]
+    },
+    {
+      "id": "",
+      "layout": "bullet-list",
+      "transition": "slide-up",
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "Three things worth caring about" },
+        {
+          "type": "card",
+          "title": "Structure",
+          "subtitle": "without forcing hierarchy",
+          "children": [
+            { "type": "text", "text": "Loose notes are auto-grouped — and you can break the grouping any time." }
+          ],
+          "utilities": ["hxs-frost", "hxs-shadow-lg", "hxs-tilted"]
+        },
+        {
+          "type": "card",
+          "title": "Cadence",
+          "subtitle": "respects how you think",
+          "children": [
+            { "type": "text", "text": "AI never interrupts; it adds a line only when you pause." }
+          ],
+          "utilities": ["hxs-frost", "hxs-shadow-lg", "hxs-rotate-1"]
+        },
+        {
+          "type": "card",
+          "title": "Texture",
+          "subtitle": "details define the feel",
+          "children": [
+            { "type": "text", "text": "Letter-spacing, leading, base color — every pixel was deliberate." }
+          ],
+          "utilities": ["hxs-frost", "hxs-shadow-lg", "hxs-rotate-neg-1"]
+        }
+      ]
+    },
+    {
+      "id": "",
+      "layout": "free",
+      "transition": "zoom",
+      "background": {
+        "type": "gradient",
+        "from": "#0a0e1a",
+        "to": "#1e1b4b",
+        "angle": 135
+      },
+      "utilities": ["hxs-bg-noise"],
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 1,
+          "text": "0.18s",
+          "utilities": ["hxs-text-glow", "hxs-text-gradient"],
+          "position": { "xPct": 8, "yPct": 28 }
+        },
+        {
+          "type": "text",
+          "text": "keystroke-to-screen latency",
+          "position": { "xPct": 8, "yPct": 65 }
+        },
+        {
+          "type": "badge",
+          "text": "4× faster than industry",
+          "tone": "accent",
+          "position": { "xPct": 60, "yPct": 22 },
+          "utilities": ["hxs-tilted"]
+        },
+        {
+          "type": "icon",
+          "name": "Zap",
+          "size": 56,
+          "tone": "accent",
+          "position": { "xPct": 78, "yPct": 60 },
+          "utilities": ["hxs-animate-float"]
+        }
+      ]
+    },
+    {
+      "id": "",
+      "layout": "cta",
+      "transition": "fade",
+      "background": {
+        "type": "gradient",
+        "from": "#1e1b4b",
+        "to": "#312e81",
+        "angle": 180
+      },
+      "utilities": ["hxs-bg-radial"],
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "Try it once. Then decide." },
+        { "type": "text", "text": "30 days free. No credit card required.", "align": "center" },
+        { "type": "button", "label": "Download", "variant": "primary", "onClick": { "action": "openLink", "url": "https://example.com" }, "utilities": ["hxs-shadow-glow"] },
+        { "type": "button", "label": "Read docs", "variant": "outline", "onClick": { "action": "openLink", "url": "https://example.com/docs" } }
+      ]
+    }
+  ]
+}

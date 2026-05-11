@@ -1,0 +1,52 @@
+{
+  "name": "huaxushuo-client",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "build:runtime": "vite build --config vite.runtime.config.ts",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "fast-json-patch": "^3.1.1",
+    "framer-motion": "^11.18.0",
+    "html-to-image": "^1.11.13",
+    "html2canvas": "^1.4.1",
+    "i18next": "^24.2.3",
+    "i18next-browser-languagedetector": "^8.2.1",
+    "immer": "^10.1.1",
+    "jspdf": "^4.2.1",
+    "jszip": "^3.10.1",
+    "lucide-react": "^0.468.0",
+    "modern-screenshot": "^4.7.0",
+    "nanoid": "^5.0.9",
+    "openai": "^6.36.0",
+    "qrcode": "^1.5.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.2",
+    "react-i18next": "^15.7.4",
+    "tailwind-merge": "^2.6.0",
+    "zod": "^3.24.1",
+    "zod-to-json-schema": "^3.24.1",
+    "zustand": "^5.0.2"
+  },
+  "devDependencies": {
+    "@types/qrcode": "^1.5.6",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.5.1",
+    "tailwindcss": "^3.4.17",
+    "typescript": "^5.7.3",
+    "vite": "^5.4.11",
+    "vite-tsconfig-paths": "^5.1.4"
+  }
+}

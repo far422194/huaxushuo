@@ -1,0 +1,14 @@
+node_modules
+dist
+.DS_Store
+.env
+.env.local
+*.log
+.vite
+client/public/runtime-template
+.idea
+.vscode
+*.tsbuildinfo
+
+# Claude Code 本地配置
+.claude/settings.local.json

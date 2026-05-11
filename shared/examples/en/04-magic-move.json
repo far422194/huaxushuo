@@ -1,0 +1,108 @@
+{
+  "version": "1.0",
+  "meta": {
+    "title": "Magic Move demo",
+    "description": "Demonstrates Keynote-style magic-move transition: elements with the same magicId fly between slides",
+    "aspectRatio": "16:9"
+  },
+  "theme": {
+    "mode": "light",
+    "colors": {
+      "bg": "#ffffff",
+      "fg": "#0f172a",
+      "primary": "#7c3aed",
+      "accent": "#ec4899",
+      "muted": "#64748b"
+    },
+    "fonts": { "heading": "Inter", "body": "Inter" },
+    "radius": "lg"
+  },
+  "variables": {},
+  "slides": [
+    {
+      "id": "s1",
+      "layout": "hero",
+      "transition": "fade",
+      "background": {
+        "type": "gradient",
+        "from": "#7c3aed",
+        "to": "#ec4899",
+        "angle": 135
+      },
+      "blocks": [
+        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
+        { "type": "heading", "level": 1, "text": "Lumen", "magicId": "brand" },
+        { "type": "text", "text": "Bring light to every inch of darkness.", "magicId": "tagline" },
+        {
+          "type": "button",
+          "label": "Next →",
+          "variant": "primary",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "layout": "title-content",
+      "transition": "magic",
+      "blocks": [
+        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
+        { "type": "heading", "level": 2, "text": "Lumen", "magicId": "brand" },
+        { "type": "text", "text": "Bring light to every inch of darkness.", "magicId": "tagline" },
+        { "type": "list", "items": ["10× brightness", "18-hour battery", "IPX8 waterproof"] },
+        {
+          "type": "button",
+          "label": "Next →",
+          "variant": "outline",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "layout": "two-column",
+      "transition": "magic",
+      "blocks": [
+        { "type": "heading", "level": 3, "text": "Lumen", "column": "left", "magicId": "brand" },
+        { "type": "text", "text": "Bring light to every inch of darkness.", "column": "left", "magicId": "tagline" },
+        { "type": "badge", "text": "DEMO", "tone": "accent", "column": "left", "magicId": "tag" },
+        {
+          "type": "card",
+          "column": "right",
+          "title": "Vs. ordinary flashlights",
+          "children": [
+            { "type": "list", "items": ["Brightness × 10", "Battery × 3", "Waterproof × 2"] }
+          ]
+        },
+        {
+          "type": "button",
+          "label": "Next →",
+          "variant": "ghost",
+          "column": "right",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "layout": "cta",
+      "transition": "magic",
+      "background": {
+        "type": "gradient",
+        "from": "#1e1b4b",
+        "to": "#7c3aed"
+      },
+      "blocks": [
+        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
+        { "type": "heading", "level": 1, "text": "Lumen", "magicId": "brand" },
+        { "type": "text", "text": "Bring light to every inch of darkness.", "magicId": "tagline" },
+        {
+          "type": "button",
+          "label": "Back to start",
+          "variant": "primary",
+          "onClick": { "action": "jumpTo", "slideId": "s1" }
+        }
+      ]
+    }
+  ]
+}

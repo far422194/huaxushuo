@@ -1,0 +1,106 @@
+{
+  "title": "对话生成",
+  "open": "对话生成",
+  "collapse": "收起",
+  "modelSettings": "大模型设置",
+  "history": "对话历史",
+  "stylePicker": "选风格",
+  "stop": "停止生成",
+  "send": "发送",
+  "input": {
+    "placeholder": "把第 2 页改成两栏对比 / 主题色换成绿色 / 在末尾加一页 CTA…",
+    "send": "发送",
+    "stop": "停止"
+  },
+  "hint": {
+    "loading": "点击右侧停止可中断生成（保留已生成部分）",
+    "ready": "Enter 发送，Shift+Enter 换行"
+  },
+  "status": {
+    "connecting": "正在连接模型…",
+    "thinking": "模型思考中…",
+    "receiving": "正在接收（{{bytes}} 字节）…",
+    "applying": "应用中…",
+    "tool": "调用工具：{{name}}",
+    "page": "已生成 {{current}}/{{estimate}} 页",
+    "slide": "已渲染 {{index}} / {{total}} 页",
+    "batchProgress": "第 {{current}}/{{total}} 批"
+  },
+  "phase": {
+    "batchPrefix": "(批 {{current}}/{{total}}) ",
+    "finishing": "整理收尾…",
+    "streaming": "正在生成第 {{current}} / {{total}} 页…",
+    "connecting": "连接模型…等待首次响应",
+    "thinking": "模型已开始响应，等待数据…",
+    "thinkingBatch": "模型构思中…即将生成第 {{from}}-{{to}} 页",
+    "thinkingBatchSingle": "模型构思中…即将生成第 {{page}} 页",
+    "reasoningWithBytes": "模型推理中… {{bytes}}（暂未生成 deck 内容）",
+    "reasoningWarning": "模型推理已 {{bytes}} · 可能 reasoning 失控，建议停止换非 thinking 模型",
+    "reasoning": "模型推理中…",
+    "receivingWithBytes": "生成 deck… {{bytes}}",
+    "receiving": "生成 deck…",
+    "page": "生成第 {{current}} / {{estimate}} 页…",
+    "tool": "确认工具…",
+    "slideStart": "首页准备中…",
+    "applying": "应用结果…",
+    "generating": "生成中…"
+  },
+  "modelBadge": {
+    "active": "本次请求使用的模型：{{model}}",
+    "notActive": "未启用",
+    "notActiveTitle": "尚未启用任何模型"
+  },
+  "promptSize": {
+    "chip": "{{kb}}K",
+    "chipBatch": "{{kb}}K (累计 {{cumKb}}K)",
+    "tooltipTitle": "本次 prompt 体积",
+    "tooltipBase": "system  {{kb}}K (base/creative)",
+    "tooltipSkill": "skill   +{{kb}}K ({{name}})",
+    "tooltipStyle": "style   +{{kb}}K",
+    "tooltipAspect": "aspect  +{{kb}}K",
+    "tooltipPages": "pages   +{{kb}}K",
+    "tooltipUserMsg": "user msg {{kb}}K",
+    "tooltipTotal": "总计 {{kb}}K · ~{{tokens}}K tokens",
+    "tooltipMaxTokens": "本次 max_tokens：{{value}}"
+  },
+  "elapsed": {
+    "earlyHint": "模型可能需要数秒思考结构…",
+    "midHint": "复杂内容需要更长推理时间，请耐心等待",
+    "longHint": "服务端可能在缓冲整段响应（部分代理不流式），请再等等就好",
+    "veryLongHint": "复杂的 deck 通常会更久"
+  },
+  "messages": {
+    "user": "你",
+    "assistant": "助手",
+    "empty": "开始对话以编辑当前 deck",
+    "regenerate": "重新生成",
+    "stopped": "已停止生成",
+    "stoppedKept": "已停止生成 · 保留已生成的 {{count}} 页",
+    "createdNew": "已生成新演示",
+    "applied": "已应用更新",
+    "tagCreate": "新建",
+    "tagUpdate": "增量"
+  },
+  "fallbackTitle": "对话",
+  "selectedStyle": {
+    "clear": "清除"
+  },
+  "stylePickerDialog": {
+    "title": "选择风格基准",
+    "none": "不使用风格基准（让模型自由发挥）"
+  },
+  "emptyHint": {
+    "title": "在当前演示上继续调整：",
+    "tips": [
+      "把第 2 页改成两栏对比",
+      "主题色换成绿色，圆角放大",
+      "在末尾加一页 CTA",
+      "把 hero 文案改克制一点",
+      "整个 deck 改成暗色主题"
+    ]
+  },
+  "errors": {
+    "generic": "出错：{{message}}",
+    "noProvider": "请先在设置中配置大模型"
+  }
+}

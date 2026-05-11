@@ -1,0 +1,589 @@
+{
+  "publish": {
+    "title": "发布演示",
+    "tab": {
+      "direct": "一键直传",
+      "zip": "导出 zip",
+      "pdf": "导出 PDF"
+    },
+    "configure": "配置",
+    "configureTitle": "配置一键直传 Worker",
+    "footer": {
+      "done": "完成",
+      "cancel": "取消"
+    },
+    "summary": {
+      "title": "{{title}}",
+      "untitled": "未命名演示",
+      "slides": "{{count}} 页",
+      "directSuffix": "直传到 Cloudflare Pages",
+      "zipSuffix": "独立可运行",
+      "pdfSuffix": "横向 16:9（1280×720）"
+    },
+    "direct": {
+      "buildingZip": "正在打包独立站资源…",
+      "uploading": "上传到 Cloudflare Pages（{{pct}}%）",
+      "duration": "部署时间约 5-15 秒，请稍候",
+      "notConfigured": "尚未配置 Worker",
+      "notConfiguredHint": "需要先自部署 Cloudflare Worker（5 分钟），然后填 Worker URL + Pages 项目名。详细步骤见 server/cf-deploy-worker/README.md。",
+      "configureNow": "立即配置",
+      "intro": "点击下方按钮，浏览器会把 zip 直传到你部署的 Worker，由 Worker 调 Cloudflare Pages API 完成发布。整个流程不暴露 API Token，部署完成后会拿到公网 URL。",
+      "submit": "一键直传 Cloudflare Pages",
+      "deployed": "部署成功！",
+      "uploadedFiles": "已上传 {{count}} 个文件到 Cloudflare Pages",
+      "copy": "复制",
+      "copied": "已复制",
+      "visit": "访问",
+      "aliases": "别名：",
+      "previewNote": "这是 Pages 的预览部署 URL，每次发布都会拿到一个新的。如要稳定 URL，可在 Cloudflare 控制台为本次部署设置自定义域名 / 标记为 Production。"
+    },
+    "deploy": {
+      "title": "一键直传配置",
+      "intro": "首次使用需自部署 Cloudflare Worker（一次性，5 分钟）。部署步骤见仓库 server/cf-deploy-worker/README.md。",
+      "workerUrl": "Worker URL",
+      "workerHint": "部署完后从 wrangler 输出复制，形如 https://hxs-deploy.xxx.workers.dev",
+      "projectName": "Pages 项目名",
+      "projectHint": "在 Cloudflare 控制台 Pages 创建（Direct Upload 模式）",
+      "save": "保存",
+      "cancel": "取消"
+    },
+    "zip": {
+      "intro": "点击下面按钮，浏览器将把当前演示打包成静态站点 zip。zip 解压后是一个完整的可独立运行的网站，可托管在任何静态平台。zip 内附 README.md，含 4 个平台的一键部署命令。",
+      "submit": "生成独立站 zip",
+      "building": "正在打包独立站资源…",
+      "ready": "已生成 {{filename}}",
+      "readyHint": "点击右侧按钮下载到本地。",
+      "download": "下载 zip",
+      "deployToPublic": "部署到公网",
+      "deployIntro": "解压 zip 后，在目录内运行任一命令即可拿到公网链接。",
+      "noCommand": "（无需命令）"
+    },
+    "pdf": {
+      "intro": "把当前演示按页截图后拼接为 PDF，适合会议留档 / 邮件分享。iframe / 表单 / 视频等交互内容在 PDF 中无法呈现。",
+      "submit": "开始导出 PDF",
+      "exporting": "正在导出第 {{current}} / {{total}} 页（{{pct}}%）",
+      "slowHint": "大 deck 较慢，请耐心等待",
+      "cancel": "取消",
+      "ready": "已生成 {{filename}}",
+      "readyHint": "点击右侧按钮下载 PDF。",
+      "download": "下载 PDF",
+      "afterNote": "PDF 每页 1280×720（横向 16:9）。iframe / 视频等交互内容在 PDF 中不展示。",
+      "stageNotReady": "PDF 舞台未就绪"
+    },
+    "error": {
+      "retry": "重试"
+    }
+  },
+  "config": {
+    "title": "配置",
+    "model": "模型",
+    "imageLibrary": "图库"
+  },
+  "provider": {
+    "title": "大模型配置",
+    "subtitle": "按能力分槽启用，每能力一个模型",
+    "connection": {
+      "webDirect": "Web 直连",
+      "proxy": "后端代理"
+    },
+    "capability": {
+      "label": {
+        "general": "全能型",
+        "textOnly": "强推理",
+        "multimodal": "全模态"
+      },
+      "desc": {
+        "general": "文本 + 图像识别。主流多模态模型（Claude / GPT-4o / Gemini）",
+        "textOnly": "纯文本推理。无法识别图片（DeepSeek-V3、纯文本模型）",
+        "multimodal": "文本 + 图像 + 视频 + 音频统一理解（Qwen-Omni 等）"
+      }
+    },
+    "scenario": {
+      "general": "普通生成",
+      "imageRecognition": "图片识别"
+    },
+    "compat": {
+      "label": "兼容协议",
+      "anthropic": "Anthropic 兼容",
+      "openaiCompat": "OpenAI 兼容"
+    },
+    "tab": {
+      "models": "我的模型",
+      "modelsWithCount": "我的模型 ({{count}})",
+      "routing": "路由优先级",
+      "proxy": "后端代理",
+      "notConfigured": "未配置"
+    },
+    "language": "界面语言",
+    "languageHint": "切换后下次生成的 deck 会按所选语言输出文案。",
+    "emptyTitle": "还没有任何模型配置",
+    "emptyHint": "所有 API Key 仅保存在本机 localStorage，不会上传到任何服务器",
+    "createNew": "新建配置",
+    "close": "关闭",
+    "deleteConfirm": "删除配置「{{name}}」？此操作不可撤销。",
+    "configRow": {
+      "test": "测试",
+      "testing": "测试中",
+      "testTitle": "发送 ping 请求验证连通性",
+      "activate": "启用",
+      "deactivate": "停用",
+      "activateTitle": "启用为「{{capability}}」",
+      "deactivateTitle": "停用 → 该能力槽空出，会自动回退到其他启用模型",
+      "cloneTitle": "一键复制（生成新条目，仅在能力槽空时自动启用）",
+      "editTitle": "编辑",
+      "deleteTitle": "删除",
+      "testOk": "连通正常 · {{ms}}ms",
+      "closeTestResult": "关闭"
+    },
+    "formView": {
+      "titleNew": "新建配置",
+      "titleEdit": "编辑配置：{{name}}",
+      "backToList": "返回列表",
+      "aliasLabel": "别名（必填，用于列表识别）",
+      "aliasPlaceholder": "例如：我的 Mimo / 工作 Claude / 测试 Kimi",
+      "connectionLabel": "连接方式",
+      "webDirectTitle": "浏览器直连服务商 API（仅展示已实测稳定的 5 家预设）",
+      "proxyTitle": "经自部署的 Cloudflare Worker 反代调用（绕过 CORS / 稳定性问题）",
+      "proxyMissingHint": "⚠ 全局代理 URL 尚未配置。返回上一级在「后端代理」配置入口填写 Worker URL，否则保存后会 fallback 到直连。",
+      "presetLabel": "服务预设",
+      "presetCustom": "自定义",
+      "presetCustomTitle": "清空 baseURL / model / max tokens 由你自行填写",
+      "capabilityLabel": "模型能力（决定该模型在哪个槽启用 + 自动路由）",
+      "baseURLLabel": "Base URL",
+      "baseURLPlaceholderAnthropic": "https://api.anthropic.com",
+      "baseURLPlaceholderOpenAI": "https://api.openai.com/v1",
+      "modelLabel": "模型名称",
+      "modelPlaceholderAnthropic": "claude-sonnet-4-6",
+      "modelPlaceholderOpenAI": "gpt-4o / deepseek-chat / ...",
+      "apiKeyLabel": "API Key",
+      "apiKeyPlaceholderAnthropic": "sk-ant-...",
+      "apiKeyPlaceholderOpenAI": "sk-...",
+      "showKey": "显示",
+      "hideKey": "隐藏",
+      "maxTokensLabel": "最大输出 tokens（可选，留空使用默认）",
+      "maxTokensPlaceholderAnthropic": "默认 32000；Sonnet 4.6 可填 64000",
+      "maxTokensPlaceholderOpenAI": "默认 8000；Kimi K2/Qwen3 16000、GLM-4.5/Gemini 32000",
+      "maxTokensHint": "填该模型实际支持的输出上限作为 cap（DeepSeek 上限 8192）。系统按下方模式决定如何使用此值。",
+      "maxTokensWarn": "⚠ 固定分配模式下每次都用 {{n}} 作为 max_tokens，部分服务会预占大量 KV cache 导致推理变慢。建议下调到 32000-64000，或切换到智能分配让系统按场景自动选择。",
+      "maxTokensModeLabel": "分配模式",
+      "maxTokensModeAuto": "智能分配",
+      "maxTokensModeFixed": "固定分配",
+      "maxTokensModeAutoTitle": "把上方值作为模型输出 cap，系统按 deck 体量在 cap 内自动选 max_tokens（小 deck 用小值省资源，大 deck 不被截）",
+      "maxTokensModeFixedTitle": "把上方值作为每次都用的固定 max_tokens，与场景无关（保持旧行为）",
+      "maxTokensModeAutoHint": "系统会根据生成内容体量在 cap 内自动选择实际 max_tokens",
+      "maxTokensModeFixedHint": "每次请求都使用上方填写的固定值，不随场景变化",
+      "save": "保存",
+      "cancel": "取消"
+    },
+    "routing": {
+      "intro": "每个场景按你设的优先级查找已启用模型；首选未启用时自动回退到下一项。",
+      "reset": "重置",
+      "resetTitle": "恢复默认优先级",
+      "moveUp": "上移（提高优先级）",
+      "moveDown": "下移（降低优先级）"
+    },
+    "proxyEditor": {
+      "label": "后端代理",
+      "statusConfigured": "已配置",
+      "statusNotConfigured": "未配置",
+      "notConfiguredHint": "未配置 · 选「后端代理」连接方式的模型会 fallback 直连",
+      "edit": "编辑",
+      "config": "配置",
+      "collapse": "收起",
+      "urlPlaceholder": "https://hxs-llm-proxy.your-subdomain.workers.dev",
+      "test": "测试连通",
+      "testing": "测试中",
+      "save": "保存",
+      "clear": "清除配置",
+      "testOk": "连通成功，已保存",
+      "testNotProxy": "响应不是 hxs-llm-proxy（确认 URL 指向已部署的代理 Worker）",
+      "deployHintPrefix": "部署 ",
+      "deployHintSuffix": " 后填入 Worker URL；不带尾斜杠。"
+    }
+  },
+  "imageLibrary": {
+    "title": "图库配置",
+    "subtitle": "配置图源后，生成内容时 picsum 占位图会被替换为关键词匹配的真实图片；所有 API Key 仅保存在本机",
+    "close": "关闭",
+    "pexels": {
+      "description": "免费摄影图库，按关键词检索，每月 20K 次配额"
+    },
+    "providerRow": {
+      "statusConfigured": "已配置",
+      "statusNotConfigured": "未配置",
+      "edit": "编辑",
+      "config": "配置",
+      "collapse": "收起"
+    },
+    "providerEditor": {
+      "apiKeyLabel": "API Key",
+      "applyLink": "免费申请 →",
+      "placeholderConfigured": "已配置（隐藏）",
+      "placeholderEmpty": "粘贴 {{label}} API Key",
+      "test": "测试",
+      "testing": "测试中…",
+      "save": "保存",
+      "clear": "清除配置",
+      "testOk": "已通过验证并保存",
+      "enrichHint": "生成时 LLM 输出 picsum 占位图，将自动用关键词查 {{label}} 替换；未配置或失败保留 picsum，不影响渲染"
+    }
+  },
+  "history": {
+    "title": "对话历史",
+    "empty": "还没有任何会话",
+    "load": "载入",
+    "remove": "删除会话",
+    "rename": "重命名",
+    "search": "搜索"
+  },
+  "storage": {
+    "title": "存储管理",
+    "size": "占用空间",
+    "clear": "清空所有数据",
+    "confirmClear": "确认清空？此操作不可恢复。"
+  },
+  "preview": {
+    "title": "全屏预览",
+    "exitTip": "按 Esc 退出"
+  },
+  "newStyle": {
+    "title": "新建风格",
+    "briefLabel": "风格描述（文字 +/或 参考图片，至少给一项）",
+    "briefHint": "文字与图片可任选其一或同时给。AI 会综合提取色彩、字体、留白、装饰、氛围，生成风格名 + 主题色 + 风格指令",
+    "briefPlaceholder": "例如：粉紫渐变背景、文案俏皮、圆角大、字体偏粗、适合 C 端教育产品。或：北欧极简，黑白灰为主，留白克制，专业商务",
+    "imagesLabel": "参考图片（可选 · 最多 {{max}} 张）",
+    "imagesHint": "支持设计稿/海报/截图，单张 ≤ 5MB",
+    "uploadButton": "上传",
+    "imageError": {
+      "tooMany": "最多上传 {{max}} 张，多余的已忽略",
+      "notImage": "{{name}} 不是图片格式",
+      "tooLarge": "{{name}} 超过 5MB 上限"
+    },
+    "generating": "AI 生成中…",
+    "regenerate": "重新生成",
+    "generate": "AI 一键生成",
+    "modelHint": "本次请求使用的模型：",
+    "previewIntroHint": "生成后右侧可查看效果并修改风格名/描述，确认满意再保存到「我的风格」。",
+    "errorFallback": "生成失败",
+    "draft": {
+      "fallbackName": "未命名风格",
+      "fallbackDescription": "图片识别风格",
+      "fallbackInstructions": "（基于参考图片识别的视觉风格）"
+    },
+    "metaTitle": "AI 自动生成的元数据（可修改）",
+    "namePlaceholder": "风格名",
+    "descriptionPlaceholder": "一句话描述",
+    "themeColors": "主题色",
+    "actions": {
+      "preview": "预览效果",
+      "save": "保存到我的风格",
+      "saved": "已保存",
+      "cancel": "取消"
+    },
+    "placeholder": {
+      "errorTitle": "可以重新调整描述再试",
+      "idleTitle": "等待生成",
+      "hint": "填写左侧表单点「AI 一键生成」，模型仅根据描述构造主题色与字体；风格指令使用你的提示词原文，不会被改写。",
+      "generating": "正在让模型构造视觉风格…",
+      "modelTag": "使用模型："
+    }
+  },
+  "stylePreview": {
+    "tagBuiltin": "内置",
+    "tagAi": "AI",
+    "tagMine": "我的",
+    "instructions": "风格指令（注入给大模型）",
+    "edit": "编辑",
+    "editPlaceholder": "描述视觉、语调、布局倾向…",
+    "save": "保存",
+    "cancel": "取消",
+    "regenSampleEnabled": "按指令生成样板",
+    "regenSampleAgain": "再次生成样板",
+    "regenSampleRunning": "AI 生成样板中…",
+    "regenSampleTooltip": "按当前指令让 AI 重新生成右侧的 4 页样板",
+    "saveSample": "保存样板到此风格",
+    "savedSample": "已保存到风格",
+    "saveSampleTooltip": "把当前 4 页样板存入此风格，下次打开预览自动用，不必再调 LLM",
+    "openInEditor": "在编辑器中打开",
+    "openInEditorTooltip": "把样板作为新对话加载到编辑器，可进一步编辑或发布",
+    "discardSample": "丢弃本次生成 · 恢复 {{fallback}}",
+    "discardFallbackSaved": "已保存样板",
+    "discardFallbackBuiltin": "内置通用样板",
+    "savedNote": "✓ 当前显示已保存的风格样板",
+    "themeColors": "主题色",
+    "fontsTitle": "字体 / 圆角 / 模式",
+    "heading": "标题",
+    "body": "正文",
+    "radius": "圆角",
+    "mode": "模式",
+    "modeDark": "暗色",
+    "modeLight": "亮色",
+    "noInstructions": "未填写指令",
+    "stageNote": "样板 deck，仅用于风格预览",
+    "useStyle": "使用此风格",
+    "useStyleSelected": "已选用此风格",
+    "errorNoModel": "未配置大模型，请先在右下角对话面板中配置 API Key",
+    "errorBuiltinSave": "内置/AI 风格不能直接保存样板。请先「保存到我的风格」复制为 user-saved 后再保存样板",
+    "errorGenerate": "生成失败",
+    "openInEditorMessage": "已从「{{name}}」风格样板创建新对话。",
+    "sampleTitle": "{{name}} · 样板"
+  },
+  "builtinPatterns": {
+    "dark-glow-hero": {
+      "name": "暗色光晕封面",
+      "description": "暗底 + 渐变 badge + 大标题局部染色 + 角落光晕（教程长图首页同款）"
+    },
+    "stat-grid-3": {
+      "name": "三列大数字",
+      "description": "三列 stat block 横排，关键指标震撼展示"
+    },
+    "mac-window-cover": {
+      "name": "macOS 窗口装饰封面",
+      "description": "顶部 chrome 三圆点 + 大留白主体 + 标签"
+    },
+    "card-list-bars": {
+      "name": "彩条卡片列表",
+      "description": "多张卡片左侧不同色高亮竖条，Notion / 小红书风格关键模式"
+    },
+    "numbered-quad-tone": {
+      "name": "四色编号清单",
+      "description": "list block ordered 模式 + 4 色循环 tone（黄/青/紫/粉）编号方块"
+    },
+    "dark-comparison-table": {
+      "name": "暗色对比表格",
+      "description": "table block + highlightCol，关键列染色 + bold（实测对比页同款）"
+    },
+    "painpoint-vs-solution": {
+      "name": "痛点对比方案",
+      "description": "红色边框痛点卡片 + 向下箭头 + 绿色边框方案卡片"
+    },
+    "flow-3step": {
+      "name": "三步流程图",
+      "description": "横排 flow block，3 步带箭头连接"
+    },
+    "bold-quote-glow": {
+      "name": "金句光晕引用",
+      "description": "quote 布局 + 大字 + 光晕装饰，章节切片用"
+    },
+    "dark-cta-glow": {
+      "name": "暗色光晕 CTA",
+      "description": "暗底 + 主按钮 + 光晕阴影，行动号召页"
+    }
+  },
+  "builtinStyles": {
+    "bs-dark-notion": {
+      "name": "暗色 Notion 教程长图",
+      "description": "小红书 / 教程长图 / 竖屏分享 暗色风格"
+    },
+    "bs-cyberpunk": {
+      "name": "暗夜赛博",
+      "description": "技术感 / 工程师 / 暗黑科技风"
+    },
+    "bs-editorial": {
+      "name": "杂志编辑感",
+      "description": "文艺 / 编辑感 / 长文阅读"
+    },
+    "bs-luxury": {
+      "name": "极简高奢",
+      "description": "黑金 / 高级感 / 极简留白"
+    },
+    "bs-corporate": {
+      "name": "B2B 路演",
+      "description": "投资 / 路演 / 企业服务"
+    },
+    "bs-launch": {
+      "name": "新品发布",
+      "description": "上线 / 发布会 / 新品 hero"
+    }
+  },
+  "builtinSkills": {
+    "dark-notion-tutorial": {
+      "name": "暗色 Notion 教程长图",
+      "description": "小红书 / 教程长图 / 竖屏分享 暗色风格"
+    },
+    "dark-cyberpunk": {
+      "name": "暗夜赛博",
+      "description": "技术感 / 工程师 / 暗黑科技风"
+    },
+    "editorial-magazine": {
+      "name": "杂志编辑感",
+      "description": "文艺 / 编辑感 / 长文阅读"
+    },
+    "minimal-luxury": {
+      "name": "极简高奢",
+      "description": "黑金 / 高级感 / 极简留白"
+    },
+    "corporate-pitch": {
+      "name": "B2B 路演",
+      "description": "投资 / 路演 / 企业服务"
+    },
+    "launch-fanfare": {
+      "name": "新品发布",
+      "description": "上线 / 发布会 / 新品 hero"
+    }
+  },
+  "patternPicker": {
+    "title": "模板库",
+    "exportLib": "导出库",
+    "exportLibTitle": "把当前用户库（patterns + skills）导出为 JSON 文件",
+    "importLib": "导入库",
+    "importLibTitle": "选择之前导出的 JSON 文件还原（id 冲突的条目会自动跳过）",
+    "importMode": {
+      "skip": "跳过冲突",
+      "skipTitle": "保护已有数据，冲突项跳过不写入（推荐）",
+      "overwrite": "覆盖冲突",
+      "overwriteTitle": "用导入文件中的版本替换库里同 id 的项"
+    },
+    "enhance": "AI 识别图片",
+    "enhanceTitle": "上传 1-3 张参考图，AI 同时识别为 Pattern + Skill 加入库",
+    "filter": {
+      "category": "类别",
+      "all": "全部",
+      "source": "来源",
+      "sourceBuiltin": "内置",
+      "sourceUser": "我的",
+      "sourceAi": "AI"
+    },
+    "categories": {
+      "hero": "封面",
+      "section": "章节",
+      "stat": "数据",
+      "list": "清单",
+      "compare": "对比",
+      "flow": "流程",
+      "quote": "引用",
+      "cta": "号召",
+      "decor": "装饰"
+    },
+    "noResult": "没有匹配的样板",
+    "useCopy": "复制内容",
+    "useCopyTitle": "复制 {{count}} 页内容到 deck，与原模板断开关联（之后修改互不影响）",
+    "useRef": "引用模板",
+    "useRefTitle": "仅引用模板 ID（patternRef），渲染时实时查模板库；之后修改原模板，所有引用页面自动跟着变；原模板删除则页面回退空白",
+    "promote": "提升为内置",
+    "demote": "取消内置",
+    "delete": "删除",
+    "deleteConfirm": "删除「{{name}}」？此操作不可撤销。",
+    "preview": "预览",
+    "tags": "标签：",
+    "footerCount": "共 {{count}} 个样板"
+  },
+  "enhance": {
+    "title": "能力补充：从图片识别为 Pattern + Skill",
+    "intro": "上传 1-3 张参考图（设计稿 / 截图 / 海报），AI 对**每张图独立**识别为：",
+    "introPattern": "Pattern（页面样板）：可在编辑器中复用 / LLM 用 patternRef 引用",
+    "introSkill": "Skill（风格能力包）：触发词命中后自动注入风格配方",
+    "introNote": "多张图 → 多组 pattern + skill，识别完成后可独立勾选保存",
+    "imagesLabel": "参考图片（必填 · 最多 {{max}} 张）",
+    "imagesHint": "单张 ≤ 5MB",
+    "uploadButton": "上传",
+    "deleteButton": "删除",
+    "imageError": {
+      "tooMany": "最多上传 {{max}} 张，多余的已忽略",
+      "notImage": "{{name}} 不是图片格式",
+      "tooLarge": "{{name}} 超过 5MB 上限"
+    },
+    "briefLabel": "用途简述（可选）",
+    "briefPlaceholder": "例如：暗色教程长图、赛博风 hero、对比页样板。留空时仅靠图片识别",
+    "generating": "AI 识别中… ",
+    "generatingMulti": "（共 {{count}} 张）",
+    "generate": "AI 一键识别",
+    "modelHint": "使用模型：",
+    "completedHint": "识别完成后可逐项勾选保存 pattern / skill",
+    "placeholderIdle": "上传图片后点击\"AI 一键识别\"",
+    "placeholderRunning": "正在识别{{which}}图片视觉特征…",
+    "placeholderNote": "每张图独立识别一份 pattern + skill",
+    "errorNoImageModel": "未启用支持图片识别的模型。请在「大模型配置」启用全能型或全模态模型",
+    "errorEmpty": "模型未返回任何有效结构",
+    "items": {
+      "summaryHeader": "共 {{count}} 组识别结果",
+      "selectAll": "全选",
+      "selectNone": "全不选",
+      "onlyPattern": "仅勾 Pattern",
+      "onlySkill": "仅勾 Skill"
+    },
+    "card": {
+      "indexLabel": "第 {{index}} / {{total}} 项",
+      "failed": "识别失败",
+      "noProduct": "无产物",
+      "expand": "展开",
+      "collapse": "折叠",
+      "patternLabel": "Pattern",
+      "skillLabel": "Skill",
+      "patternErrorTitle": "Pattern 校验失败",
+      "patternHeader": "Pattern（页面样板）",
+      "skillHeader": "Skill（风格能力包）",
+      "noPattern": "无 pattern 产出",
+      "noSkill": "无 skill 产出",
+      "checkboxNoneTitle": "无 {{label}} 可保存",
+      "checkboxInvalidTitle": "{{label}} 校验有警告，仍可勾选保存",
+      "checkboxSaveTitle": "保存 {{label}}"
+    },
+    "fields": {
+      "name": "名称",
+      "description": "描述",
+      "category": "分类",
+      "tags": "标签",
+      "triggers": "触发词",
+      "systemAddon": "风格配方（systemAddon）",
+      "recommendBlocks": "推荐 block 类型",
+      "recommendUtilities": "推荐 utility"
+    },
+    "categoryOptions": {
+      "hero": "封面",
+      "section": "章节",
+      "stat": "数据",
+      "list": "清单",
+      "compare": "对比",
+      "flow": "流程",
+      "quote": "引用",
+      "cta": "号召",
+      "decor": "装饰"
+    },
+    "footer": {
+      "saveBoth": "保存（{{patterns}} pattern + {{skills}} skill）",
+      "saveNone": "未勾选任何项",
+      "saveTooltip": "保存 {{patterns}} 个 pattern + {{skills}} 个 skill",
+      "saveDisabledTooltip": "请勾选至少一项",
+      "cancel": "取消",
+      "regenerate": "重新生成",
+      "regenerateTooltip": "保留输入图片重新调用模型"
+    },
+    "chip": {
+      "placeholder": "回车或逗号添加…",
+      "delete": "删除",
+      "add": "添加"
+    }
+  },
+  "extractPrompt": {
+    "title": "提取内容框架",
+    "buttonTitle": "提取框架",
+    "buttonTooltip": "把当前演示提取成脱敏的内容案例（保存到内容案例库）",
+    "summarySlides": "{{count}} 页",
+    "summaryHint": "将提取章节结构，脱敏品牌/人名/具体数字与 URL",
+    "extracting": "正在让模型阅读 deck 并抽取框架…",
+    "errorFallback": "提取失败",
+    "retry": "重试",
+    "frameTitle": "框架标题（≤ 8 字）",
+    "frameInstructions": "脱敏后的内容指令",
+    "frameInstructionsHint": "（可编辑后再保存；下次套用时把方括号占位替换为实际主题即可）",
+    "regenerate": "重新提取",
+    "save": "保存到内容案例库",
+    "saved": "已保存到我的案例",
+    "footerClose": "关闭",
+    "footerCancel": "取消"
+  },
+  "formSubmissions": {
+    "title": "表单提交记录",
+    "subtitle": "本机浏览器存储；发布站点的提交各自存在访问者浏览器，演示者无法直接看到",
+    "emptyAll": "还没有任何表单提交。",
+    "emptyForm": "此表单还没有提交。",
+    "count": "{{count}} 条",
+    "notInDeck": "· 已不在 deck",
+    "exportCsv": "导出 CSV",
+    "clear": "清空",
+    "clearConfirm": "确认清空 {{formId}} 的全部 {{count}} 条提交？",
+    "time": "时间",
+    "delete": "删除"
+  }
+}

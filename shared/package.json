@@ -1,0 +1,14 @@
+{
+  "name": "@huaxushuo/shared",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "main": "./dsl/index.ts",
+  "exports": {
+    "./dsl": "./dsl/index.ts",
+    "./examples/*": "./examples/*"
+  },
+  "dependencies": {
+    "zod": "^3.24.1"
+  }
+}

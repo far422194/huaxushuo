@@ -1,0 +1,108 @@
+{
+  "version": "1.0",
+  "meta": {
+    "title": "Magic Move 示范",
+    "description": "演示 Keynote 风格的魔法移动转场：相同 magicId 的元素在两页之间飞行",
+    "aspectRatio": "16:9"
+  },
+  "theme": {
+    "mode": "light",
+    "colors": {
+      "bg": "#ffffff",
+      "fg": "#0f172a",
+      "primary": "#7c3aed",
+      "accent": "#ec4899",
+      "muted": "#64748b"
+    },
+    "fonts": { "heading": "Inter", "body": "Inter" },
+    "radius": "lg"
+  },
+  "variables": {},
+  "slides": [
+    {
+      "id": "s1",
+      "layout": "hero",
+      "transition": "fade",
+      "background": {
+        "type": "gradient",
+        "from": "#7c3aed",
+        "to": "#ec4899",
+        "angle": 135
+      },
+      "blocks": [
+        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
+        { "type": "heading", "level": 1, "text": "Lumen", "magicId": "brand" },
+        { "type": "text", "text": "把光带到每一寸黑暗。", "magicId": "tagline" },
+        {
+          "type": "button",
+          "label": "下一页 →",
+          "variant": "primary",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "layout": "title-content",
+      "transition": "magic",
+      "blocks": [
+        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
+        { "type": "heading", "level": 2, "text": "Lumen", "magicId": "brand" },
+        { "type": "text", "text": "把光带到每一寸黑暗。", "magicId": "tagline" },
+        { "type": "list", "items": ["10 倍亮度", "续航 18 小时", "IPX8 防水"] },
+        {
+          "type": "button",
+          "label": "下一页 →",
+          "variant": "outline",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "layout": "two-column",
+      "transition": "magic",
+      "blocks": [
+        { "type": "heading", "level": 3, "text": "Lumen", "column": "left", "magicId": "brand" },
+        { "type": "text", "text": "把光带到每一寸黑暗。", "column": "left", "magicId": "tagline" },
+        { "type": "badge", "text": "DEMO", "tone": "accent", "column": "left", "magicId": "tag" },
+        {
+          "type": "card",
+          "column": "right",
+          "title": "对比传统手电",
+          "children": [
+            { "type": "list", "items": ["亮度 × 10", "续航 × 3", "防水等级 × 2"] }
+          ]
+        },
+        {
+          "type": "button",
+          "label": "下一页 →",
+          "variant": "ghost",
+          "column": "right",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "layout": "cta",
+      "transition": "magic",
+      "background": {
+        "type": "gradient",
+        "from": "#1e1b4b",
+        "to": "#7c3aed"
+      },
+      "blocks": [
+        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
+        { "type": "heading", "level": 1, "text": "Lumen", "magicId": "brand" },
+        { "type": "text", "text": "把光带到每一寸黑暗。", "magicId": "tagline" },
+        {
+          "type": "button",
+          "label": "返回首页",
+          "variant": "primary",
+          "onClick": { "action": "jumpTo", "slideId": "s1" }
+        }
+      ]
+    }
+  ]
+}

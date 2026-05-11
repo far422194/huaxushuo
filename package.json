@@ -1,0 +1,19 @@
+{
+  "name": "huaxushuo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "华胥说: LLM 输出 DSL,运行时确定性渲染的可交互演示生成器",
+  "scripts": {
+    "dev": "pnpm --filter huaxushuo-client dev",
+    "build": "pnpm --filter huaxushuo-client build",
+    "build:runtime": "pnpm --filter huaxushuo-client build:runtime",
+    "typecheck": "pnpm --filter huaxushuo-client typecheck && pnpm --filter @huaxushuo/cli typecheck",
+    "lint": "pnpm --filter huaxushuo-client lint",
+    "cli:build": "pnpm --filter @huaxushuo/cli build"
+  },
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=9"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

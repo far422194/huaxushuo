@@ -1,0 +1,73 @@
+{
+  "title": "用一句话生成可交互的演示",
+  "subtitle": "描述内容需求，配上你想要的视觉风格，30 秒拿到一份可交互的演示。",
+  "magicMoveDemo": "试试 Magic Move 示例",
+  "input": {
+    "placeholder": "例如：做一份介绍 AI 写作助手的 5 页演示，包含特性、对比、CTA",
+    "placeholderWithStyle": "用「{{style}}」风格做：例如，介绍 AI 写作助手的 5 页发布演示",
+    "submit": "生成演示",
+    "generating": "生成中…",
+    "stop": "停止",
+    "stopTitle": "停止生成",
+    "advanced": "高级选项",
+    "skill": "能力包",
+    "style": "风格",
+    "aspectRatio": "画幅",
+    "aspectAuto": "自适应",
+    "aspect169": "16:9 横屏",
+    "aspect43": "4:3 横屏",
+    "shortcuts": "Enter 发送 · Shift+Enter 换行",
+    "stoppingHint": "生成中，点右侧停止"
+  },
+  "chip": {
+    "clearStyle": "清除风格",
+    "injectHint": "将作为风格基准注入生成",
+    "styleTag": "[风格：{{name}}]"
+  },
+  "tabs": {
+    "style": "风格",
+    "content": "内容案例",
+    "styleCount": "风格 ({{count}})",
+    "contentCount": "内容案例 ({{count}})"
+  },
+  "filters": {
+    "all": "全部",
+    "builtin": "内置",
+    "ai": "AI 生成"
+  },
+  "newStyle": "新建风格",
+  "regenBatch": "AI 再生成一批",
+  "regenBatchTitle": "调用 AI 再生成一批内容案例",
+  "examples": {
+    "title": "试试这些示例",
+    "all": "全部",
+    "builtin": "内置",
+    "ai": "AI 生成"
+  },
+  "history": {
+    "title": "历史会话",
+    "empty": "暂无历史会话",
+    "openHistory": "查看历史"
+  },
+  "empty": {
+    "aiStyle": "还没有 AI 生成的风格。点上面「+ 新建风格」让 AI 帮你做一个。",
+    "builtinStyle": "还没有内置风格。可以把你已保存的风格点 Pin 转为内置。",
+    "style": "暂无风格",
+    "content": "还没有内容案例。点右上角「AI 再生成一批」让模型出一批，或直接在上面对话框写需求。"
+  },
+  "card": {
+    "useTip": "点击填入对话框，可继续编辑后再生成"
+  },
+  "status": {
+    "stoppedKept": "已停止生成 · 保留已生成的 {{count}} 页",
+    "stopped": "已停止生成",
+    "createdNew": "已生成新演示",
+    "stoppedReturned": "已停止生成 · 保留已生成的 {{count}} 页（已写入新对话，可继续编辑或撤销）",
+    "generationFailed": "生成失败（未返回 deck）",
+    "generateFailedShort": "生成失败"
+  },
+  "errors": {
+    "generic": "生成失败：{{message}}",
+    "noInput": "请先输入需求"
+  }
+}

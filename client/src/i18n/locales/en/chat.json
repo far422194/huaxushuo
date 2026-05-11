@@ -1,0 +1,106 @@
+{
+  "title": "Chat to edit",
+  "open": "Chat to edit",
+  "collapse": "Collapse",
+  "modelSettings": "Model settings",
+  "history": "Conversation history",
+  "stylePicker": "Pick style",
+  "stop": "Stop generating",
+  "send": "Send",
+  "input": {
+    "placeholder": "Rewrite page 2 as a two-column compare / change accent to green / add a CTA at the end…",
+    "send": "Send",
+    "stop": "Stop"
+  },
+  "hint": {
+    "loading": "Click stop on the right to interrupt (already-generated slides are kept)",
+    "ready": "Enter to send, Shift+Enter for newline"
+  },
+  "status": {
+    "connecting": "Connecting to the model…",
+    "thinking": "Model is thinking…",
+    "receiving": "Receiving ({{bytes}} bytes)…",
+    "applying": "Applying…",
+    "tool": "Calling tool: {{name}}",
+    "page": "Generated {{current}}/{{estimate}} slides",
+    "slide": "Rendered {{index}} / {{total}} slides",
+    "batchProgress": "Batch {{current}}/{{total}}"
+  },
+  "phase": {
+    "batchPrefix": "(Batch {{current}}/{{total}}) ",
+    "finishing": "Finishing up…",
+    "streaming": "Generating slide {{current}} / {{total}}…",
+    "connecting": "Connecting to the model… waiting for first response",
+    "thinking": "Model is responding, waiting for data…",
+    "thinkingBatch": "Model thinking… preparing slides {{from}}-{{to}}",
+    "thinkingBatchSingle": "Model thinking… preparing slide {{page}}",
+    "reasoningWithBytes": "Model reasoning… {{bytes}} (no deck yet)",
+    "reasoningWarning": "Reasoning {{bytes}} · likely runaway, consider stopping and switching to a non-thinking model",
+    "reasoning": "Model reasoning…",
+    "receivingWithBytes": "Generating deck… {{bytes}}",
+    "receiving": "Generating deck… {{bytes}}",
+    "page": "Generating slide {{current}} / {{estimate}}…",
+    "tool": "Confirming tool…",
+    "slideStart": "Preparing first slide…",
+    "applying": "Applying result…",
+    "generating": "Generating…"
+  },
+  "modelBadge": {
+    "active": "Model used: {{model}}",
+    "notActive": "No model",
+    "notActiveTitle": "No model enabled yet"
+  },
+  "promptSize": {
+    "chip": "{{kb}}K",
+    "chipBatch": "{{kb}}K (cum {{cumKb}}K)",
+    "tooltipTitle": "Prompt size for this call",
+    "tooltipBase": "system  {{kb}}K (base/creative)",
+    "tooltipSkill": "skill   +{{kb}}K ({{name}})",
+    "tooltipStyle": "style   +{{kb}}K",
+    "tooltipAspect": "aspect  +{{kb}}K",
+    "tooltipPages": "pages   +{{kb}}K",
+    "tooltipUserMsg": "user msg {{kb}}K",
+    "tooltipTotal": "Total {{kb}}K · ~{{tokens}}K tokens",
+    "tooltipMaxTokens": "max_tokens this call: {{value}}"
+  },
+  "elapsed": {
+    "earlyHint": "The model may take a few seconds to draft the structure…",
+    "midHint": "Complex content needs more reasoning time — hang in there",
+    "longHint": "The server may be buffering the whole response (some proxies don't stream)… please wait",
+    "veryLongHint": "Big decks usually take longer"
+  },
+  "messages": {
+    "user": "You",
+    "assistant": "Assistant",
+    "empty": "Start a conversation to edit the current deck",
+    "regenerate": "Regenerate",
+    "stopped": "Generation stopped",
+    "stoppedKept": "Generation stopped · {{count}} slides kept",
+    "createdNew": "New deck generated",
+    "applied": "Update applied",
+    "tagCreate": "New",
+    "tagUpdate": "Patch"
+  },
+  "fallbackTitle": "Chat",
+  "selectedStyle": {
+    "clear": "Clear"
+  },
+  "stylePickerDialog": {
+    "title": "Pick a style baseline",
+    "none": "No style baseline (let the model decide)"
+  },
+  "emptyHint": {
+    "title": "Continue editing the current deck:",
+    "tips": [
+      "Make page 2 a two-column comparison",
+      "Switch the theme to green, larger radius",
+      "Append a CTA slide at the end",
+      "Tone down the hero copy",
+      "Convert the whole deck to dark mode"
+    ]
+  },
+  "errors": {
+    "generic": "Error: {{message}}",
+    "noProvider": "Configure a model in Settings first"
+  }
+}

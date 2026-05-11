@@ -1,0 +1,589 @@
+{
+  "publish": {
+    "title": "Publish deck",
+    "tab": {
+      "direct": "Cloudflare deploy",
+      "zip": "Export ZIP",
+      "pdf": "Export PDF"
+    },
+    "configure": "Configure",
+    "configureTitle": "Configure the upload Worker",
+    "footer": {
+      "done": "Done",
+      "cancel": "Cancel"
+    },
+    "summary": {
+      "title": "{{title}}",
+      "untitled": "Untitled deck",
+      "slides": "{{count}} slides",
+      "directSuffix": "Deploy to Cloudflare Pages",
+      "zipSuffix": "Self-contained site",
+      "pdfSuffix": "Landscape 16:9 (1280×720)"
+    },
+    "direct": {
+      "buildingZip": "Packaging the static site…",
+      "uploading": "Uploading to Cloudflare Pages ({{pct}}%)",
+      "duration": "Deploys typically take 5–15s, please wait",
+      "notConfigured": "Worker not configured yet",
+      "notConfiguredHint": "You need to deploy your own Cloudflare Worker (a one-time, ~5-minute step), then fill in the Worker URL + Pages project name. See server/cf-deploy-worker/README.md for instructions.",
+      "configureNow": "Configure now",
+      "intro": "Click the button below — the browser uploads the zip directly to your deployed Worker, which calls the Cloudflare Pages API to publish. No API token leaves the browser, and you get a public URL once the deploy finishes.",
+      "submit": "Deploy to Cloudflare Pages",
+      "deployed": "Deploy succeeded!",
+      "uploadedFiles": "Uploaded {{count}} files to Cloudflare Pages",
+      "copy": "Copy",
+      "copied": "Copied",
+      "visit": "Open",
+      "aliases": "Aliases:",
+      "previewNote": "This is a Cloudflare Pages preview URL — a fresh one is issued each deploy. For a stable URL, set a custom domain or mark the deploy as Production in the Cloudflare dashboard."
+    },
+    "deploy": {
+      "title": "Cloudflare deploy settings",
+      "intro": "First-time setup requires deploying your own Cloudflare Worker (one-time, ~5 minutes). See server/cf-deploy-worker/README.md.",
+      "workerUrl": "Worker URL",
+      "workerHint": "Copy from the wrangler output, e.g. https://hxs-deploy.xxx.workers.dev",
+      "projectName": "Pages project name",
+      "projectHint": "Created in the Cloudflare Pages dashboard (Direct Upload mode)",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "zip": {
+      "intro": "Click the button below to package the deck into a static-site zip. The unzipped folder is a fully self-contained website you can host anywhere. README.md inside the zip lists one-line deploy commands for 4 popular hosts.",
+      "submit": "Build standalone zip",
+      "building": "Packaging the static site…",
+      "ready": "Generated {{filename}}",
+      "readyHint": "Click the button on the right to download.",
+      "download": "Download zip",
+      "deployToPublic": "Deploy to public",
+      "deployIntro": "After unzipping, run any of the commands below from the directory to publish.",
+      "noCommand": "(no command)"
+    },
+    "pdf": {
+      "intro": "Captures every slide as an image and concatenates them into a PDF — useful for archives / email. iframe / forms / video can't be rendered in the PDF.",
+      "submit": "Start PDF export",
+      "exporting": "Exporting page {{current}} / {{total}} ({{pct}}%)",
+      "slowHint": "Big decks take a while, please wait",
+      "cancel": "Cancel",
+      "ready": "Generated {{filename}}",
+      "readyHint": "Click the button on the right to download.",
+      "download": "Download PDF",
+      "afterNote": "Each PDF page is 1280×720 (landscape 16:9). Interactive content (iframes / video) is not rendered.",
+      "stageNotReady": "PDF stage is not ready"
+    },
+    "error": {
+      "retry": "Retry"
+    }
+  },
+  "config": {
+    "title": "Config",
+    "model": "Model",
+    "imageLibrary": "Image library"
+  },
+  "provider": {
+    "title": "Model settings",
+    "subtitle": "Slot models per capability — one model per capability.",
+    "connection": {
+      "webDirect": "Web direct",
+      "proxy": "Backend proxy"
+    },
+    "capability": {
+      "label": {
+        "general": "Generalist",
+        "textOnly": "Reasoning",
+        "multimodal": "Omni"
+      },
+      "desc": {
+        "general": "Text + image. Mainstream multimodal models (Claude / GPT-4o / Gemini).",
+        "textOnly": "Text-only reasoning. No image input (DeepSeek-V3, text-only models).",
+        "multimodal": "Unified text + image + video + audio (Qwen-Omni etc.)."
+      }
+    },
+    "scenario": {
+      "general": "General",
+      "imageRecognition": "Image recognition"
+    },
+    "compat": {
+      "label": "Compatible protocol",
+      "anthropic": "Anthropic-compatible",
+      "openaiCompat": "OpenAI-compatible"
+    },
+    "tab": {
+      "models": "My models",
+      "modelsWithCount": "My models ({{count}})",
+      "routing": "Routing priority",
+      "proxy": "Backend proxy",
+      "notConfigured": "Not configured"
+    },
+    "language": "Interface language",
+    "languageHint": "After switching, generated decks will use the selected language for content.",
+    "emptyTitle": "No model configured yet",
+    "emptyHint": "API keys are stored only in this browser's localStorage and never sent to any server.",
+    "createNew": "New configuration",
+    "close": "Close",
+    "deleteConfirm": "Delete configuration \"{{name}}\"? This cannot be undone.",
+    "configRow": {
+      "test": "Test",
+      "testing": "Testing",
+      "testTitle": "Send a ping request to verify connectivity",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "activateTitle": "Activate as \"{{capability}}\"",
+      "deactivateTitle": "Deactivate → frees this capability slot; routing falls back to other active models",
+      "cloneTitle": "Duplicate (creates a new entry; auto-activates only if the slot is empty)",
+      "editTitle": "Edit",
+      "deleteTitle": "Delete",
+      "testOk": "Connected · {{ms}}ms",
+      "closeTestResult": "Close"
+    },
+    "formView": {
+      "titleNew": "New configuration",
+      "titleEdit": "Edit configuration: {{name}}",
+      "backToList": "Back to list",
+      "aliasLabel": "Alias (required, used in the list)",
+      "aliasPlaceholder": "e.g., My Mimo / Work Claude / Test Kimi",
+      "connectionLabel": "Connection method",
+      "webDirectTitle": "Browser calls the provider API directly (only the 5 verified-stable presets are shown)",
+      "proxyTitle": "Route through your self-hosted Cloudflare Worker proxy (bypasses CORS / stability issues)",
+      "proxyMissingHint": "⚠ Global proxy URL not configured. Go back and set the Worker URL under \"Backend proxy\", otherwise this will fall back to direct connection.",
+      "presetLabel": "Service preset",
+      "presetCustom": "Custom",
+      "presetCustomTitle": "Clear baseURL / model / max tokens to fill in manually",
+      "capabilityLabel": "Model capability (decides which slot to use + auto-routing)",
+      "baseURLLabel": "Base URL",
+      "baseURLPlaceholderAnthropic": "https://api.anthropic.com",
+      "baseURLPlaceholderOpenAI": "https://api.openai.com/v1",
+      "modelLabel": "Model name",
+      "modelPlaceholderAnthropic": "claude-sonnet-4-6",
+      "modelPlaceholderOpenAI": "gpt-4o / deepseek-chat / ...",
+      "apiKeyLabel": "API Key",
+      "apiKeyPlaceholderAnthropic": "sk-ant-...",
+      "apiKeyPlaceholderOpenAI": "sk-...",
+      "showKey": "Show",
+      "hideKey": "Hide",
+      "maxTokensLabel": "Max output tokens (optional, defaults if blank)",
+      "maxTokensPlaceholderAnthropic": "Default 32000; Sonnet 4.6 supports 64000",
+      "maxTokensPlaceholderOpenAI": "Default 8000; Kimi K2/Qwen3 16000, GLM-4.5/Gemini 32000",
+      "maxTokensHint": "Enter the model's actual output cap (DeepSeek cap is 8192). The mode below decides how this value is used.",
+      "maxTokensWarn": "⚠ Fixed mode uses {{n}} as max_tokens every call; some providers pre-allocate large KV cache and slow inference. Suggest 32000-64000, or switch to smart mode for context-aware selection.",
+      "maxTokensModeLabel": "Allocation mode",
+      "maxTokensModeAuto": "Smart",
+      "maxTokensModeFixed": "Fixed",
+      "maxTokensModeAutoTitle": "Treat the value above as an output cap; system auto-picks max_tokens within the cap based on deck size (small deck → small value, large deck → not truncated)",
+      "maxTokensModeFixedTitle": "Treat the value above as a fixed max_tokens used every call regardless of context (legacy behavior)",
+      "maxTokensModeAutoHint": "The system auto-selects an effective max_tokens within the cap based on content size",
+      "maxTokensModeFixedHint": "Every request uses the exact value above; does not vary by context",
+      "save": "Save",
+      "cancel": "Cancel"
+    },
+    "routing": {
+      "intro": "Each scenario looks up active models in the priority order you set; it falls back to the next item when the top choice is not enabled.",
+      "reset": "Reset",
+      "resetTitle": "Restore default order",
+      "moveUp": "Move up (raise priority)",
+      "moveDown": "Move down (lower priority)"
+    },
+    "proxyEditor": {
+      "label": "Backend proxy",
+      "statusConfigured": "Configured",
+      "statusNotConfigured": "Not configured",
+      "notConfiguredHint": "Not configured — models using \"Backend proxy\" will fall back to direct connection",
+      "edit": "Edit",
+      "config": "Configure",
+      "collapse": "Collapse",
+      "urlPlaceholder": "https://hxs-llm-proxy.your-subdomain.workers.dev",
+      "test": "Test connectivity",
+      "testing": "Testing",
+      "save": "Save",
+      "clear": "Clear configuration",
+      "testOk": "Connected, saved",
+      "testNotProxy": "Response is not hxs-llm-proxy (verify the URL points to a deployed proxy Worker)",
+      "deployHintPrefix": "Deploy ",
+      "deployHintSuffix": " then paste the Worker URL here; no trailing slash."
+    }
+  },
+  "imageLibrary": {
+    "title": "Image library",
+    "subtitle": "After configuring an image source, picsum placeholders in generated content are replaced with keyword-matched real photos; API keys are stored only in this browser.",
+    "close": "Close",
+    "pexels": {
+      "description": "Free stock photos, keyword search, 20K requests/month"
+    },
+    "providerRow": {
+      "statusConfigured": "Configured",
+      "statusNotConfigured": "Not configured",
+      "edit": "Edit",
+      "config": "Configure",
+      "collapse": "Collapse"
+    },
+    "providerEditor": {
+      "apiKeyLabel": "API Key",
+      "applyLink": "Apply for free →",
+      "placeholderConfigured": "Configured (hidden)",
+      "placeholderEmpty": "Paste {{label}} API key",
+      "test": "Test",
+      "testing": "Testing…",
+      "save": "Save",
+      "clear": "Clear",
+      "testOk": "Verified and saved",
+      "enrichHint": "When generating, picsum placeholders from the LLM are auto-replaced via {{label}} keyword search; if not configured or failed, picsum stays and rendering still works."
+    }
+  },
+  "history": {
+    "title": "Conversation history",
+    "empty": "No conversations yet",
+    "load": "Load",
+    "remove": "Delete",
+    "rename": "Rename",
+    "search": "Search"
+  },
+  "storage": {
+    "title": "Storage",
+    "size": "Used space",
+    "clear": "Clear all data",
+    "confirmClear": "Clear everything? This cannot be undone."
+  },
+  "preview": {
+    "title": "Full-screen preview",
+    "exitTip": "Press Esc to exit"
+  },
+  "newStyle": {
+    "title": "New style",
+    "briefLabel": "Style description (text and/or reference images — at least one)",
+    "briefHint": "Provide text, images, or both. The AI extracts color, type, whitespace, decoration, and mood, then produces a style name + theme + style instructions.",
+    "briefPlaceholder": "e.g. Pink-purple gradient background, playful copy, large radius, bold type, fits consumer education products. Or: Nordic minimal, mostly black/white/gray, restrained whitespace, professional B2B.",
+    "imagesLabel": "Reference images (optional · up to {{max}})",
+    "imagesHint": "Designs / posters / screenshots. ≤ 5 MB each",
+    "uploadButton": "Upload",
+    "imageError": {
+      "tooMany": "Up to {{max}} images — extras ignored",
+      "notImage": "{{name}} is not an image",
+      "tooLarge": "{{name}} exceeds the 5MB limit"
+    },
+    "generating": "AI generating…",
+    "regenerate": "Regenerate",
+    "generate": "AI generate",
+    "modelHint": "Model used:",
+    "previewIntroHint": "After generation, you can preview and edit the name/description on the right, then save it to \"My styles\".",
+    "errorFallback": "Generation failed",
+    "draft": {
+      "fallbackName": "Untitled style",
+      "fallbackDescription": "Image-derived style",
+      "fallbackInstructions": "(Visual style derived from reference images)"
+    },
+    "metaTitle": "AI-generated metadata (editable)",
+    "namePlaceholder": "Style name",
+    "descriptionPlaceholder": "One-line description",
+    "themeColors": "Theme colors",
+    "actions": {
+      "preview": "Preview",
+      "save": "Save to My styles",
+      "saved": "Saved",
+      "cancel": "Cancel"
+    },
+    "placeholder": {
+      "errorTitle": "Tweak the description and try again",
+      "idleTitle": "Awaiting generation",
+      "hint": "Fill in the form on the left and click \"AI generate\". The model produces theme colors and fonts; the style instruction itself is your prompt verbatim.",
+      "generating": "Constructing the visual style…",
+      "modelTag": "Model used:"
+    }
+  },
+  "stylePreview": {
+    "tagBuiltin": "Built-in",
+    "tagAi": "AI",
+    "tagMine": "Mine",
+    "instructions": "Style instructions (injected into the model)",
+    "edit": "Edit",
+    "editPlaceholder": "Describe the visuals, tone, layout preferences…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "regenSampleEnabled": "Generate sample from instructions",
+    "regenSampleAgain": "Regenerate sample",
+    "regenSampleRunning": "Generating sample…",
+    "regenSampleTooltip": "Have the AI rebuild the 4-slide sample on the right using the current instructions",
+    "saveSample": "Save sample to this style",
+    "savedSample": "Saved to style",
+    "saveSampleTooltip": "Save the current 4-slide sample into this style — next time the preview opens it'll be reused without an LLM call",
+    "openInEditor": "Open in editor",
+    "openInEditorTooltip": "Load the sample as a new conversation in the editor for further editing or publishing",
+    "discardSample": "Discard this run · revert to {{fallback}}",
+    "discardFallbackSaved": "saved sample",
+    "discardFallbackBuiltin": "default sample",
+    "savedNote": "✓ Showing the saved style sample",
+    "themeColors": "Theme colors",
+    "fontsTitle": "Fonts / radius / mode",
+    "heading": "Heading",
+    "body": "Body",
+    "radius": "Radius",
+    "mode": "Mode",
+    "modeDark": "Dark",
+    "modeLight": "Light",
+    "noInstructions": "No instructions provided",
+    "stageNote": "Sample deck — for style preview only",
+    "useStyle": "Use this style",
+    "useStyleSelected": "Style selected",
+    "errorNoModel": "No model configured. Open the chat panel settings (bottom-right) and add an API key first.",
+    "errorBuiltinSave": "Built-in / AI styles can't save samples directly. Save it to \"My styles\" first to make it user-saved, then save the sample.",
+    "errorGenerate": "Generation failed",
+    "openInEditorMessage": "Created a new conversation from the \"{{name}}\" style sample.",
+    "sampleTitle": "{{name}} · sample"
+  },
+  "builtinPatterns": {
+    "dark-glow-hero": {
+      "name": "Dark glow hero",
+      "description": "Dark background + gradient badge + partial-tone heading + corner glow (long-image tutorial cover)"
+    },
+    "stat-grid-3": {
+      "name": "Three-stat grid",
+      "description": "Three stat blocks side-by-side for high-impact metrics"
+    },
+    "mac-window-cover": {
+      "name": "macOS window section",
+      "description": "Mac chrome three-dot bar + spacious body + tag"
+    },
+    "card-list-bars": {
+      "name": "Bar-accent card list",
+      "description": "Stacked cards with colored left bars — the signature Notion / Xiaohongshu pattern"
+    },
+    "numbered-quad-tone": {
+      "name": "Four-color numbered list",
+      "description": "Ordered list with 4-tone rotation (yellow/cyan/purple/pink) numbered chips"
+    },
+    "dark-comparison-table": {
+      "name": "Dark comparison table",
+      "description": "Table block with highlightCol + tone + bold for the contrast page"
+    },
+    "painpoint-vs-solution": {
+      "name": "Pain → solution",
+      "description": "Red-bordered pain cards + down arrow + green-bordered solution cards"
+    },
+    "flow-3step": {
+      "name": "Three-step flow",
+      "description": "Horizontal flow block, 3 steps with arrows"
+    },
+    "bold-quote-glow": {
+      "name": "Bold quote with glow",
+      "description": "Quote layout + large type + glow decoration for chapter breaks"
+    },
+    "dark-cta-glow": {
+      "name": "Dark CTA with glow",
+      "description": "Dark background + primary button + glow shadow for the call-to-action page"
+    }
+  },
+  "builtinStyles": {
+    "bs-dark-notion": {
+      "name": "Dark Notion long-image tutorial",
+      "description": "Xiaohongshu / long-image tutorial / vertical share — dark style"
+    },
+    "bs-cyberpunk": {
+      "name": "Dark cyberpunk",
+      "description": "Tech / engineer / dark sci-fi tone"
+    },
+    "bs-editorial": {
+      "name": "Editorial magazine",
+      "description": "Literary / editorial / long-form reading"
+    },
+    "bs-luxury": {
+      "name": "Minimal luxury",
+      "description": "Black-gold / high-end / minimal whitespace"
+    },
+    "bs-corporate": {
+      "name": "B2B pitch",
+      "description": "Investment / pitch / enterprise services"
+    },
+    "bs-launch": {
+      "name": "Product launch",
+      "description": "Launch / event / product hero"
+    }
+  },
+  "builtinSkills": {
+    "dark-notion-tutorial": {
+      "name": "Dark Notion long-image tutorial",
+      "description": "Xiaohongshu / long-image tutorial / vertical share — dark style"
+    },
+    "dark-cyberpunk": {
+      "name": "Dark cyberpunk",
+      "description": "Tech / engineer / dark sci-fi tone"
+    },
+    "editorial-magazine": {
+      "name": "Editorial magazine",
+      "description": "Literary / editorial / long-form reading"
+    },
+    "minimal-luxury": {
+      "name": "Minimal luxury",
+      "description": "Black-gold / high-end / minimal whitespace"
+    },
+    "corporate-pitch": {
+      "name": "B2B pitch",
+      "description": "Investment / pitch / enterprise services"
+    },
+    "launch-fanfare": {
+      "name": "Product launch",
+      "description": "Launch / event / product hero"
+    }
+  },
+  "patternPicker": {
+    "title": "Pattern library",
+    "exportLib": "Export library",
+    "exportLibTitle": "Export your patterns + skills as a JSON file",
+    "importLib": "Import library",
+    "importLibTitle": "Restore from a previously exported JSON (id-conflict items are skipped automatically)",
+    "importMode": {
+      "skip": "Skip on conflict",
+      "skipTitle": "Protect existing entries — skip items with id conflicts (recommended)",
+      "overwrite": "Overwrite on conflict",
+      "overwriteTitle": "Replace items in the library with the imported version when ids match"
+    },
+    "enhance": "Recognize from images",
+    "enhanceTitle": "Upload 1–3 reference images and the AI recognizes them as Patterns + Skills, then adds them to the library",
+    "filter": {
+      "category": "Category",
+      "all": "All",
+      "source": "Source",
+      "sourceBuiltin": "Built-in",
+      "sourceUser": "Mine",
+      "sourceAi": "AI"
+    },
+    "categories": {
+      "hero": "Hero",
+      "section": "Section",
+      "stat": "Stat",
+      "list": "List",
+      "compare": "Compare",
+      "flow": "Flow",
+      "quote": "Quote",
+      "cta": "CTA",
+      "decor": "Decoration"
+    },
+    "noResult": "No matching patterns",
+    "useCopy": "Copy contents",
+    "useCopyTitle": "Copy the {{count}} slides into the deck and detach from the source pattern (independent edits afterwards)",
+    "useRef": "Reference pattern",
+    "useRefTitle": "Reference the pattern by id (patternRef) — pages re-resolve at render time. Edits to the source pattern propagate; deleting the pattern leaves pages blank.",
+    "promote": "Promote to built-in",
+    "demote": "Demote built-in",
+    "delete": "Delete",
+    "deleteConfirm": "Delete \"{{name}}\"? This cannot be undone.",
+    "preview": "Preview",
+    "tags": "Tags:",
+    "footerCount": "{{count}} patterns total"
+  },
+  "enhance": {
+    "title": "Capability enhancement: detect Patterns + Skills from images",
+    "intro": "Upload 1–3 reference images (designs / screenshots / posters). The AI recognizes **each image independently** into:",
+    "introPattern": "Pattern (page template): reusable in the editor / referenceable by patternRef",
+    "introSkill": "Skill (style add-on): style recipes auto-injected when triggers match",
+    "introNote": "Multiple images → multiple pattern + skill pairs. After detection you can save them individually.",
+    "imagesLabel": "Reference images (required · up to {{max}})",
+    "imagesHint": "≤ 5MB each",
+    "uploadButton": "Upload",
+    "deleteButton": "Delete",
+    "imageError": {
+      "tooMany": "Up to {{max}} images — extras ignored",
+      "notImage": "{{name}} is not an image",
+      "tooLarge": "{{name}} exceeds the 5MB limit"
+    },
+    "briefLabel": "Brief (optional)",
+    "briefPlaceholder": "e.g. Dark long-image tutorial, cyber hero, comparison page template. Leave blank to rely solely on the images.",
+    "generating": "Recognizing… ",
+    "generatingMulti": "({{count}} images)",
+    "generate": "AI recognize",
+    "modelHint": "Model used:",
+    "completedHint": "After detection you can pick which patterns / skills to save",
+    "placeholderIdle": "Upload images, then click \"AI recognize\"",
+    "placeholderRunning": "Recognizing visual features in {{which}}image(s)…",
+    "placeholderNote": "Each image yields one pattern + one skill",
+    "errorNoImageModel": "No image-recognition-capable model is enabled. Enable an omni / multimodal model in Model settings.",
+    "errorEmpty": "The model returned no valid output",
+    "items": {
+      "summaryHeader": "{{count}} detection results",
+      "selectAll": "Select all",
+      "selectNone": "Select none",
+      "onlyPattern": "Only Pattern",
+      "onlySkill": "Only Skill"
+    },
+    "card": {
+      "indexLabel": "Item {{index}} / {{total}}",
+      "failed": "Detection failed",
+      "noProduct": "No output",
+      "expand": "Expand",
+      "collapse": "Collapse",
+      "patternLabel": "Pattern",
+      "skillLabel": "Skill",
+      "patternErrorTitle": "Pattern validation failed",
+      "patternHeader": "Pattern (page template)",
+      "skillHeader": "Skill (style add-on)",
+      "noPattern": "No pattern produced",
+      "noSkill": "No skill produced",
+      "checkboxNoneTitle": "No {{label}} to save",
+      "checkboxInvalidTitle": "{{label}} has validation warnings — you can still save it",
+      "checkboxSaveTitle": "Save {{label}}"
+    },
+    "fields": {
+      "name": "Name",
+      "description": "Description",
+      "category": "Category",
+      "tags": "Tags",
+      "triggers": "Triggers",
+      "systemAddon": "Style recipe (systemAddon)",
+      "recommendBlocks": "Recommended blocks",
+      "recommendUtilities": "Recommended utilities"
+    },
+    "categoryOptions": {
+      "hero": "Hero",
+      "section": "Section",
+      "stat": "Stat",
+      "list": "List",
+      "compare": "Compare",
+      "flow": "Flow",
+      "quote": "Quote",
+      "cta": "CTA",
+      "decor": "Decoration"
+    },
+    "footer": {
+      "saveBoth": "Save ({{patterns}} pattern + {{skills}} skill)",
+      "saveNone": "Nothing selected",
+      "saveTooltip": "Save {{patterns}} patterns + {{skills}} skills",
+      "saveDisabledTooltip": "Select at least one item",
+      "cancel": "Cancel",
+      "regenerate": "Regenerate",
+      "regenerateTooltip": "Re-run with the same input images"
+    },
+    "chip": {
+      "placeholder": "Enter or comma to add…",
+      "delete": "Delete",
+      "add": "Add"
+    }
+  },
+  "extractPrompt": {
+    "title": "Extract content blueprint",
+    "buttonTitle": "Extract blueprint",
+    "buttonTooltip": "Distill the current deck into a redacted content sample (saves to your content library)",
+    "summarySlides": "{{count}} slides",
+    "summaryHint": "Extracts the chapter structure and redacts brand / person names / specific numbers / URLs",
+    "extracting": "Reading the deck and extracting the blueprint…",
+    "errorFallback": "Extraction failed",
+    "retry": "Retry",
+    "frameTitle": "Blueprint title (≤ 8 chars)",
+    "frameInstructions": "Redacted content instruction",
+    "frameInstructionsHint": "(edit then save; next time, replace the bracketed placeholders with your real subject)",
+    "regenerate": "Re-extract",
+    "save": "Save to content library",
+    "saved": "Saved",
+    "footerClose": "Close",
+    "footerCancel": "Cancel"
+  },
+  "formSubmissions": {
+    "title": "Form submissions",
+    "subtitle": "Stored in this browser only; submissions on published sites live in each visitor's browser and aren't visible here",
+    "emptyAll": "No form submissions yet.",
+    "emptyForm": "This form has no submissions yet.",
+    "count": "{{count}}",
+    "notInDeck": "· not in deck",
+    "exportCsv": "Export CSV",
+    "clear": "Clear",
+    "clearConfirm": "Clear all {{count}} submissions for {{formId}}?",
+    "time": "Time",
+    "delete": "Delete"
+  }
+}

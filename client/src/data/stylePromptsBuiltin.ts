@@ -1,0 +1,141 @@
+import type { StylePrompt } from "./stylePrompts";
+
+// 源码硬编码内置风格库：6 个覆盖最常见演示场景
+// id 必须稳定（外部引用依赖此 id；i18n 翻译条目按 id 查找）
+// 与 BUILTIN_SKILLS 的命名/主题对齐，让"风格选择"与"skill 命中"语义一致
+//
+// 与用户「转为内置」的项目共存：模块加载时会一并填入 BUILTIN_STYLE_PROMPTS。
+// 用户提升的项 id 是 nanoid（8 字符）；这里固定 `bs-` 前缀避免冲突。
+
+export const BUILTIN_STYLE_PROMPTS_SOURCE: StylePrompt[] = [
+  {
+    id: "bs-dark-notion",
+    name: "暗色 Notion 教程长图",
+    description: "小红书 / 教程长图 / 竖屏分享 暗色风格",
+    emoji: "🌙",
+    source: "builtin",
+    createdAt: 0,
+    theme: {
+      mode: "dark",
+      colors: {
+        bg: "#0a0a0a",
+        fg: "#e5e7eb",
+        primary: "#22d3ee",
+        accent: "#a78bfa",
+        muted: "#475569",
+        success: "#10b981",
+        warning: "#f59e0b",
+        danger: "#ef4444",
+        info: "#3b82f6",
+      } as any,
+      fonts: { heading: "Inter", body: "Inter" },
+      radius: "lg",
+    },
+    styleInstructions: `暗色教程长图风格，竖屏长图布局（aspectRatio:"auto"），右上显示页码。\n背景 bg #0a0a0a 深黑 + fg #e5e7eb 浅灰。\n标题 RichText 局部染色（核心动词/产品名/数字单独 tone:"gradient"|"warning"|"danger"），单段不染色显得平淡。\n卡片列表必用左竖条 hxs-bar-l-{success|warning|info|danger|accent} 多色循环；编号清单用 list ordered + 4 色循环 tone（黄/青/紫/粉）。\n数据对比必用 table block，关键单元格 tone+bold。3-5 步流程必用 flow block。`,
+  },
+  {
+    id: "bs-cyberpunk",
+    name: "暗夜赛博",
+    description: "技术感 / 工程师 / 暗黑科技风",
+    emoji: "⚡",
+    source: "builtin",
+    createdAt: 0,
+    theme: {
+      mode: "dark",
+      colors: {
+        bg: "#0d1117",
+        fg: "#c9d1d9",
+        primary: "#00ff88",
+        accent: "#58a6ff",
+        muted: "#484f58",
+      } as any,
+      fonts: { heading: "JetBrains Mono", body: "Inter" },
+      radius: "sm",
+    },
+    styleInstructions: `暗夜赛博 / 技术感风格。bg #0d1117（GitHub 暗）+ primary 终端绿 #00ff88 + accent 冷蓝 #58a6ff。\n章节页 slide.utilities=["hxs-bg-grid"]；hero 用 hxs-bg-corner-glow + heading hxs-text-glow。\nchrome block（mac variant）模拟终端 / IDE 截图。\nfonts.heading "JetBrains Mono"，转场全部 zoom 或 slide-up。\n文案克制冷峻：写"请求时长 800ms"而非"响应飞快"，写"内存 12MB"而非"轻量级"。`,
+  },
+  {
+    id: "bs-editorial",
+    name: "杂志编辑感",
+    description: "文艺 / 编辑感 / 长文阅读",
+    emoji: "📖",
+    source: "builtin",
+    createdAt: 0,
+    theme: {
+      mode: "light",
+      colors: {
+        bg: "#faf7f2",
+        fg: "#1a1a1a",
+        primary: "#8b1a1a",
+        accent: "#a87a3c",
+        muted: "#807060",
+      } as any,
+      fonts: { heading: "Songti SC", body: "Songti SC" },
+      radius: "sm",
+    },
+    styleInstructions: `杂志编辑感 / 文艺风格。bg 米白 #faf7f2 + fg 近黑 #1a1a1a + primary 深红 #8b1a1a。\n衬线字体（Songti SC / Source Han Serif）。\nslide.utilities=["hxs-bg-noise"] 噪点底纹给纸张质感。\n多用 quote 布局做章节切片，不用 cta。\n文案有书卷气，避免营销腔；段落留白多，每页内容少。`,
+  },
+  {
+    id: "bs-luxury",
+    name: "极简高奢",
+    description: "黑金 / 高级感 / 极简留白",
+    emoji: "✦",
+    source: "builtin",
+    createdAt: 0,
+    theme: {
+      mode: "dark",
+      colors: {
+        bg: "#000000",
+        fg: "#f5f5f5",
+        primary: "#d4af37",
+        accent: "#ffffff",
+        muted: "#666666",
+      } as any,
+      fonts: { heading: "Songti SC", body: "Inter" },
+      radius: "none",
+    },
+    styleInstructions: `极简高奢 / 黑金风格。bg 纯黑 #000 + primary 香槟金 #d4af37。radius "none"（锐利无圆角）。\n装饰极少：utilities 一页 ≤ 2 个；不用底纹、不用动画。\n文案精简：每页 blocks ≤ 4，hero 标题 ≤ 8 字。\n字距加宽 hxs-tracking-wide + 大留白 + 衬线。`,
+  },
+  {
+    id: "bs-corporate",
+    name: "B2B 路演",
+    description: "投资 / 路演 / 企业服务",
+    emoji: "📊",
+    source: "builtin",
+    createdAt: 0,
+    theme: {
+      mode: "light",
+      colors: {
+        bg: "#ffffff",
+        fg: "#0f172a",
+        primary: "#0ea5e9",
+        accent: "#6366f1",
+        muted: "#94a3b8",
+      } as any,
+      fonts: { heading: "Inter", body: "Inter" },
+      radius: "md",
+    },
+    styleInstructions: `B2B 路演 / 投资风格。light 模式 + 偏冷色（蓝/紫）+ grid 底纹 + 强对比。\n必用 stat block 体现数据；必用 table 做对比；必用 flow 体现流程。\n每页都要有量化数据（"3 倍提速"/"成本 -60%"）。\nCTA 直接写 ROI：年省成本 / 月活提升 / 转化提升。`,
+  },
+  {
+    id: "bs-launch",
+    name: "新品发布",
+    description: "上线 / 发布会 / 新品 hero",
+    emoji: "🚀",
+    source: "builtin",
+    createdAt: 0,
+    theme: {
+      mode: "dark",
+      colors: {
+        bg: "#0f172a",
+        fg: "#f8fafc",
+        primary: "#a78bfa",
+        accent: "#ec4899",
+        muted: "#64748b",
+      } as any,
+      fonts: { heading: "Inter", body: "Inter" },
+      radius: "lg",
+    },
+    styleInstructions: `新品发布 / 上线风格。dark 模式 + 渐变背景。\nhero 必用 background gradient + slide.utilities=["hxs-bg-radial"] 光斑 + heading hxs-text-gradient + button hxs-shadow-glow。\n多用 magic move：logo / slogan 在前后页飞行过渡（同 magicId）。\nstat 行展示亮点指标（速度 / 容量 / 用户数）。\nCTA 加 hxs-animate-glow-pulse 让按钮呼吸感更强。`,
+  },
+];

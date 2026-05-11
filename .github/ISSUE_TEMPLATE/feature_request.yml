@@ -1,0 +1,75 @@
+name: ✨ Feature request
+description: Suggest an idea or improvement
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for sharing an idea. The project leans toward simple, focused features and is allergic to over-engineering — please help us judge fit by filling in motivation clearly.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What pain or gap are you hitting? Concrete scenario beats abstract idea.
+      placeholder: e.g. "When deck has > 20 slides, the SlideList scroll position resets every time a new slide streams in."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: One concrete approach. If you've considered alternatives, list them and why they were rejected.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - DSL / schema
+        - Renderer
+        - Editor
+        - LLM / providers
+        - Prompts / fewshots
+        - Image library / Pexels
+        - Publishing (zip / Cloudflare / PDF)
+        - i18n
+        - Pattern / Skill
+        - Performance
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you've tried, or simpler designs you weighed against
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Self-assessed implementation cost (rough)
+      options:
+        - Small (~hours, single file)
+        - Medium (~days, a few files)
+        - Large (architectural, multi-area)
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I have searched [existing issues](https://github.com/your-org/huaxushuo/issues) and this is not a duplicate
+          required: true
+        - label: I have checked [PRD §3.2 (not doing)](../docs/PRD.md) and [§3.3 (planned)](../docs/PRD.md) — this isn't already decided in either direction
+          required: false

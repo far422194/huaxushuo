@@ -1,0 +1,20 @@
+# 华胥说 · LLM 代理 Worker 部署配置
+# 解决 LLM API 在浏览器侧的连接稳定性问题：浏览器 → 本 Worker → 真实 LLM API
+#
+# 部署：
+#   cd server/llm-proxy-worker
+#   pnpm install
+#   npx wrangler deploy
+# 拿到 Worker URL 后，到编辑器「配置 → 模型」顶部「后端代理」里填上即可。
+
+name = "hxs-llm-proxy"
+main = "src/worker.ts"
+compatibility_date = "2024-01-15"
+
+[vars]
+# CORS 允许的来源；生产建议改为编辑器域名（如 "https://hxs.example.com"）
+ALLOWED_ORIGIN = "*"
+
+# 可选：限制只能转发到这些目标 host（逗号分隔），未设则不限制
+# 强烈建议生产环境配置以避免 Worker 被滥用为通用代理（消耗 CF 配额 + 安全风险）
+# ALLOWED_TARGETS = "api.anthropic.com,api.openai.com,api.moonshot.cn,open.bigmodel.cn,dashscope.aliyuncs.com,api.deepseek.com,generativelanguage.googleapis.com,api.minimax.chat,api.xiaomimimo.com"

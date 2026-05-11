@@ -1,0 +1,103 @@
+name: 🐛 Bug report
+description: Report something that's broken or behaving unexpectedly
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. Please fill in every section so we can reproduce.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: What happened?
+      description: A clear, concise description of the bug. One paragraph is plenty.
+      placeholder: e.g. "Generation fails with 'Expected object, received string' on mimo, only when prompt is long."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Minimum steps for someone else to hit the same bug.
+      placeholder: |
+        1. Open Home, type "..."
+        2. Click 发送
+        3. See error condition X
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      placeholder: e.g. "Deck generates with 5 slides; first slide lands within 2s."
+    validations:
+      required: true
+
+  - type: input
+    id: model
+    attributes:
+      label: LLM provider / model
+      description: Which provider and model? (Anthropic / OpenAI / Deepseek / Kimi / Zhipu / Qwen / SiliconFlow / Gemini / mimo / custom)
+      placeholder: e.g. "Anthropic claude-sonnet-4-6 (cache hit) | mimo mimo-v2.5-pro | OpenAI gpt-4o"
+    validations:
+      required: true
+
+  - type: input
+    id: max_tokens
+    attributes:
+      label: max_tokens setting
+      description: As shown in your model config (or "default")
+      placeholder: e.g. "32000" or "default"
+    validations:
+      required: false
+
+  - type: dropdown
+    id: aspect
+    attributes:
+      label: Aspect ratio
+      options:
+        - "16:9"
+        - "4:3"
+        - "auto"
+    validations:
+      required: false
+
+  - type: input
+    id: language
+    attributes:
+      label: UI language
+      description: zh-CN / en / other
+      placeholder: e.g. "zh-CN"
+    validations:
+      required: false
+
+  - type: textarea
+    id: console
+    attributes:
+      label: Console / network errors
+      description: Anything in the browser DevTools console or relevant network requests
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: env
+    attributes:
+      label: Environment
+      description: Browser, OS, screen size if relevant
+      placeholder: e.g. "Chrome 130 / macOS 14.6 / 1920×1080"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I have searched [existing issues](https://github.com/your-org/huaxushuo/issues) and this is not a duplicate
+          required: true
+        - label: I have read the relevant section in [PRD](../docs/PRD.md) (if behavior-related)
+          required: false

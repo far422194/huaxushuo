@@ -1,0 +1,154 @@
+{
+  "version": "1.0",
+  "meta": {
+    "title": "Acme AI 助手发布演示",
+    "description": "5 页发布演示，覆盖封面、特性、对比、引用、CTA，含变量交互",
+    "author": "Acme Inc.",
+    "aspectRatio": "16:9"
+  },
+  "theme": {
+    "mode": "light",
+    "colors": {
+      "bg": "#ffffff",
+      "fg": "#111827",
+      "primary": "#10b981",
+      "accent": "#f59e0b",
+      "muted": "#6b7280"
+    },
+    "fonts": { "heading": "Inter", "body": "Inter" },
+    "radius": "lg"
+  },
+  "variables": {
+    "userName": "访客",
+    "interestedInPro": false
+  },
+  "slides": [
+    {
+      "id": "s1",
+      "layout": "hero",
+      "transition": "fade",
+      "background": {
+        "type": "gradient",
+        "from": "#064e3b",
+        "to": "#10b981",
+        "angle": 160
+      },
+      "blocks": [
+        { "type": "badge", "text": "全新发布", "tone": "accent" },
+        { "type": "heading", "level": 1, "text": "Acme AI 助手" },
+        { "type": "text", "text": "让重复工作消失，让创造自由开始。" },
+        {
+          "type": "button",
+          "label": "你好，{{userName}}！开始体验",
+          "variant": "primary",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "layout": "bullet-list",
+      "transition": "slide-left",
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "三大核心能力" },
+        {
+          "type": "list",
+          "items": [
+            "理解上下文：跨文档、跨对话保持记忆",
+            "执行复杂任务：浏览、写作、调用工具",
+            "随叫随到：桌面、手机、Web 全终端"
+          ]
+        },
+        {
+          "type": "button",
+          "label": "看实际效果",
+          "variant": "primary",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "layout": "two-column",
+      "transition": "slide-left",
+      "blocks": [
+        {
+          "type": "card",
+          "column": "left",
+          "title": "免费版",
+          "subtitle": "每月 100 次对话",
+          "children": [
+            { "type": "list", "items": ["基础模型", "30 秒响应", "社区支持"] },
+            {
+              "type": "button",
+              "label": "继续免费用",
+              "variant": "outline",
+              "onClick": { "action": "jumpTo", "slideId": "s5" }
+            }
+          ]
+        },
+        {
+          "type": "card",
+          "column": "right",
+          "title": "Pro 版",
+          "subtitle": "无限对话 + 高级模型",
+          "children": [
+            { "type": "list", "items": ["旗舰模型", "1 秒响应", "优先支持", "团队协作"] },
+            {
+              "type": "button",
+              "label": "升级到 Pro",
+              "variant": "primary",
+              "onClick": { "action": "setVar", "name": "interestedInPro", "value": true }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "layout": "quote",
+      "transition": "fade",
+      "background": { "type": "solid", "color": "#f0fdf4" },
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 2,
+          "text": "“它不是替代我，而是让我能做以前没时间做的事。”"
+        },
+        { "type": "text", "text": "— 张敏，产品经理" },
+        {
+          "type": "button",
+          "label": "下一步",
+          "variant": "ghost",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "layout": "cta",
+      "transition": "zoom",
+      "background": {
+        "type": "gradient",
+        "from": "#10b981",
+        "to": "#0ea5e9"
+      },
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "{{userName}}，准备好了吗？" },
+        { "type": "text", "text": "现在注册，第一个月免费体验 Pro。" },
+        {
+          "type": "button",
+          "label": "免费开始",
+          "variant": "primary",
+          "onClick": { "action": "openLink", "url": "https://acme.example.com/signup" }
+        },
+        {
+          "type": "button",
+          "label": "返回封面",
+          "variant": "ghost",
+          "onClick": { "action": "jumpTo", "slideId": "s1" }
+        }
+      ]
+    }
+  ]
+}

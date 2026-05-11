@@ -1,0 +1,20 @@
+# Cloudflare Worker 中转配置
+# 部署前先编辑：name + 在 Cloudflare 控制台创建 Pages 项目（拿到 project_name），
+# 然后用 `wrangler secret put CF_API_TOKEN` 把 API Token 写入 secret（不要写文件里）
+
+name = "hxs-deploy"
+main = "src/worker.ts"
+compatibility_date = "2024-01-15"
+
+# 默认变量（非敏感；可在仪表盘改）
+[vars]
+# Cloudflare Account ID（在仪表盘右下角；非敏感）
+CF_ACCOUNT_ID = "fe664711bfe90dcc744ce4be86818ea7"
+# 默认目标 Pages 项目名；客户端也可在请求里覆盖
+DEFAULT_PROJECT = "huaxushuo"
+# 允许调用 Worker 的来源（CORS 白名单；用 "*" 任意域名都允许，生产建议限制为你的编辑器域名）
+ALLOWED_ORIGIN = "*"
+
+# 部署时用 secret 存敏感凭证（不要写在文件里）：
+#   wrangler secret put CF_API_TOKEN
+# 仅需 Pages:Edit 权限（最小化）

@@ -1,0 +1,73 @@
+{
+  "title": "Generate an interactive deck from one sentence",
+  "subtitle": "Describe the content, pair it with a visual style, get an interactive deck in 30 seconds.",
+  "magicMoveDemo": "Try the Magic Move sample",
+  "input": {
+    "placeholder": "e.g. A 5-page launch deck for an AI writing assistant — features, comparison, CTA",
+    "placeholderWithStyle": "Using \"{{style}}\" style: e.g. a 5-page launch deck for an AI writing assistant",
+    "submit": "Generate",
+    "generating": "Generating…",
+    "stop": "Stop",
+    "stopTitle": "Stop generation",
+    "advanced": "Advanced",
+    "skill": "Skill",
+    "style": "Style",
+    "aspectRatio": "Aspect ratio",
+    "aspectAuto": "Auto",
+    "aspect169": "16:9 widescreen",
+    "aspect43": "4:3 standard",
+    "shortcuts": "Enter to send · Shift+Enter for newline",
+    "stoppingHint": "Generating — click the right button to stop"
+  },
+  "chip": {
+    "clearStyle": "Clear style",
+    "injectHint": "Will be injected as the style baseline",
+    "styleTag": "[Style: {{name}}]"
+  },
+  "tabs": {
+    "style": "Styles",
+    "content": "Content samples",
+    "styleCount": "Styles ({{count}})",
+    "contentCount": "Content samples ({{count}})"
+  },
+  "filters": {
+    "all": "All",
+    "builtin": "Built-in",
+    "ai": "AI-generated"
+  },
+  "newStyle": "New style",
+  "regenBatch": "Regenerate a batch",
+  "regenBatchTitle": "Have the AI generate a fresh batch of content samples",
+  "examples": {
+    "title": "Try one of these",
+    "all": "All",
+    "builtin": "Built-in",
+    "ai": "AI-generated"
+  },
+  "history": {
+    "title": "Recent conversations",
+    "empty": "No recent conversations",
+    "openHistory": "Open history"
+  },
+  "empty": {
+    "aiStyle": "No AI-generated styles yet. Click \"+ New style\" above to create one.",
+    "builtinStyle": "No built-in styles yet. Pin one of your saved styles to promote it to built-in.",
+    "style": "No styles",
+    "content": "No content samples yet. Click \"Regenerate a batch\" or just describe what you want in the chat above."
+  },
+  "card": {
+    "useTip": "Click to fill the prompt; edit further before generating"
+  },
+  "status": {
+    "stoppedKept": "Generation stopped · {{count}} slides kept",
+    "stopped": "Generation stopped",
+    "createdNew": "New deck generated",
+    "stoppedReturned": "Generation stopped · {{count}} slides kept (saved to a new conversation; you can keep editing or undo)",
+    "generationFailed": "Generation failed (no deck returned)",
+    "generateFailedShort": "Generation failed"
+  },
+  "errors": {
+    "generic": "Generation failed: {{message}}",
+    "noInput": "Please enter a prompt first"
+  }
+}

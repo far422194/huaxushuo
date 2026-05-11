@@ -1,0 +1,90 @@
+{
+  "version": "1.0",
+  "meta": {
+    "title": "产品方案对比",
+    "description": "3 页：封面 → 对比 → 行动号召",
+    "aspectRatio": "16:9"
+  },
+  "theme": {
+    "mode": "light",
+    "colors": {
+      "bg": "#ffffff",
+      "fg": "#0f172a",
+      "primary": "#2563eb",
+      "accent": "#f59e0b",
+      "muted": "#64748b"
+    },
+    "fonts": { "heading": "Inter", "body": "Inter" },
+    "radius": "md"
+  },
+  "variables": {},
+  "slides": [
+    {
+      "id": "s1",
+      "layout": "hero",
+      "transition": "fade",
+      "background": { "type": "solid", "color": "#f8fafc" },
+      "blocks": [
+        { "type": "heading", "level": 1, "text": "选择适合你的方案" },
+        { "type": "text", "text": "看看为什么团队都从传统方式迁移过来。" },
+        {
+          "type": "button",
+          "label": "查看对比",
+          "variant": "primary",
+          "onClick": { "action": "next" }
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "layout": "two-column",
+      "transition": "slide-left",
+      "blocks": [
+        {
+          "type": "card",
+          "column": "left",
+          "title": "传统 PPT",
+          "subtitle": "停留在静态展示",
+          "children": [
+            { "type": "list", "items": ["纯静态截图", "无交互", "邮件附件分享", "改一页就要重发"] }
+          ]
+        },
+        {
+          "type": "card",
+          "column": "right",
+          "title": "华叙说",
+          "subtitle": "可交付的交互演示",
+          "children": [
+            { "type": "list", "items": ["自然语言生成", "按钮、跳转、变量", "公网链接秒分享", "改完即时同步"] }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "layout": "cta",
+      "transition": "zoom",
+      "background": {
+        "type": "gradient",
+        "from": "#2563eb",
+        "to": "#7c3aed"
+      },
+      "blocks": [
+        { "type": "heading", "level": 2, "text": "今天就开始" },
+        { "type": "text", "text": "30 秒生成第一份可交互演示。" },
+        {
+          "type": "button",
+          "label": "立即开始",
+          "variant": "primary",
+          "onClick": { "action": "openLink", "url": "https://example.com/start" }
+        },
+        {
+          "type": "button",
+          "label": "返回封面",
+          "variant": "ghost",
+          "onClick": { "action": "jumpTo", "slideId": "s1" }
+        }
+      ]
+    }
+  ]
+}

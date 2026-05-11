@@ -1,0 +1,34 @@
+{
+  "noProvider": "未配置大模型。请先在右下角对话面板的设置中填入 API Key 与模型。",
+  "anthropic": {
+    "auth": "鉴权失败（{{status}}）：API Key 可能错误、过期，或没有此模型的调用权限。请到「大模型设置」检查 API Key。",
+    "rateLimit": "限流（429）：请求频率超过 Anthropic 限制，等几秒重试。",
+    "badRequest": "请求参数错误（400）：{{detail}}",
+    "connection": "连接 Anthropic API 失败。\n\n可能原因：\n1. 当前网络无法访问 api.anthropic.com（中国大陆需要代理）\n2. 如果你填了自定义 baseURL，请确认地址正确且允许浏览器跨域（CORS）\n\nF12 → Network → 找 `messages` 请求，查看实际状态码。",
+    "generic": "Anthropic API 调用失败：{{message}}{{statusSuffix}}"
+  },
+  "agent": {
+    "modelOnlyText": "模型只回了文字未调用工具{{snippet}}",
+    "toolValidationFailed": "工具调用结果未通过校验：\n{{detail}}\n请按 input_schema 与约束修正后重新调用工具。",
+    "retryExhausted": "重试 {{attempts}} 次后仍失败：{{detail}}",
+    "maxTokensDefault": "输出超过默认上限被截断（当前 {{used}}，已是默认 ceiling）。\n\n必须做以下之一：\n1. 在「大模型设置 → 最大输出 tokens」填写具体值（Claude Sonnet 4.6 可填 64000、Opus 4.7 标准 32000 / extended 64000）\n2. 减少要求的页数 / 内容密度",
+    "maxTokensCustom": "输出被你设置的 max_tokens={{used}} 截断。请进一步调高「最大输出 tokens」（Sonnet 4.6 上限 64000），或减少页数。",
+    "noToolPushback": "你刚才只输出了文字。请**直接调用 create_deck 或 patch_deck 工具**输出 deck.json，不要返回任何纯文字解释。",
+    "firstBatchFailed": "第 1 批生成失败",
+    "batchPartialSuccess": "已生成 {{count}} 页演示（第 {{current}}/{{total}} 批中止）",
+    "batchPartialWarning": "第 {{current}}/{{total}} 批生成失败，已保存前 {{count}} 页到历史。\n原因：{{reason}}",
+    "batchAllSuccess": "已分批生成 {{count}} 页演示（共 {{total}} 批）",
+    "batchPerPageRecovered": "第 {{current}}/{{total}} 批：拆页恢复 {{recovered}}/{{total2}} 页",
+    "batchPerPageAllRecovered": "第 {{current}}/{{total}} 批：拆页全部恢复",
+    "batchEmpty": "分批生成未产出任何结果",
+    "unknown": "未知错误"
+  },
+  "upload": {
+    "noWorkerUrl": "未填写 Worker URL",
+    "noProjectName": "未填写 CF Pages 项目名",
+    "parseFailed": "Worker 响应解析失败：{{message}}\n响应头部：{{head}}",
+    "networkOrCors": "上传到 Worker 失败：可能是 CORS / 网络问题。请检查 Worker 是否部署、ALLOWED_ORIGIN 是否含当前域名",
+    "timeout": "上传超时",
+    "buildFailed": "请求构造失败：{{message}}"
+  }
+}

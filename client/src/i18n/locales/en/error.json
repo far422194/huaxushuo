@@ -1,0 +1,34 @@
+{
+  "noProvider": "No model configured. Please open the chat panel settings (bottom-right) and fill in your API key and model.",
+  "anthropic": {
+    "auth": "Authentication failed ({{status}}): the API key may be invalid, expired, or lack access to this model. Open Model Settings and check your API key.",
+    "rateLimit": "Rate-limited (429): request frequency exceeded the Anthropic limit. Wait a few seconds and retry.",
+    "badRequest": "Bad request (400): {{detail}}",
+    "connection": "Failed to reach the Anthropic API.\n\nPossible causes:\n1. The browser cannot reach api.anthropic.com from your network (a proxy may be required in mainland China).\n2. If you set a custom baseURL, verify it is reachable and allows browser CORS.\n\nOpen DevTools → Network → find the `messages` request to inspect the real status code.",
+    "generic": "Anthropic API call failed: {{message}}{{statusSuffix}}"
+  },
+  "agent": {
+    "modelOnlyText": "The model returned only text and did not call any tool{{snippet}}",
+    "toolValidationFailed": "Tool call output failed validation:\n{{detail}}\nFix it according to the input_schema and constraints, then call the tool again.",
+    "retryExhausted": "Failed after {{attempts}} retries: {{detail}}",
+    "maxTokensDefault": "Output truncated by the default max_tokens ceiling (currently {{used}}, already at the default cap).\n\nDo one of the following:\n1. Set an explicit value in Model Settings → Max output tokens (e.g. 64000 for Claude Sonnet 4.6, 32000 standard / 64000 extended for Opus 4.7).\n2. Reduce the requested page count or content density.",
+    "maxTokensCustom": "Output truncated by your max_tokens={{used}} setting. Increase Max output tokens (Sonnet 4.6 max 64000) or reduce the page count.",
+    "noToolPushback": "You replied with plain text. Please **call the create_deck or patch_deck tool directly** to emit the deck.json — do not return prose.",
+    "firstBatchFailed": "First batch failed to generate",
+    "batchPartialSuccess": "Generated {{count}} slides (batch {{current}}/{{total}} aborted)",
+    "batchPartialWarning": "Batch {{current}}/{{total}} failed; the first {{count}} slides have been saved to history.\nReason: {{reason}}",
+    "batchAllSuccess": "Generated {{count}} slides over {{total}} batches",
+    "batchPerPageRecovered": "Batch {{current}}/{{total}}: per-page recovery rescued {{recovered}}/{{total2}} pages",
+    "batchPerPageAllRecovered": "Batch {{current}}/{{total}}: per-page recovery succeeded for all pages",
+    "batchEmpty": "Batched generation produced no result",
+    "unknown": "Unknown error"
+  },
+  "upload": {
+    "noWorkerUrl": "Worker URL is empty",
+    "noProjectName": "Cloudflare Pages project name is empty",
+    "parseFailed": "Failed to parse the Worker response: {{message}}\nResponse head: {{head}}",
+    "networkOrCors": "Upload to the Worker failed — likely a CORS or network issue. Check that the Worker is deployed and that ALLOWED_ORIGIN includes the current domain.",
+    "timeout": "Upload timed out",
+    "buildFailed": "Failed to build the request: {{message}}"
+  }
+}
