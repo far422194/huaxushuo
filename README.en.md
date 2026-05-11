@@ -108,8 +108,7 @@ pnpm dev                            # editor at http://localhost:5173
 ```bash
 git clone https://github.com/far422194/huaxushuo.git
 cd huaxushuo
-pnpm install                        # pnpm workspace, installs all sub-packages in one shot
-pnpm dev
+pnpm dev                            # first run auto-installs deps; subsequent runs start instantly
 ```
 
 First-time flow:
@@ -143,10 +142,9 @@ pnpm workspace — a single `pnpm install` at the root installs every sub-packag
 Run everything from the repo root (workspace — no need to `cd client`):
 
 ```bash
-pnpm install            # install every sub-package
-pnpm dev                # editor (http://localhost:5173)
+pnpm dev                # editor (http://localhost:5173); auto-installs deps on first run
 pnpm typecheck          # TypeScript checks (incl. cli)
-pnpm build              # production build
+pnpm build              # production build (auto-installs deps on first run)
 pnpm build:runtime      # build the standalone runtime template (consumed by the publish pipeline)
 pnpm lint               # lint
 pnpm cli:build          # build @huaxushuo/cli
