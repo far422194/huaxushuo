@@ -108,8 +108,7 @@ pnpm dev                            # 启动编辑器 http://localhost:5173
 ```bash
 git clone https://github.com/far422194/huaxushuo.git
 cd huaxushuo
-pnpm install                        # pnpm workspace,一次装齐所有子包
-pnpm dev
+pnpm dev                            # 首次会自动 pnpm install,之后直接启动
 ```
 
 首次进入：
@@ -143,10 +142,9 @@ pnpm workspace · 根目录 `pnpm install` 一次装齐所有子包。
 从仓库根目录(workspace,无需 `cd client`):
 
 ```bash
-pnpm install            # 安装所有子包依赖
-pnpm dev                # 启动编辑器(http://localhost:5173)
+pnpm dev                # 启动编辑器(http://localhost:5173);首次会自动 pnpm install
 pnpm typecheck          # TypeScript 类型检查(含 cli)
-pnpm build              # 生产构建
+pnpm build              # 生产构建(首次会自动 pnpm install)
 pnpm build:runtime      # 单独构建独立站 runtime 模板(注入 deck 后即可发布)
 pnpm lint               # 代码风格检查
 pnpm cli:build          # 构建 @huaxushuo/cli
