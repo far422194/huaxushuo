@@ -2,9 +2,7 @@
 
 English · [简体中文](./README.md)
 
-> **An LLM-driven interactive deck generator**: a single sentence in natural language produces a clickable, animated, publishable deck website — backed by a structured DSL (not raw code) for control, editability, and stability.
-
-Every slide renders into a `1280×720` (or `1024×768` / vertical auto) canvas. Layouts, blocks, and utilities are strictly defined by Zod schemas and filtered against a whitelist at runtime. The LLM emits deck JSON; a deterministic renderer renders it — preserving the flexibility of conversational generation while avoiding the fragility of "agent writes raw code" tools.
+**Huaxushuo** turns your line of thought into a visible, intuitive demo — an interactive website. It doesn't chase elaborate visuals; it stays simple and direct so the deck becomes the cue card for your talk, **letting you focus on what you're actually saying** instead of getting stuck producing slides or images. The path from *idea → talk* becomes more graceful.
 
 ```bash
 # One-line scaffold (recommended)
@@ -12,16 +10,25 @@ npx @huaxushuo/cli init huaxushuo
 cd huaxushuo && pnpm dev
 ```
 
+![Editor preview](docs/images/editor.png)
+
 ## Why Huaxushuo
 
-Slides are visual code. LLMs are great at writing code. But existing tools either ship pure static decks (Gamma / Tome — no interactivity) or emit raw React (v0 / bolt.new — no structure, hard to control). Huaxushuo takes a third path: **LLM emits DSL, runtime renders deterministically**.
+Existing tools either ship pure static decks (Gamma / Tome — no interactivity) or emit raw React (v0 / bolt.new — no structure, hard to control).
+
+Huaxushuo takes a third path: **LLM emits DSL, runtime renders deterministically**.
+
+> Goal: natural language → presentable content in minutes (10 slides in 30 seconds, 20–30 slides in 5–10 minutes).
 
 - vs PPT — clickable, animated, supports variable state, one-click publish to a public URL
+- vs Mind maps — progressive linear reasoning closer to how you actually speak; no zoom-in/out or expand/collapse gymnastics when branches multiply
 - vs Gamma / Tome — leans toward "interactive product prototypes," not pure static decks
 - vs Figma — no design skills required; driven by natural language
 - vs v0 / bolt.new — structured DSL output: controllable, editable, stable
 
 ## Highlights
+
+Every slide renders into a `1280×720` (or `1024×768` / vertical auto) canvas. Layouts, blocks, and utilities are strictly defined by Zod schemas and filtered against a whitelist at runtime. The LLM emits deck JSON; a deterministic renderer renders it — preserving the flexibility of conversational generation while avoiding the fragility of "agent writes raw code" tools.
 
 ### 🎨 11 layouts × 16 blocks × 30+ utilities
 

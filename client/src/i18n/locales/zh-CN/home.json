@@ -2,6 +2,11 @@
   "title": "用一句话生成可交互的演示",
   "subtitle": "描述内容需求，配上你想要的视觉风格，30 秒拿到一份可交互的演示。",
   "magicMoveDemo": "试试 Magic Move 示例",
+  "onboarding": {
+    "title": "还没配置大模型",
+    "description": "配置一次即可开始生成。支持 Claude / OpenAI / Deepseek / Kimi / Gemini 等。",
+    "cta": "立即配置"
+  },
   "input": {
     "placeholder": "例如：做一份介绍 AI 写作助手的 5 页演示，包含特性、对比、CTA",
     "placeholderWithStyle": "用「{{style}}」风格做：例如，介绍 AI 写作助手的 5 页发布演示",
