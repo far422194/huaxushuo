@@ -2,6 +2,11 @@
   "title": "Generate an interactive deck from one sentence",
   "subtitle": "Describe the content, pair it with a visual style, get an interactive deck in 30 seconds.",
   "magicMoveDemo": "Try the Magic Move sample",
+  "onboarding": {
+    "title": "No model configured yet",
+    "description": "Set it up once to start generating. Works with Claude / OpenAI / Deepseek / Kimi / Gemini and more.",
+    "cta": "Configure now"
+  },
   "input": {
     "placeholder": "e.g. A 5-page launch deck for an AI writing assistant — features, comparison, CTA",
     "placeholderWithStyle": "Using \"{{style}}\" style: e.g. a 5-page launch deck for an AI writing assistant",
