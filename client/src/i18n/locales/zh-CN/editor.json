@@ -152,7 +152,16 @@
       "min": "最小值",
       "max": "最大值",
       "rows": "行数（默认 4）",
-      "tabLabel": "标签文字"
+      "tabLabel": "标签文字",
+      "fieldType": {
+        "text": "单行文本",
+        "email": "邮箱",
+        "textarea": "多行文本",
+        "select": "下拉选择",
+        "checkbox": "勾选",
+        "number": "数字",
+        "radio": "单选"
+      }
     }
   },
   "blockTab": {

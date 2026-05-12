@@ -124,7 +124,10 @@ const TextBlock = z.object({
 
 const HeadingBlock = z.object({
   type: z.literal("heading"),
-  level: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(1),
+  // 6 级标题：固定字号 120 / 88 / 72 / 64 / 56 / 48 px
+  level: z.union([
+    z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6),
+  ]).default(3),
   text: RichTextSchema,
   align: z.enum(["left", "center", "right"]).optional(),
   column: Column.optional(),
@@ -213,7 +216,72 @@ const IconBlock = z.object({
   position: PositionSchema,
 });
 
-// CardBlock 可嵌套上述基础块（不含 card 自身，避免无限递归）
+// 统计大数字块：value 是大字号渲染的数字 / 短字符串，label 是下方小字注释
+// trend 可选，渲染向上 / 向下 / 横线箭头（"+12%" 向上 / "-5%" 向下 / "持平" 横线）
+const StatBlock = z.object({
+  type: z.literal("stat"),
+  value: z.string().min(1),
+  label: z.string().optional(),
+  tone: Tone.default("primary"),
+  trend: z.enum(["up", "down", "flat"]).optional(),
+  align: z.enum(["left", "center", "right"]).optional(),
+  column: Column.optional(),
+  magicId: MagicId,
+  utilities: UtilityList,
+  position: PositionSchema,
+});
+
+// 横排流程块：steps 是 2-6 个步骤；每步可独立染色；arrow 决定连接符
+const FlowStepSchema = z.object({
+  label: z.string().min(1),
+  tone: Tone.optional(),
+});
+const FlowBlock = z.object({
+  type: z.literal("flow"),
+  steps: z.array(FlowStepSchema).min(2).max(6),
+  arrow: z.enum(["arrow", "chevron", "plus"]).default("arrow"),
+  align: z.enum(["left", "center", "right"]).optional(),
+  column: Column.optional(),
+  magicId: MagicId,
+  utilities: UtilityList,
+  position: PositionSchema,
+});
+
+// 表格：数据对比专用。单元格可以是字符串（旧路径），也可以是对象（tone 染色 + bold）
+// highlightCol 指定要强调的列（0-based），整列 primary 描边强调
+const TableCellSchema = z.union([
+  z.string(),
+  z.object({
+    text: z.string(),
+    tone: Tone.optional(),
+    bold: z.boolean().optional(),
+  }),
+]);
+const TableBlock = z.object({
+  type: z.literal("table"),
+  headers: z.array(z.string()).min(1).max(8),
+  rows: z.array(z.array(TableCellSchema).min(1)).min(1).max(20),
+  highlightCol: z.number().int().min(0).optional(),
+  column: Column.optional(),
+  magicId: MagicId,
+  utilities: UtilityList,
+  position: PositionSchema,
+});
+
+// macOS / 浏览器窗口装饰条：模拟应用截图、教程长图常用
+// mac = 红黄绿三个 12px 圆点；browser = 浏览器地址栏样式
+const ChromeBlock = z.object({
+  type: z.literal("chrome"),
+  variant: z.enum(["mac", "browser"]).default("mac"),
+  title: z.string().optional(),
+  column: Column.optional(),
+  magicId: MagicId,
+  utilities: UtilityList,
+  position: PositionSchema,
+});
+
+// CardBlock 可嵌套上述基础块（不含 card / modal / tab / form 自身，避免无限递归）
+// stat / flow / table / chrome 均为叶子块，允许嵌入 —— 卡片里放 KPI、迷你流程、对比表是常见诉求
 const CardChildBlock = z.discriminatedUnion("type", [
   TextBlock,
   HeadingBlock,
@@ -223,6 +291,10 @@ const CardChildBlock = z.discriminatedUnion("type", [
   BadgeBlock,
   IframeBlock,
   IconBlock,
+  StatBlock,
+  FlowBlock,
+  TableBlock,
+  ChromeBlock,
 ]);
 
 const CardBlock = z.object({
@@ -288,7 +360,8 @@ const FormBlock = z.object({
   position: PositionSchema,
 });
 
-// modal 与 tab 的子块：基础 7 种 + form + icon（不允许再嵌 modal/tab/card 自身，避免递归）
+// modal 与 tab 的子块：基础 8 种 + form + 叶子型容器（stat/flow/table/chrome）
+// 不允许 modal/tab/card 自身，避免递归
 const ContainerChildBlock = z.discriminatedUnion("type", [
   TextBlock,
   HeadingBlock,
@@ -299,6 +372,10 @@ const ContainerChildBlock = z.discriminatedUnion("type", [
   IframeBlock,
   IconBlock,
   FormBlock,
+  StatBlock,
+  FlowBlock,
+  TableBlock,
+  ChromeBlock,
 ]);
 
 const ModalBlock = z.object({
@@ -325,70 +402,6 @@ const TabBlock = z.object({
   type: z.literal("tab"),
   tabs: z.array(TabSchema).min(1).max(6),
   defaultTabId: z.string().optional(),
-  column: Column.optional(),
-  magicId: MagicId,
-  utilities: UtilityList,
-  position: PositionSchema,
-});
-
-// 统计大数字块：value 是大字号渲染的数字 / 短字符串，label 是下方小字注释
-// trend 可选，渲染向上 / 向下 / 横线箭头（"+12%" 向上 / "-5%" 向下 / "持平" 横线）
-const StatBlock = z.object({
-  type: z.literal("stat"),
-  value: z.string().min(1),
-  label: z.string().optional(),
-  tone: Tone.default("primary"),
-  trend: z.enum(["up", "down", "flat"]).optional(),
-  align: z.enum(["left", "center", "right"]).optional(),
-  column: Column.optional(),
-  magicId: MagicId,
-  utilities: UtilityList,
-  position: PositionSchema,
-});
-
-// 横排流程块：steps 是 2-6 个步骤；每步可独立染色；arrow 决定连接符
-const FlowStepSchema = z.object({
-  label: z.string().min(1),
-  tone: Tone.optional(),
-});
-const FlowBlock = z.object({
-  type: z.literal("flow"),
-  steps: z.array(FlowStepSchema).min(2).max(6),
-  arrow: z.enum(["arrow", "chevron", "plus"]).default("arrow"),
-  align: z.enum(["left", "center", "right"]).optional(),
-  column: Column.optional(),
-  magicId: MagicId,
-  utilities: UtilityList,
-  position: PositionSchema,
-});
-
-// 表格：数据对比专用。单元格可以是字符串（旧路径），也可以是对象（tone 染色 + bold）
-// highlightCol 指定要强调的列（0-based），整列 primary 描边强调
-const TableCellSchema = z.union([
-  z.string(),
-  z.object({
-    text: z.string(),
-    tone: Tone.optional(),
-    bold: z.boolean().optional(),
-  }),
-]);
-const TableBlock = z.object({
-  type: z.literal("table"),
-  headers: z.array(z.string()).min(1).max(8),
-  rows: z.array(z.array(TableCellSchema).min(1)).min(1).max(20),
-  highlightCol: z.number().int().min(0).optional(),
-  column: Column.optional(),
-  magicId: MagicId,
-  utilities: UtilityList,
-  position: PositionSchema,
-});
-
-// macOS / 浏览器窗口装饰条：模拟应用截图、教程长图常用
-// mac = 红黄绿三个 12px 圆点；browser = 浏览器地址栏样式
-const ChromeBlock = z.object({
-  type: z.literal("chrome"),
-  variant: z.enum(["mac", "browser"]).default("mac"),
-  title: z.string().optional(),
   column: Column.optional(),
   magicId: MagicId,
   utilities: UtilityList,

@@ -2,6 +2,7 @@
   "title": "用一句话生成可交互的演示",
   "subtitle": "描述内容需求，配上你想要的视觉风格，30 秒拿到一份可交互的演示。",
   "magicMoveDemo": "试试 Magic Move 示例",
+  "magicMoveDemoFailed": "Magic Move 示例加载失败：内置示例 schema 校验未通过，详情见控制台。",
   "onboarding": {
     "title": "还没配置大模型",
     "description": "配置一次即可开始生成。支持 Claude / OpenAI / Deepseek / Kimi / Gemini 等。",
@@ -22,7 +23,11 @@
     "aspect169": "16:9 横屏",
     "aspect43": "4:3 横屏",
     "shortcuts": "Enter 发送 · Shift+Enter 换行",
-    "stoppingHint": "生成中，点右侧停止"
+    "stoppingHint": "生成中，点右侧停止",
+    "pageEstimateExplicit": "{{n}} 页",
+    "pageEstimateInferred": "~{{n}} 页",
+    "pageEstimateExplicitTitle": "已从消息中识别明确页数 {{n}} 页，LLM 会严格按此生成",
+    "pageEstimateInferredTitle": "按文案结构推断 {{n}} 页（无明确数字）。明确写「{{n}} 页」可让 LLM 严格遵守"
   },
   "chip": {
     "clearStyle": "清除风格",

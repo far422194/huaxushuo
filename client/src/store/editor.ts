@@ -27,6 +27,10 @@ export const SKELETON_SLIDE_ID = "__skeleton__";
 // 让用户在 prefill 长空窗期看到「视觉上 N 页骨架」，实际 slide 流式落地时 FIFO 替换
 export const PLACEHOLDER_ID_PREFIX = "__placeholder_";
 
+// 单页 block 数量硬上限：schema 端不限制（允许 LLM 生成任意数量），编辑器侧给个保护防止误操作
+// 20 应足够任何视觉合理的 slide（hero/title-content 实际 3-6，复杂网格 ≤ 12）
+export const BLOCKS_PER_SLIDE_MAX = 20;
+
 export function isPlaceholderSlideId(id: string): boolean {
   return id.startsWith(PLACEHOLDER_ID_PREFIX);
 }
@@ -199,7 +203,14 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setCurrentConversationId: (id) => set({ currentConversationId: id }),
   setSelectedStyleId: (id) => set({ selectedStyleId: id }),
 
-  setCurrentIndex: (i) => set({ currentIndex: Math.max(0, Math.min(get().deck.slides.length - 1, i)) }),
+  setCurrentIndex: (i) => {
+    const len = get().deck.slides.length;
+    if (len === 0) {
+      set({ currentIndex: 0 });
+      return;
+    }
+    set({ currentIndex: Math.max(0, Math.min(len - 1, i)) });
+  },
 
   selectSlide: (slideId) => {
     const { deck } = get();
@@ -285,15 +296,23 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   removeSlide: (slideId) => {
+    // 删除前记录被删 slide 在 deck 中的索引，用于决定新 selection 切到哪张
+    const prevDeck = get().deck;
+    const removedIdx = prevDeck.slides.findIndex((s) => s.id === slideId);
     get().commit((draft) => {
       if (draft.slides.length <= 1) return;
       const idx = draft.slides.findIndex((s) => s.id === slideId);
       if (idx >= 0) draft.slides.splice(idx, 1);
     });
     const { deck, currentIndex } = get();
+    const nextIdx = Math.max(0, Math.min(currentIndex, deck.slides.length - 1));
+    // 切到相邻 slide：优先取原索引位置（被删后该位置是后一张），首页删除取 0
+    const targetIdx = removedIdx >= 0 ? Math.min(removedIdx, deck.slides.length - 1) : nextIdx;
+    const targetSlide = deck.slides[targetIdx];
     set({
-      currentIndex: Math.min(currentIndex, deck.slides.length - 1),
-      selection: {},
+      currentIndex: nextIdx,
+      // 保留 slide 维度选中，让 PropertyPanel 保持在 slide TAB 而非退回 deck TAB
+      selection: targetSlide ? { slideId: targetSlide.id } : {},
     });
   },
 
@@ -312,12 +331,31 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   },
 
   moveSlide: (from, to) => {
+    const prevCurrent = get().currentIndex;
     get().commit((draft) => {
       if (from < 0 || from >= draft.slides.length) return;
       const clampedTo = Math.max(0, Math.min(draft.slides.length - 1, to));
       const [item] = draft.slides.splice(from, 1);
       if (item) draft.slides.splice(clampedTo, 0, item);
     });
+    // currentIndex 跟随被移动页 / 相对位移补偿，避免主舞台显示错误页
+    const len = get().deck.slides.length;
+    if (len === 0) return;
+    const clampedTo = Math.max(0, Math.min(len - 1, to));
+    let next = prevCurrent;
+    if (prevCurrent === from) {
+      // 用户拖的就是当前页 → 跟随到目标位置
+      next = clampedTo;
+    } else if (from < prevCurrent && clampedTo >= prevCurrent) {
+      // 被拖页原本在当前页之前，移到当前页或之后 → 当前页相对前移 1
+      next = prevCurrent - 1;
+    } else if (from > prevCurrent && clampedTo <= prevCurrent) {
+      // 被拖页原本在当前页之后，移到当前页或之前 → 当前页相对后移 1
+      next = prevCurrent + 1;
+    }
+    if (next !== prevCurrent) {
+      set({ currentIndex: Math.max(0, Math.min(len - 1, next)) });
+    }
   },
 
   updateSlide: (slideId, mutate) => {
@@ -331,7 +369,7 @@ export const useEditorStore = create<EditorState>((set, get) => ({
     get().commit((draft) => {
       const slide = draft.slides.find((s) => s.id === slideId);
       if (!slide) return;
-      if (slide.blocks.length >= 6) return;
+      if (slide.blocks.length >= BLOCKS_PER_SLIDE_MAX) return;
       slide.blocks.push(block as Draft<Block>);
     });
   },

@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { FileText } from "lucide-react";
 import type { PromptSegments } from "@/llm/types";
 
 // 进度条上的 prompt 体积 chip：显示本次（或本批）发给 LLM 的 system + user message 总体积
@@ -88,15 +89,16 @@ export function PromptSizeChip({
     ? ` · max ${fmtTokens(info.maxTokens)}`
     : "";
 
+  // 内置 layout 类强制(图标 + 文字单行),外部 className 仅追加颜色 / 边框 / 字号等修饰
+  // 历史教训：把 emoji 改成 SVG 图标后，调用方旧 className 缺 inline-flex 让图标变 block 撑换行
+  const baseLayout =
+    "inline-flex items-center gap-1 cursor-help whitespace-nowrap tabular-nums";
+  const defaultDecor =
+    "px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium border border-slate-200";
   return (
-    <span
-      className={
-        className ??
-        "px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium border border-slate-200 cursor-help tabular-nums"
-      }
-      title={tooltip}
-    >
-      📝 {baseLabel}{maxLabel}
+    <span className={`${baseLayout} ${className ?? defaultDecor}`} title={tooltip}>
+      <FileText size={10} aria-hidden />
+      {baseLabel}{maxLabel}
     </span>
   );
 }

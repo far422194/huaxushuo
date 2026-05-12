@@ -101,11 +101,13 @@ export function PatternPicker({ onClose }: { onClose: () => void }) {
 
   const insertAsRef = (p: Pattern) => {
     // 插入仅含 patternRef 引用 + 空 blocks 的轻量 slide，让 LLM 风格的"复用模式"也能在编辑器手动用
+    // transition 继承 pattern 自带值（pattern 第一页定义了什么用什么），避免硬塞 "fade" 覆盖 pattern 设计
+    const base = p.slides[0];
     insertSlides([
       {
         id: "",
-        layout: p.slides[0]?.layout ?? "title-content",
-        transition: "fade",
+        layout: base?.layout ?? "title-content",
+        transition: base?.transition ?? "fade",
         patternRef: p.id,
         blocks: [],
       },

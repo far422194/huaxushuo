@@ -2,6 +2,7 @@
   "title": "Generate an interactive deck from one sentence",
   "subtitle": "Describe the content, pair it with a visual style, get an interactive deck in 30 seconds.",
   "magicMoveDemo": "Try the Magic Move sample",
+  "magicMoveDemoFailed": "Magic Move sample failed to load: built-in example failed schema validation. See console for details.",
   "onboarding": {
     "title": "No model configured yet",
     "description": "Set it up once to start generating. Works with Claude / OpenAI / Deepseek / Kimi / Gemini and more.",
@@ -22,7 +23,11 @@
     "aspect169": "16:9 widescreen",
     "aspect43": "4:3 standard",
     "shortcuts": "Enter to send · Shift+Enter for newline",
-    "stoppingHint": "Generating — click the right button to stop"
+    "stoppingHint": "Generating — click the right button to stop",
+    "pageEstimateExplicit": "{{n}} pages",
+    "pageEstimateInferred": "~{{n}} pages",
+    "pageEstimateExplicitTitle": "Explicit page count {{n}} detected from your message; the LLM will follow it strictly",
+    "pageEstimateInferredTitle": "Inferred {{n}} pages from your text structure (no explicit number). Write \"{{n}} pages\" to make it strict"
   },
   "chip": {
     "clearStyle": "Clear style",

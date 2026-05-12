@@ -26,6 +26,7 @@
   "upload": {
     "noWorkerUrl": "未填写 Worker URL",
     "noProjectName": "未填写 CF Pages 项目名",
+    "httpError": "上传失败：HTTP {{status}}\n响应内容：{{head}}\n（502/503/504 多为 Cloudflare 网关临时不可用，等几秒重试；其他码查 Worker 日志或确认 Worker URL 正确）",
     "parseFailed": "Worker 响应解析失败：{{message}}\n响应头部：{{head}}",
     "networkOrCors": "上传到 Worker 失败：可能是 CORS / 网络问题。请检查 Worker 是否部署、ALLOWED_ORIGIN 是否含当前域名",
     "timeout": "上传超时",

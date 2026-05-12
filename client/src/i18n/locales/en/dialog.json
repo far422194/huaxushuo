@@ -240,7 +240,55 @@
     "title": "Storage",
     "size": "Used space",
     "clear": "Clear all data",
-    "confirmClear": "Clear everything? This cannot be undone."
+    "confirmClear": "Clear everything? This cannot be undone.",
+    "quotaWarn": "Approaching the browser's localStorage quota — clear conversation history or form submissions",
+    "otherKeys": "Other namespaces (non-huaxushuo)",
+    "otherDesc": "Unknown namespace (not written by huaxushuo)",
+    "notWritten": "Not yet written",
+    "countSuffix": "items",
+    "footerNote": "All data stays in your browser. Nothing is uploaded to any server.",
+    "modules": {
+      "conversations": {
+        "label": "Conversations",
+        "desc": "All ChatPanel sessions (up to 50)"
+      },
+      "stylePrompts": {
+        "label": "Style library",
+        "desc": "AI-generated + user-saved styles (with sampleDeck)"
+      },
+      "contentPrompts": {
+        "label": "Content library",
+        "desc": "AI-generated + user-saved content prompts"
+      },
+      "patterns": {
+        "label": "Pattern library",
+        "desc": "Editor-saved / AI-generated / promoted visual patterns"
+      },
+      "skills": {
+        "label": "Skill library",
+        "desc": "AI-generated / user-saved / promoted generation recipes"
+      },
+      "formSubmissions": {
+        "label": "Form submissions",
+        "desc": "Visitor submissions collected by FormBlock (up to 500)"
+      },
+      "llmSettings": {
+        "label": "LLM settings",
+        "desc": "API keys + service presets (don't export / share)"
+      },
+      "deploySettings": {
+        "label": "Deploy settings",
+        "desc": "Credentials and configs for Cloudflare / Netlify"
+      },
+      "pexels": {
+        "label": "Pexels API key",
+        "desc": "Used to swap picsum placeholders with keyword-matched real photos"
+      },
+      "preferences": {
+        "label": "Preferences",
+        "desc": "Language, UI theme and other local preferences"
+      }
+    }
   },
   "preview": {
     "title": "Full-screen preview",
@@ -310,6 +358,21 @@
     "discardFallbackSaved": "saved sample",
     "discardFallbackBuiltin": "default sample",
     "savedNote": "✓ Showing the saved style sample",
+    "sampleDeck": {
+      "previewTitle": "{{brand}} Style Preview",
+      "newProduct": "New Release",
+      "heroSubtitle": "Reimagine how every workday begins.",
+      "ctaLearnMore": "Learn more",
+      "oldWayTitle": "The old way",
+      "oldWayItems": ["Manual & tedious", "Scattered info", "Hard to collaborate"],
+      "newWayTitle": "Our way",
+      "newWayItems": ["Auto-synced", "Single source", "Real-time collab"],
+      "quote": "\"After {{brand}}, there's no going back.\"",
+      "quoteAttribution": "— An early adopter",
+      "ctaTitle": "Get started",
+      "ctaSubtitle": "30-day free trial. No credit card required.",
+      "ctaButton": "Start free trial"
+    },
     "themeColors": "Theme colors",
     "fontsTitle": "Fonts / radius / mode",
     "heading": "Heading",

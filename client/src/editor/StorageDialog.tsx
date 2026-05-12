@@ -4,43 +4,75 @@ import { X, Database, Trash2, RefreshCw, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 // HXS 用到的所有 localStorage 命名空间元数据
+// 注：data/* 内的 STORAGE_KEY 是单一可信源，这里只镜像声明、统一渲染
 interface StorageModule {
-  key: string;
-  label: string;
-  desc: string;
+  key: string;            // localStorage key（必须与 data/*.ts 的 STORAGE_KEY 一致）
+  labelKey: string;       // i18n: storage.modules.{X}.label
+  descKey: string;        // i18n: storage.modules.{X}.desc
   countOf?: (data: any) => number; // 解析后取条目数
 }
 
 const MODULES: StorageModule[] = [
   {
     key: "hxs.conversations",
-    label: "对话历史",
-    desc: "ChatPanel 的所有会话流（最多 50 条）",
+    labelKey: "modules.conversations.label",
+    descKey: "modules.conversations.desc",
     countOf: (d) => (Array.isArray(d) ? d.length : 0),
   },
   {
     key: "hxs.style_prompts",
-    label: "风格库",
-    desc: "AI 生成的 + 用户保存的风格（含 sampleDeck）",
+    labelKey: "modules.stylePrompts.label",
+    descKey: "modules.stylePrompts.desc",
+    // 风格库存储结构：{ userSaved, generated }
     countOf: (d) => (d?.userSaved?.length ?? 0) + (d?.generated?.length ?? 0),
   },
   {
-    key: "hxs.prompts",
-    label: "内容案例库",
-    desc: "AI 生成的与用户保存的案例（含 12 内置）",
+    key: "hxs.content_prompts",
+    labelKey: "modules.contentPrompts.label",
+    descKey: "modules.contentPrompts.desc",
+    // 内容案例存储结构：{ generated, userSaved }（修复：原配置写成 hxs.prompts 读不到导致始终 0）
+    countOf: (d) => (d?.generated?.length ?? 0) + (d?.userSaved?.length ?? 0),
+  },
+  {
+    key: "hxs.patterns",
+    labelKey: "modules.patterns.label",
+    descKey: "modules.patterns.desc",
+    // Pattern 存储结构：{ generated, userSaved, builtin }
     countOf: (d) =>
-      (d?.aiGenerated?.length ?? 0) + (d?.userSaved?.length ?? 0),
+      (d?.generated?.length ?? 0) + (d?.userSaved?.length ?? 0) + (d?.builtin?.length ?? 0),
+  },
+  {
+    key: "hxs.skills",
+    labelKey: "modules.skills.label",
+    descKey: "modules.skills.desc",
+    countOf: (d) =>
+      (d?.generated?.length ?? 0) + (d?.userSaved?.length ?? 0) + (d?.builtin?.length ?? 0),
   },
   {
     key: "hxs.form_submissions",
-    label: "表单提交",
-    desc: "FormBlock 收集的访客提交记录（最多 500）",
+    labelKey: "modules.formSubmissions.label",
+    descKey: "modules.formSubmissions.desc",
     countOf: (d) => (Array.isArray(d) ? d.length : 0),
   },
   {
     key: "hxs.llm.settings",
-    label: "LLM 配置",
-    desc: "API Key + 服务预设（不要导出分享）",
+    labelKey: "modules.llmSettings.label",
+    descKey: "modules.llmSettings.desc",
+  },
+  {
+    key: "hxs.deploy_settings",
+    labelKey: "modules.deploySettings.label",
+    descKey: "modules.deploySettings.desc",
+  },
+  {
+    key: "hxs.pexels_api_key",
+    labelKey: "modules.pexels.label",
+    descKey: "modules.pexels.desc",
+  },
+  {
+    key: "hxs.preferences",
+    labelKey: "modules.preferences.label",
+    descKey: "modules.preferences.desc",
   },
 ];
 
@@ -77,7 +109,7 @@ function readUnknownKeys(): RowData[] {
     const raw = localStorage.getItem(key);
     if (raw == null) continue;
     out.push({
-      module: { key, label: key, desc: "未知命名空间（非华胥说写入）" },
+      module: { key, labelKey: "", descKey: "" },
       bytes: raw.length * 2,
       count: 0,
       exists: true,
@@ -150,7 +182,7 @@ export function StorageDialog({ onClose }: { onClose: () => void }) {
           <div className="flex items-center justify-between text-xs mb-1.5">
             <span className="text-slate-700 font-medium">{t("storage.size")}</span>
             <span className="font-mono text-slate-600">
-              {formatBytes(total)} / ≈ 5 MB（{usagePct.toFixed(1)}%）
+              {formatBytes(total)} / ≈ 5 MB ({usagePct.toFixed(1)}%)
             </span>
           </div>
           <div className="relative h-1.5 rounded-full bg-slate-200 overflow-hidden">
@@ -165,7 +197,7 @@ export function StorageDialog({ onClose }: { onClose: () => void }) {
           {usagePct >= 85 && (
             <p className="mt-1.5 text-[11px] text-rose-700 inline-flex items-center gap-1">
               <AlertTriangle size={11} />
-              接近浏览器 localStorage 配额，建议清理对话历史或表单提交
+              {t("storage.quotaWarn")}
             </p>
           )}
         </div>
@@ -177,7 +209,7 @@ export function StorageDialog({ onClose }: { onClose: () => void }) {
             ))}
             {otherRows.length > 0 && (
               <li className="px-5 pt-3 pb-1 text-[10px] uppercase tracking-wider text-slate-400">
-                其他命名空间（非华胥说）
+                {t("storage.otherKeys")}
               </li>
             )}
             {otherRows.map((r) => (
@@ -187,7 +219,7 @@ export function StorageDialog({ onClose }: { onClose: () => void }) {
         </div>
 
         <footer className="px-5 py-2.5 border-t border-slate-200 flex justify-between items-center text-[11px] text-slate-500 flex-shrink-0">
-          <span>所有数据仅存浏览器本地，不会上传任何服务器</span>
+          <span>{t("storage.footerNote")}</span>
           <button onClick={onClose} className="px-2.5 py-1 rounded text-slate-600 hover:bg-slate-100">
             {tCommon("actions.close")}
           </button>
@@ -205,22 +237,26 @@ function Row({
   onClear: (key: string, label: string) => void;
 }) {
   const { t } = useTranslation("dialog");
+  // labelKey 为空 → 未知命名空间，label 直接用 storage key 字面
+  const isUnknown = !row.module.labelKey;
+  const label = isUnknown ? row.module.key : t(`storage.${row.module.labelKey}`);
+  const desc = isUnknown ? t("storage.otherDesc") : t(`storage.${row.module.descKey}`);
   return (
     <li className="px-5 py-2.5 flex items-center gap-3 hover:bg-slate-50">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-slate-800 truncate">{row.module.label}</span>
+          <span className="text-sm font-medium text-slate-800 truncate">{label}</span>
           {row.module.countOf && (
             <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
-              {row.count} 条
+              {row.count} {t("storage.countSuffix")}
             </span>
           )}
           {!row.exists && (
-            <span className="text-[10px] text-slate-400">尚未写入</span>
+            <span className="text-[10px] text-slate-400">{t("storage.notWritten")}</span>
           )}
         </div>
         <p className="text-[11px] text-slate-500 truncate font-mono">{row.module.key}</p>
-        <p className="text-[10px] text-slate-400 truncate">{row.module.desc}</p>
+        <p className="text-[10px] text-slate-400 truncate">{desc}</p>
       </div>
       <div className="flex-shrink-0 flex items-center gap-2">
         <span className="font-mono text-xs text-slate-700 tabular-nums">
@@ -228,7 +264,7 @@ function Row({
         </span>
         {row.exists && (
           <button
-            onClick={() => onClear(row.module.key, row.module.label)}
+            onClick={() => onClear(row.module.key, label)}
             className="p-1 rounded text-slate-400 hover:text-rose-600 hover:bg-rose-50"
             title={t("storage.clear")}
           >

@@ -126,7 +126,8 @@ export function EnhanceCapabilityDialog({
       });
       return;
     }
-    setStatus({ kind: "generating", modelName: activeModel.name });
+    // 显示真实模型 ID(如 mimo-v2.5-pro)而非用户自定义别名(如"我的 Mimo")
+    setStatus({ kind: "generating", modelName: activeModel.model });
     const result = await generateCapability({ brief: brief.trim(), images });
     if (result.error) {
       setStatus({ kind: "error", message: result.error });

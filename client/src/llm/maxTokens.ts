@@ -84,6 +84,11 @@ export function chooseMaxTokens(opts: {
   //   1. 「分批永远 16K」（旧阶梯把 estimate≤10 全压在 16K）→ 分批走 cap，自适应模型大小
   //   2. 「单次大 deck 在小 cap 模型上 16K 截断」→ 单次按 estimate 算，cap 内最大化
   //   3. 「分批小 cap + chunk=2 给 13K thinking 截断」→ 分批走 cap，与旧串行行为一致
-  const target = opts.batched ? cap : opts.estimate * 5000 + 3000;
+  //   4. 「estimate=0 兜底」→ 极端场景（detectSegments / explicit 全失败）estimate 落到 0 时
+  //      target=3000 远远不够单页复杂 deck，强制单页最少 8000 tokens
+  const SINGLE_MIN_TOKENS = 8000;
+  const target = opts.batched
+    ? cap
+    : Math.max(SINGLE_MIN_TOKENS, opts.estimate * 5000 + 3000);
   return Math.min(target, cap);
 }

@@ -1,18 +1,23 @@
 {
   "version": "1.0",
   "meta": {
-    "title": "Magic Move demo",
-    "description": "Demonstrates Keynote-style magic-move transition: elements with the same magicId fly between slides",
-    "aspectRatio": "16:9"
+    "title": "Magic Move Demo",
+    "description": "Keynote-style flight between pages: elements sharing a magicId animate from one slide to the next. Also showcases the 6-level heading scale plus stat / table / flow / card decoration blocks.",
+    "aspectRatio": "16:9",
+    "showPageNumbers": true
   },
   "theme": {
     "mode": "light",
     "colors": {
-      "bg": "#ffffff",
+      "bg": "#fafafa",
       "fg": "#0f172a",
       "primary": "#7c3aed",
       "accent": "#ec4899",
-      "muted": "#64748b"
+      "muted": "#64748b",
+      "success": "#10b981",
+      "warning": "#f59e0b",
+      "danger": "#ef4444",
+      "info": "#0ea5e9"
     },
     "fonts": { "heading": "Inter", "body": "Inter" },
     "radius": "lg"
@@ -30,8 +35,16 @@
         "angle": 135
       },
       "blocks": [
-        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
-        { "type": "heading", "level": 1, "text": "Lumen", "magicId": "brand" },
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "magicId": "tag" },
+        {
+          "type": "heading",
+          "level": 1,
+          "text": [
+            { "text": "Lumen", "bold": true },
+            { "text": " · A light revolution" }
+          ],
+          "magicId": "brand"
+        },
         { "type": "text", "text": "Bring light to every inch of darkness.", "magicId": "tagline" },
         {
           "type": "button",
@@ -43,62 +56,142 @@
     },
     {
       "id": "s2",
-      "layout": "title-content",
+      "layout": "three-column",
       "transition": "magic",
       "blocks": [
-        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
-        { "type": "heading", "level": 2, "text": "Lumen", "magicId": "brand" },
-        { "type": "text", "text": "Bring light to every inch of darkness.", "magicId": "tagline" },
-        { "type": "list", "items": ["10× brightness", "18-hour battery", "IPX8 waterproof"] },
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "column": "center", "magicId": "tag" },
         {
-          "type": "button",
-          "label": "Next →",
-          "variant": "outline",
-          "onClick": { "action": "next" }
-        }
+          "type": "heading",
+          "level": 3,
+          "text": "Lumen · three hard numbers",
+          "align": "center",
+          "column": "center",
+          "magicId": "brand"
+        },
+        { "type": "stat", "value": "10×", "label": "Brightness", "tone": "primary", "trend": "up", "column": "col1" },
+        { "type": "stat", "value": "18h", "label": "Runtime", "tone": "success", "column": "col2" },
+        { "type": "stat", "value": "IPX8", "label": "Waterproof", "tone": "info", "column": "col3" }
       ]
     },
     {
       "id": "s3",
-      "layout": "two-column",
+      "layout": "title-content",
       "transition": "magic",
       "blocks": [
-        { "type": "heading", "level": 3, "text": "Lumen", "column": "left", "magicId": "brand" },
-        { "type": "text", "text": "Bring light to every inch of darkness.", "column": "left", "magicId": "tagline" },
-        { "type": "badge", "text": "DEMO", "tone": "accent", "column": "left", "magicId": "tag" },
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "magicId": "tag" },
         {
-          "type": "card",
-          "column": "right",
-          "title": "Vs. ordinary flashlights",
-          "children": [
-            { "type": "list", "items": ["Brightness × 10", "Battery × 3", "Waterproof × 2"] }
-          ]
+          "type": "heading",
+          "level": 4,
+          "text": "Lumen vs. classic flashlights",
+          "magicId": "brand"
         },
+        { "type": "text", "text": "Bring light to every inch of darkness.", "magicId": "tagline" },
         {
-          "type": "button",
-          "label": "Next →",
-          "variant": "ghost",
-          "column": "right",
-          "onClick": { "action": "next" }
+          "type": "table",
+          "headers": ["Spec", "Classic", "Lumen"],
+          "rows": [
+            ["Brightness", "100 lm", { "text": "1000 lm", "tone": "primary", "bold": true }],
+            ["Runtime", "6 h", { "text": "18 h", "tone": "success", "bold": true }],
+            ["Waterproof", "IPX4", { "text": "IPX8", "tone": "info", "bold": true }]
+          ],
+          "highlightCol": 2
         }
       ]
     },
     {
       "id": "s4",
+      "layout": "three-column",
+      "transition": "magic",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Three real scenarios",
+          "align": "center",
+          "column": "center"
+        },
+        {
+          "type": "card",
+          "column": "col1",
+          "title": "Camping",
+          "utilities": ["hxs-bar-l-success"],
+          "children": [
+            { "type": "icon", "name": "Compass", "tone": "success", "size": 32, "align": "center" },
+            { "type": "text", "text": "All-night light, enough for a long midnight hike.", "align": "center" }
+          ]
+        },
+        {
+          "type": "card",
+          "column": "col2",
+          "title": "Emergency",
+          "utilities": ["hxs-bar-l-warning"],
+          "children": [
+            { "type": "icon", "name": "Zap", "tone": "warning", "size": 32, "align": "center" },
+            { "type": "text", "text": "Instant-on in a blackout, one tap toggles SOS beacon.", "align": "center" }
+          ]
+        },
+        {
+          "type": "card",
+          "column": "col3",
+          "title": "Coastline",
+          "utilities": ["hxs-bar-l-info"],
+          "children": [
+            { "type": "icon", "name": "Sparkles", "tone": "info", "size": 32, "align": "center" },
+            { "type": "text", "text": "IPX8 fully submersible — works even underwater.", "align": "center" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "layout": "title-content",
+      "transition": "magic",
+      "blocks": [
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "magicId": "tag" },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "Three steps to use",
+          "magicId": "brand"
+        },
+        { "type": "text", "text": "Bring light to every inch of darkness.", "magicId": "tagline" },
+        {
+          "type": "flow",
+          "steps": [
+            { "label": "Hold to power on", "tone": "primary" },
+            { "label": "Tap to cycle modes", "tone": "warning" },
+            { "label": "Submerge and keep going", "tone": "info" }
+          ],
+          "arrow": "chevron",
+          "align": "center"
+        }
+      ]
+    },
+    {
+      "id": "s6",
       "layout": "cta",
       "transition": "magic",
       "background": {
         "type": "gradient",
         "from": "#1e1b4b",
-        "to": "#7c3aed"
+        "to": "#7c3aed",
+        "angle": 135
       },
       "blocks": [
-        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
-        { "type": "heading", "level": 1, "text": "Lumen", "magicId": "brand" },
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "magicId": "tag" },
+        {
+          "type": "heading",
+          "level": 1,
+          "text": [
+            { "text": "Lumen", "bold": true },
+            { "text": " · A light revolution" }
+          ],
+          "magicId": "brand"
+        },
         { "type": "text", "text": "Bring light to every inch of darkness.", "magicId": "tagline" },
         {
           "type": "button",
-          "label": "Back to start",
+          "label": "Back to page 1",
           "variant": "primary",
           "onClick": { "action": "jumpTo", "slideId": "s1" }
         }

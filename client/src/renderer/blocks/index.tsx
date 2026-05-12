@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ArrowRight, ChevronRight, Plus, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
@@ -46,7 +46,9 @@ function renderSegments(segments: InterpolatedSegment[]): React.ReactNode {
       style.WebkitBackgroundClip = "text";
       style.backgroundClip = "text";
       style.color = "transparent";
-      style.display = "inline-block";
+      // 不设 display: inline-block —— inline-block 是 atomic box 不能跨字断行，
+      // PDF 截图（modern-screenshot 序列化 SVG foreignObject）时若像素测量差几px，
+      // 整段 gradient 会被推到下一行而非按字断行，造成 PDF 与预览不一致
     } else if (seg.tone) {
       style.color = toneToColor(seg.tone);
     }
@@ -65,8 +67,11 @@ function TextBlock({ block }: { block: Extract<Block, { type: "text" }> }) {
   const textUtils = getBlockTextUtilities(block);
   return (
     <p
-      className={cn("text-base md:text-xl leading-[1.75] max-w-3xl", ...textUtils)}
+      className={cn(...textUtils)}
       style={{
+        maxWidth: 768,
+        fontSize: 20,
+        lineHeight: 1.75,
         textAlign: align,
         color: "var(--hxs-fg)",
         opacity: 0.85,
@@ -80,22 +85,35 @@ function TextBlock({ block }: { block: Extract<Block, { type: "text" }> }) {
 }
 
 // 标题：分级字号差距更大，用 heading 字体；text 同样支持 RichText 数组（核心词局部染色）
+// 字号 / 行高 / 字距用 inline style 而非 Tailwind className：
+// 1) 避免 PDF 导出（modern-screenshot SVG foreignObject → img data URL）中 rem 解析被解析为非 16px 导致字号放大
+// 2) 避免响应式断点 md:* 在 SVG image document 内评估行为与预览不一致
+// 3) 让预览 / PDF / 缩略图都走同一 hard-code px 路径，绝对一致
 function HeadingBlock({ block }: { block: Extract<Block, { type: "heading" }> }) {
   const rich = useInterpolatedRich(block.text);
   const align = block.align ?? "left";
   const level = block.level;
   const textUtils = getBlockTextUtilities(block);
-  const sizeCls =
+  // 6 级标题固定字号：H1=120 / H2=88 / H3=72 / H4=64 / H5=56 / H6=48
+  // letterSpacing / lineHeight / fontWeight 按级别渐进，长标题不再动态降档
+  const sizeStyle: React.CSSProperties =
     level === 1
-      ? "text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.05]"
+      ? { fontSize: 120, lineHeight: 1.0, letterSpacing: "-0.06em", fontWeight: 900 }
       : level === 2
-      ? "text-3xl md:text-5xl font-bold tracking-tight leading-[1.1]"
-      : "text-xl md:text-2xl font-semibold tracking-tight leading-snug";
+      ? { fontSize: 88, lineHeight: 1.02, letterSpacing: "-0.055em", fontWeight: 800 }
+      : level === 3
+      ? { fontSize: 72, lineHeight: 1.05, letterSpacing: "-0.05em", fontWeight: 800 }
+      : level === 4
+      ? { fontSize: 64, lineHeight: 1.05, letterSpacing: "-0.05em", fontWeight: 700 }
+      : level === 5
+      ? { fontSize: 56, lineHeight: 1.1, letterSpacing: "-0.04em", fontWeight: 700 }
+      : { fontSize: 48, lineHeight: 1.1, letterSpacing: "-0.04em", fontWeight: 600 };
   const Tag = (`h${level}` as unknown) as keyof JSX.IntrinsicElements;
   return (
     <Tag
-      className={cn(sizeCls, ...textUtils)}
+      className={cn(...textUtils)}
       style={{
+        ...sizeStyle,
         textAlign: align,
         color: "var(--hxs-fg)",
         fontFamily: "var(--hxs-font-heading)",
@@ -135,7 +153,12 @@ function ButtonBlock({ block }: { block: Extract<Block, { type: "button" }> }) {
   const label = useInterpolated(block.label);
   const variant = block.variant;
   const base =
-    "inline-flex items-center justify-center px-7 py-3.5 text-base md:text-lg font-semibold tracking-tight transition-all active:scale-[0.97] hover:-translate-y-0.5";
+    "inline-flex items-center justify-center px-7 py-3.5 font-semibold transition-all active:scale-[0.97] hover:-translate-y-0.5";
+  const sizeStyle: React.CSSProperties = {
+    fontSize: 18,
+    lineHeight: "28px",
+    letterSpacing: "-0.025em",
+  };
   const styleByVariant: React.CSSProperties =
     variant === "primary"
       ? {
@@ -165,7 +188,7 @@ function ButtonBlock({ block }: { block: Extract<Block, { type: "button" }> }) {
           textDecorationThickness: "1.5px",
         };
   return (
-    <button className={base} style={styleByVariant} onClick={() => dispatch(block.onClick)}>
+    <button className={base} style={{ ...sizeStyle, ...styleByVariant }} onClick={() => dispatch(block.onClick)}>
       {label}
     </button>
   );
@@ -177,7 +200,10 @@ function ButtonBlock({ block }: { block: Extract<Block, { type: "button" }> }) {
 function ListBlock({ block }: { block: Extract<Block, { type: "list" }> }) {
   const Tag = (block.ordered ? "ol" : "ul") as "ol" | "ul";
   return (
-    <Tag className={cn("space-y-3 md:space-y-4 text-base md:text-xl list-none pl-0")}>
+    <Tag
+      className={cn("space-y-4 list-none pl-0")}
+      style={{ fontSize: 20, lineHeight: 1.75 }}
+    >
       {block.items.map((item, i) => {
         const isStr = typeof item === "string";
         const text = isStr ? item : item.text;
@@ -266,8 +292,13 @@ function BadgeBlock({ block }: { block: Extract<Block, { type: "badge" }> }) {
   const text = useInterpolated(block.text);
   return (
     <span
-      className="inline-flex items-center px-3 py-1 text-xs font-semibold tracking-[0.18em] uppercase"
+      className="inline-flex items-center px-3 py-1 font-semibold uppercase"
       style={{
+        fontSize: 12,
+        lineHeight: "16px",
+        letterSpacing: "0.18em",
+        // 强制单行：badge 视觉就是不该换行；PDF 截图引擎 inline style 测量差几 px 也不能让它折行
+        whiteSpace: "nowrap",
         backgroundColor: toneToColor(block.tone),
         color: "#fff",
         borderRadius: "9999px",
@@ -320,19 +351,28 @@ function CardBlock({ block }: { block: Extract<Block, { type: "card" }> }) {
 
   return (
     <div
-      className={cn("p-7 md:p-9 flex flex-col gap-5 h-full")}
-      style={inlineStyle}
+      className={cn("flex flex-col h-full")}
+      style={{ padding: 36, gap: 20, ...inlineStyle }}
     >
       {block.title && (
         <div>
           <h3
-            className="text-2xl md:text-3xl font-bold tracking-tight"
-            style={{ color: "var(--hxs-fg)", fontFamily: "var(--hxs-font-heading)" }}
+            className="font-bold"
+            style={{
+              fontSize: 30,
+              lineHeight: "36px",
+              letterSpacing: "-0.025em",
+              color: "var(--hxs-fg)",
+              fontFamily: "var(--hxs-font-heading)",
+            }}
           >
             {title}
           </h3>
           {block.subtitle && (
-            <p className="text-sm mt-1.5 leading-relaxed" style={{ color: "var(--hxs-muted)" }}>
+            <p
+              className="mt-1.5"
+              style={{ fontSize: 14, lineHeight: 1.625, color: "var(--hxs-muted)" }}
+            >
               {subtitle}
             </p>
           )}
@@ -417,8 +457,14 @@ function ModalBlock({ block }: { block: Extract<Block, { type: "modal" }> }) {
   return (
     <>
       <button
-        className="inline-flex items-center justify-center px-7 py-3.5 text-base md:text-lg font-semibold tracking-tight transition-all active:scale-[0.97] hover:-translate-y-0.5"
-        style={{ ...triggerStyle, fontFamily: "var(--hxs-font-heading)" }}
+        className="inline-flex items-center justify-center px-7 py-3.5 font-semibold transition-all active:scale-[0.97] hover:-translate-y-0.5"
+        style={{
+          fontSize: 18,
+          lineHeight: "28px",
+          letterSpacing: "-0.025em",
+          ...triggerStyle,
+          fontFamily: "var(--hxs-font-heading)",
+        }}
         onClick={() => setOpen(true)}
       >
         {triggerLabel}
@@ -429,22 +475,26 @@ function ModalBlock({ block }: { block: Extract<Block, { type: "modal" }> }) {
           <AnimatePresence>
             {open && (
               <motion.div
-                className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-8"
+                className="fixed inset-0 z-[1000] flex items-center justify-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => setOpen(false)}
-                style={{ backgroundColor: "rgba(15, 23, 42, 0.55)" }}
+                style={{ padding: 32, backgroundColor: "rgba(15, 23, 42, 0.55)" }}
               >
                 <motion.div
-                  className="relative max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+                  className="relative w-full overflow-y-auto"
                   initial={{ opacity: 0, scale: 0.95, y: 8 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96, y: 4 }}
                   transition={{ duration: 0.22, ease: "easeOut" }}
                   onClick={(e) => e.stopPropagation()}
                   style={{
+                    // 与 layouts/index.tsx 用 inline px 替代 Tailwind max-w-* / max-h-[*] 同策略，
+                    // 避免 PDF 导出 (modern-screenshot SVG image document) 中 rem / viewport 单位解析异常
+                    maxWidth: 672,  // 与 Tailwind max-w-2xl (42rem ≈ 672px) 对齐
+                    maxHeight: "85vh",
                     backgroundColor: "var(--hxs-bg)",
                     color: "var(--hxs-fg)",
                     borderRadius: "var(--hxs-radius)",
@@ -460,11 +510,17 @@ function ModalBlock({ block }: { block: Extract<Block, { type: "modal" }> }) {
                   >
                     <X size={18} />
                   </button>
-                  <div className="px-7 py-7 md:px-9 md:py-9">
+                  <div style={{ padding: 36 }}>
                     {block.title && (
                       <h3
-                        className="text-2xl md:text-3xl font-bold tracking-tight mb-5 pr-8"
-                        style={{ color: "var(--hxs-fg)", fontFamily: "var(--hxs-font-heading)" }}
+                        className="font-bold mb-5 pr-8"
+                        style={{
+                          fontSize: 30,
+                          lineHeight: "36px",
+                          letterSpacing: "-0.025em",
+                          color: "var(--hxs-fg)",
+                          fontFamily: "var(--hxs-font-heading)",
+                        }}
                       >
                         {title}
                       </h3>
@@ -490,9 +546,13 @@ function TabBlock({ block }: { block: Extract<Block, { type: "tab" }> }) {
   const initial = block.defaultTabId ?? block.tabs[0]?.id ?? "";
   const [activeId, setActiveId] = useState(initial);
   const active = block.tabs.find((t) => t.id === activeId) ?? block.tabs[0];
+  // 同一页多个 TabBlock 实例需要独立的 layoutId namespace 避免 framer-motion 把不同 tab 的下划线认成同一元素
+  // magicId 存在时（用户主动开启 Magic Move 跨 slide 飞行）优先用 magicId，否则用 React.useId() 保证唯一
+  const reactId = useId();
+  const layoutNamespace = (block as any).magicId ?? reactId;
   if (!active) return null;
   return (
-    <div className="w-full max-w-3xl">
+    <div className="w-full" style={{ maxWidth: 768 }}>
       <div
         className="flex items-center gap-1 mb-4 border-b"
         style={{ borderColor: "color-mix(in srgb, var(--hxs-fg) 12%, transparent)" }}
@@ -504,8 +564,11 @@ function TabBlock({ block }: { block: Extract<Block, { type: "tab" }> }) {
             <button
               key={t.id}
               onClick={() => setActiveId(t.id)}
-              className="relative px-4 py-2.5 text-sm md:text-base font-semibold tracking-tight transition-colors"
+              className="relative px-4 py-2.5 font-semibold transition-colors"
               style={{
+                fontSize: 16,
+                lineHeight: "24px",
+                letterSpacing: "-0.025em",
                 color: isActive ? "var(--hxs-primary)" : "var(--hxs-fg)",
                 opacity: isActive ? 1 : 0.6,
                 fontFamily: "var(--hxs-font-heading)",
@@ -514,7 +577,7 @@ function TabBlock({ block }: { block: Extract<Block, { type: "tab" }> }) {
               {tabLabel}
               {isActive && (
                 <motion.span
-                  layoutId={`tab-underline-${(block as any).magicId ?? "tab"}-${block.tabs.length}`}
+                  layoutId={`tab-underline-${layoutNamespace}`}
                   className="absolute left-0 right-0 -bottom-px h-0.5"
                   style={{ backgroundColor: "var(--hxs-primary)" }}
                 />
@@ -551,8 +614,14 @@ function StatBlock({ block }: { block: Extract<Block, { type: "stat" }> }) {
     >
       <div className="flex items-center gap-2">
         <span
-          className="text-6xl md:text-7xl font-extrabold tracking-tighter leading-none"
-          style={{ color: valueColor, fontFamily: "var(--hxs-font-heading)" }}
+          className="font-extrabold"
+          style={{
+            fontSize: 72,
+            lineHeight: 1,
+            letterSpacing: "-0.05em",
+            color: valueColor,
+            fontFamily: "var(--hxs-font-heading)",
+          }}
         >
           {value}
         </span>
@@ -562,8 +631,13 @@ function StatBlock({ block }: { block: Extract<Block, { type: "stat" }> }) {
       </div>
       {block.label && (
         <span
-          className="text-sm md:text-base mt-1"
-          style={{ color: "var(--hxs-muted)", fontFamily: "var(--hxs-font-body)" }}
+          className="mt-1"
+          style={{
+            fontSize: 16,
+            lineHeight: "24px",
+            color: "var(--hxs-muted)",
+            fontFamily: "var(--hxs-font-body)",
+          }}
         >
           {label}
         </span>
@@ -580,16 +654,18 @@ function FlowBlock({ block }: { block: Extract<Block, { type: "flow" }> }) {
   const ArrowComp = block.arrow === "chevron" ? ChevronRight : block.arrow === "plus" ? Plus : ArrowRight;
   return (
     <div
-      className="flex flex-wrap items-center gap-3 md:gap-4"
-      style={{ justifyContent: justify, width: "100%" }}
+      className="flex flex-wrap items-center"
+      style={{ gap: 16, justifyContent: justify, width: "100%" }}
     >
       {block.steps.map((step, i) => {
         const color = toneToColor(step.tone ?? "primary");
         return (
-          <span key={i} className="inline-flex items-center gap-3 md:gap-4">
+          <span key={i} className="inline-flex items-center" style={{ gap: 16 }}>
             <span
-              className="inline-flex items-center px-4 py-2 text-sm md:text-base font-semibold"
+              className="inline-flex items-center px-4 py-2 font-semibold"
               style={{
+                fontSize: 16,
+                lineHeight: "24px",
                 color,
                 border: `1.5px solid ${color}`,
                 borderRadius: "var(--hxs-radius)",

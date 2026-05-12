@@ -49,16 +49,22 @@ export function FormBlock({ block }: { block: FormBlockType }) {
   if (submitted) {
     return (
       <div
-        className="w-full max-w-xl rounded-2xl px-7 py-8"
+        className="w-full rounded-2xl px-7 py-8"
         style={{
+          maxWidth: 576,
           backgroundColor: "color-mix(in srgb, var(--hxs-primary) 8%, transparent)",
           border: "1px solid color-mix(in srgb, var(--hxs-primary) 25%, transparent)",
           borderRadius: "var(--hxs-radius)",
         }}
       >
         <p
-          className="text-base md:text-lg font-semibold"
-          style={{ color: "var(--hxs-primary)", fontFamily: "var(--hxs-font-heading)" }}
+          className="font-semibold"
+          style={{
+            fontSize: 18,
+            lineHeight: "28px",
+            color: "var(--hxs-primary)",
+            fontFamily: "var(--hxs-font-heading)",
+          }}
         >
           {successMessage}
         </p>
@@ -69,8 +75,8 @@ export function FormBlock({ block }: { block: FormBlockType }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-xl flex flex-col gap-4"
-      style={{ color: "var(--hxs-fg)", fontFamily: "var(--hxs-font-body)" }}
+      className="w-full flex flex-col"
+      style={{ maxWidth: 576, gap: 16, color: "var(--hxs-fg)", fontFamily: "var(--hxs-font-body)" }}
     >
       {block.fields.map((field) => (
         <FieldControl
@@ -86,8 +92,12 @@ export function FormBlock({ block }: { block: FormBlockType }) {
       <button
         type="submit"
         disabled={submitting}
-        className="inline-flex items-center justify-center self-start px-7 py-3 text-base md:text-lg font-semibold tracking-tight transition-all active:scale-[0.97] hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
+        className="inline-flex items-center justify-center self-start font-semibold transition-all active:scale-[0.97] hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:translate-y-0"
         style={{
+          padding: "12px 28px",
+          fontSize: 18,
+          lineHeight: "28px",
+          letterSpacing: "-0.025em",
           backgroundColor: "var(--hxs-primary)",
           color: "#fff",
           borderRadius: "var(--hxs-radius)",
@@ -146,9 +156,11 @@ function FieldControl({
   error?: string;
   onChange: (v: any) => void;
 }) {
-  const baseInput =
-    "w-full px-3.5 py-2.5 text-base outline-none transition-colors";
+  const baseInput = "w-full outline-none transition-colors";
   const inputStyle: React.CSSProperties = {
+    padding: "10px 14px",
+    fontSize: 16,
+    lineHeight: "24px",
     backgroundColor: "color-mix(in srgb, var(--hxs-fg) 4%, transparent)",
     border: error
       ? "1.5px solid #f43f5e"
@@ -158,10 +170,16 @@ function FieldControl({
   };
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col" style={{ gap: 6 }}>
       <label
-        className="text-sm font-semibold tracking-tight"
-        style={{ color: "var(--hxs-fg)", fontFamily: "var(--hxs-font-heading)" }}
+        className="font-semibold"
+        style={{
+          fontSize: 14,
+          lineHeight: "20px",
+          letterSpacing: "-0.025em",
+          color: "var(--hxs-fg)",
+          fontFamily: "var(--hxs-font-heading)",
+        }}
       >
         {field.label}
         {field.required && (
@@ -195,7 +213,10 @@ function FieldControl({
           ))}
         </select>
       ) : field.type === "checkbox" ? (
-        <label className="inline-flex items-center gap-2 cursor-pointer text-base">
+        <label
+          className="inline-flex items-center cursor-pointer"
+          style={{ gap: 8, fontSize: 16, lineHeight: "24px" }}
+        >
           <input
             type="checkbox"
             checked={value === true}
@@ -208,9 +229,13 @@ function FieldControl({
           </span>
         </label>
       ) : field.type === "radio" ? (
-        <div className="flex flex-col gap-2 mt-1">
+        <div className="flex flex-col" style={{ gap: 8, marginTop: 4 }}>
           {(field.options ?? []).map((opt) => (
-            <label key={opt.value} className="inline-flex items-center gap-2 cursor-pointer text-base">
+            <label
+              key={opt.value}
+              className="inline-flex items-center cursor-pointer"
+              style={{ gap: 8, fontSize: 16, lineHeight: "24px" }}
+            >
               <input
                 type="radio"
                 name={field.name}
@@ -247,7 +272,7 @@ function FieldControl({
       )}
 
       {error && (
-        <span className="text-xs" style={{ color: "#f43f5e" }}>
+        <span style={{ fontSize: 12, lineHeight: "16px", color: "#f43f5e" }}>
           {error}
         </span>
       )}

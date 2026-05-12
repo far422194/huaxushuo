@@ -35,6 +35,9 @@ export interface BatchInfo {
   pageOffset: number;  // 此批开始前已生成的页数（用于全局进度公式）
   pageCount: number;   // 本批包含的页数（用于按批动态选 max_tokens）
   totalPages: number;  // 全部批次的总页数（= sum of 各 chunk.length）；UI 据此修正 estimate
+  // 本批所处阶段的真实并发数：首批=1（同步建 baseline）；续接=min(MAX_CONCURRENT_BATCHES, totalBatches-1)
+  // UI 用这个字段渲染"X 路并行"前缀，避免静态推导与实际请求数不符
+  concurrency?: number;
 }
 
 // 单次 LLM 调用的 prompt 分段大小（字符数）
@@ -86,6 +89,9 @@ export interface AgentResult {
   warning?: string;
   cancelled?: boolean;         // 用户主动取消时为 true，可与 deck 同时存在（保留已生成部分）
   appliedToStore?: boolean;    // agent 已通过 commitStreamingDeck/cancelStreamingDeck 写入 store，UI 不要再 loadDeck
+  // 429 限流标记：provider 识别到 status=429 / "rate limit" 时透传此字段；
+  // agent 据此走指数退避重试，而不是走 runaway 兜底（错误地减半 max_tokens）
+  rateLimited?: boolean;
 }
 
 export interface Provider {

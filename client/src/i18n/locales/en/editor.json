@@ -152,7 +152,16 @@
       "min": "Min",
       "max": "Max",
       "rows": "Rows (default 4)",
-      "tabLabel": "Tab label"
+      "tabLabel": "Tab label",
+      "fieldType": {
+        "text": "Text",
+        "email": "Email",
+        "textarea": "Textarea",
+        "select": "Select",
+        "checkbox": "Checkbox",
+        "number": "Number",
+        "radio": "Radio"
+      }
     }
   },
   "blockTab": {
