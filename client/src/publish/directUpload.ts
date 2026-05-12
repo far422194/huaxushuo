@@ -47,9 +47,23 @@ export async function directUploadToCloudflare(
       };
 
       xhr.onload = () => {
+        // 非 2xx：Cloudflare 网关错误（502/503/504）常返回纯文本如 "error code: 502"，
+        // 早期版本直接 JSON.parse 抛 "Unexpected token..."，对用户极不友好。
+        // 在 JSON.parse 之前先按 HTTP status 分流，给可读的网关错误提示
+        if (xhr.status < 200 || xhr.status >= 300) {
+          const head = xhr.responseText.slice(0, 200).trim();
+          resolve({
+            ok: false,
+            error: i18next.t("error:upload.httpError", {
+              status: xhr.status,
+              head: head || "(empty)",
+            }),
+          });
+          return;
+        }
         try {
           const data = JSON.parse(xhr.responseText);
-          if (xhr.status >= 200 && xhr.status < 300 && data.ok) {
+          if (data.ok) {
             resolve({
               ok: true,
               url: data.url,

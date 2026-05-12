@@ -26,6 +26,7 @@
   "upload": {
     "noWorkerUrl": "Worker URL is empty",
     "noProjectName": "Cloudflare Pages project name is empty",
+    "httpError": "Upload failed: HTTP {{status}}\nResponse: {{head}}\n(502/503/504 are usually transient Cloudflare gateway errors — wait a few seconds and retry; for other codes check the Worker logs or verify the Worker URL is correct.)",
     "parseFailed": "Failed to parse the Worker response: {{message}}\nResponse head: {{head}}",
     "networkOrCors": "Upload to the Worker failed — likely a CORS or network issue. Check that the Worker is deployed and that ALLOWED_ORIGIN includes the current domain.",
     "timeout": "Upload timed out",

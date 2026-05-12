@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "pnpm build:runtime",
     "build": "tsc --noEmit && vite build",
     "build:runtime": "vite build --config vite.runtime.config.ts",
     "preview": "vite preview",
