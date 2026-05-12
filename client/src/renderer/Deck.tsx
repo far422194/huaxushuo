@@ -154,7 +154,7 @@ export function Deck({
         )}
 
         {/* mode="popLayout" 配合 Magic Move 跨 slide 共享布局；mode="sync" 用于全屏预览（转场更稳定）
-            staticExport 时跳过 AnimatePresence，旧 slide 立即卸载避免重叠 */}
+            staticExport 时跳过 AnimatePresence + 让 Slide 用静态 div，旧 slide 立即卸载避免重叠 / 缩略图入场动画 flicker */}
         {staticExport ? (
           current && (
             <Slide
@@ -162,6 +162,7 @@ export function Deck({
               slide={current}
               isAuto={isAuto}
               showPageNumber={effectiveShowPageNumber}
+              staticMode
             />
           )
         ) : (
@@ -196,18 +197,36 @@ function buildBackgroundKey(slide: SlideT | undefined): string {
 // 背景层组件：渲染 slide.background + 底纹 utilities（hxs-bg-grid 等）
 // 独立 absolute inset-0；与内容层解耦，由 Deck 层的 AnimatePresence 控制是否重渲
 // instant=true：用于 PDF 导出，立即定格不渐显（避免截到背景 fade 中间帧导致颜色还原失真）
+//
+// image 背景特殊处理：图片层 + theme.bg 半透明渐变 overlay 两层
+// 目的：避免 LLM 选了高饱和图片后，前景标题/正文与图片色相近导致不可读
+// overlay 用 theme.bg（浅主题用浅覆盖、深主题用深覆盖），顶部更浓底部稍弱保证整体不闷
 function BackgroundLayer({ slide, instant }: { slide: SlideT; instant?: boolean }) {
   const bgStyle = backgroundToStyle(slide.background);
+  const isImageBg = slide.background?.type === "image";
   const { pattern: patternUtils } = splitUtilities(filterUtilities(slide.utilities));
   return (
     <motion.div
       className="absolute inset-0 z-0"
-      style={bgStyle}
+      style={isImageBg ? undefined : bgStyle}
       initial={instant ? { opacity: 1 } : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={instant ? { opacity: 1 } : { opacity: 0 }}
       transition={{ duration: instant ? 0 : 0.4 }}
     >
+      {isImageBg && (
+        <>
+          <div aria-hidden className="absolute inset-0" style={bgStyle} />
+          <div
+            aria-hidden
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background:
+                "linear-gradient(to bottom, color-mix(in srgb, var(--hxs-bg) 60%, transparent) 0%, color-mix(in srgb, var(--hxs-bg) 30%, transparent) 100%)",
+            }}
+          />
+        </>
+      )}
       {patternUtils.map((u) => (
         <div
           key={u}

@@ -46,7 +46,9 @@ function renderSegments(segments: InterpolatedSegment[]): React.ReactNode {
       style.WebkitBackgroundClip = "text";
       style.backgroundClip = "text";
       style.color = "transparent";
-      style.display = "inline-block";
+      // 不设 display: inline-block —— inline-block 是 atomic box 不能跨字断行，
+      // PDF 截图（modern-screenshot 序列化 SVG foreignObject）时若像素测量差几px，
+      // 整段 gradient 会被推到下一行而非按字断行，造成 PDF 与预览不一致
     } else if (seg.tone) {
       style.color = toneToColor(seg.tone);
     }
@@ -65,8 +67,10 @@ function TextBlock({ block }: { block: Extract<Block, { type: "text" }> }) {
   const textUtils = getBlockTextUtilities(block);
   return (
     <p
-      className={cn("text-base md:text-xl leading-[1.75] max-w-3xl", ...textUtils)}
+      className={cn("max-w-3xl", ...textUtils)}
       style={{
+        fontSize: 20,
+        lineHeight: 1.75,
         textAlign: align,
         color: "var(--hxs-fg)",
         opacity: 0.85,
@@ -80,22 +84,54 @@ function TextBlock({ block }: { block: Extract<Block, { type: "text" }> }) {
 }
 
 // 标题：分级字号差距更大，用 heading 字体；text 同样支持 RichText 数组（核心词局部染色）
+// 字号 / 行高 / 字距用 inline style 而非 Tailwind className：
+// 1) 避免 PDF 导出（modern-screenshot SVG foreignObject → img data URL）中 rem 解析被解析为非 16px 导致字号放大
+// 2) 避免响应式断点 md:* 在 SVG image document 内评估行为与预览不一致
+// 3) 让预览 / PDF / 缩略图都走同一 hard-code px 路径，绝对一致
 function HeadingBlock({ block }: { block: Extract<Block, { type: "heading" }> }) {
   const rich = useInterpolatedRich(block.text);
   const align = block.align ?? "left";
   const level = block.level;
   const textUtils = getBlockTextUtilities(block);
-  const sizeCls =
+  // 动态字号：短标题用大字保留 hero 视觉，长标题降一档给 PDF 截图字宽容差留 buffer
+  // PDF 中 SVG image document 内字体 fallback 让 CJK advance width 比预览大 ~15%，
+  // 长标题在 multi-column 窄 padding 下会触发末字换行 —— 按"加权字符数"自适应字号
+  // 中文 / 标点权重 1.0（advance ≈ font-size），英文 / 空格 0.5（advance ≈ 0.5×font-size）
+  const text = rich.isString
+    ? rich.text
+    : rich.segments.map((s) => s.text).join("");
+  // CJK 字符范围（用 \uXXXX 转义而非字面字符，避免肉眼像乱码）：
+  // 一-鿿  CJK 统一汉字
+  // 　-〿  CJK 符号 / 标点（含全角空格）
+  // ＀-￯  全角字符（含全角逗号 / 句号 / 问号）
+  const cjkCount = (text.match(/[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/g) ?? []).length;
+  const otherCount = text.length - cjkCount;
+  const weightedLen = cjkCount + otherCount * 0.5;
+  // L1 阈值：> 9 → 降到 64（"AI 是生成者,人是决策者" / "交互式演示网站怎么做?" 都触发降级）
+  // L2 阈值：> 14（L2 字号 48，容器更宽，容差更大）
+  // letterSpacing 对齐原 Tailwind tracking-tighter / tracking-tight
+  const sizeStyle: React.CSSProperties =
     level === 1
-      ? "text-5xl md:text-7xl font-extrabold tracking-tighter leading-[1.05]"
+      ? {
+          fontSize: weightedLen > 9 ? 64 : 72,
+          lineHeight: 1.05,
+          letterSpacing: "-0.05em",
+          fontWeight: 800,
+        }
       : level === 2
-      ? "text-3xl md:text-5xl font-bold tracking-tight leading-[1.1]"
-      : "text-xl md:text-2xl font-semibold tracking-tight leading-snug";
+      ? {
+          fontSize: weightedLen > 14 ? 40 : 48,
+          lineHeight: 1.1,
+          letterSpacing: "-0.05em",
+          fontWeight: 700,
+        }
+      : { fontSize: 24, lineHeight: 1.375, letterSpacing: "-0.025em", fontWeight: 600 };
   const Tag = (`h${level}` as unknown) as keyof JSX.IntrinsicElements;
   return (
     <Tag
-      className={cn(sizeCls, ...textUtils)}
+      className={cn(...textUtils)}
       style={{
+        ...sizeStyle,
         textAlign: align,
         color: "var(--hxs-fg)",
         fontFamily: "var(--hxs-font-heading)",
@@ -135,7 +171,12 @@ function ButtonBlock({ block }: { block: Extract<Block, { type: "button" }> }) {
   const label = useInterpolated(block.label);
   const variant = block.variant;
   const base =
-    "inline-flex items-center justify-center px-7 py-3.5 text-base md:text-lg font-semibold tracking-tight transition-all active:scale-[0.97] hover:-translate-y-0.5";
+    "inline-flex items-center justify-center px-7 py-3.5 font-semibold transition-all active:scale-[0.97] hover:-translate-y-0.5";
+  const sizeStyle: React.CSSProperties = {
+    fontSize: 18,
+    lineHeight: "28px",
+    letterSpacing: "-0.025em",
+  };
   const styleByVariant: React.CSSProperties =
     variant === "primary"
       ? {
@@ -165,7 +206,7 @@ function ButtonBlock({ block }: { block: Extract<Block, { type: "button" }> }) {
           textDecorationThickness: "1.5px",
         };
   return (
-    <button className={base} style={styleByVariant} onClick={() => dispatch(block.onClick)}>
+    <button className={base} style={{ ...sizeStyle, ...styleByVariant }} onClick={() => dispatch(block.onClick)}>
       {label}
     </button>
   );
@@ -177,7 +218,10 @@ function ButtonBlock({ block }: { block: Extract<Block, { type: "button" }> }) {
 function ListBlock({ block }: { block: Extract<Block, { type: "list" }> }) {
   const Tag = (block.ordered ? "ol" : "ul") as "ol" | "ul";
   return (
-    <Tag className={cn("space-y-3 md:space-y-4 text-base md:text-xl list-none pl-0")}>
+    <Tag
+      className={cn("space-y-4 list-none pl-0")}
+      style={{ fontSize: 20, lineHeight: 1.75 }}
+    >
       {block.items.map((item, i) => {
         const isStr = typeof item === "string";
         const text = isStr ? item : item.text;
@@ -266,8 +310,13 @@ function BadgeBlock({ block }: { block: Extract<Block, { type: "badge" }> }) {
   const text = useInterpolated(block.text);
   return (
     <span
-      className="inline-flex items-center px-3 py-1 text-xs font-semibold tracking-[0.18em] uppercase"
+      className="inline-flex items-center px-3 py-1 font-semibold uppercase"
       style={{
+        fontSize: 12,
+        lineHeight: "16px",
+        letterSpacing: "0.18em",
+        // 强制单行：badge 视觉就是不该换行；PDF 截图引擎 inline style 测量差几 px 也不能让它折行
+        whiteSpace: "nowrap",
         backgroundColor: toneToColor(block.tone),
         color: "#fff",
         borderRadius: "9999px",
@@ -326,13 +375,22 @@ function CardBlock({ block }: { block: Extract<Block, { type: "card" }> }) {
       {block.title && (
         <div>
           <h3
-            className="text-2xl md:text-3xl font-bold tracking-tight"
-            style={{ color: "var(--hxs-fg)", fontFamily: "var(--hxs-font-heading)" }}
+            className="font-bold"
+            style={{
+              fontSize: 30,
+              lineHeight: "36px",
+              letterSpacing: "-0.025em",
+              color: "var(--hxs-fg)",
+              fontFamily: "var(--hxs-font-heading)",
+            }}
           >
             {title}
           </h3>
           {block.subtitle && (
-            <p className="text-sm mt-1.5 leading-relaxed" style={{ color: "var(--hxs-muted)" }}>
+            <p
+              className="mt-1.5"
+              style={{ fontSize: 14, lineHeight: 1.625, color: "var(--hxs-muted)" }}
+            >
               {subtitle}
             </p>
           )}
@@ -417,8 +475,14 @@ function ModalBlock({ block }: { block: Extract<Block, { type: "modal" }> }) {
   return (
     <>
       <button
-        className="inline-flex items-center justify-center px-7 py-3.5 text-base md:text-lg font-semibold tracking-tight transition-all active:scale-[0.97] hover:-translate-y-0.5"
-        style={{ ...triggerStyle, fontFamily: "var(--hxs-font-heading)" }}
+        className="inline-flex items-center justify-center px-7 py-3.5 font-semibold transition-all active:scale-[0.97] hover:-translate-y-0.5"
+        style={{
+          fontSize: 18,
+          lineHeight: "28px",
+          letterSpacing: "-0.025em",
+          ...triggerStyle,
+          fontFamily: "var(--hxs-font-heading)",
+        }}
         onClick={() => setOpen(true)}
       >
         {triggerLabel}
@@ -463,8 +527,14 @@ function ModalBlock({ block }: { block: Extract<Block, { type: "modal" }> }) {
                   <div className="px-7 py-7 md:px-9 md:py-9">
                     {block.title && (
                       <h3
-                        className="text-2xl md:text-3xl font-bold tracking-tight mb-5 pr-8"
-                        style={{ color: "var(--hxs-fg)", fontFamily: "var(--hxs-font-heading)" }}
+                        className="font-bold mb-5 pr-8"
+                        style={{
+                          fontSize: 30,
+                          lineHeight: "36px",
+                          letterSpacing: "-0.025em",
+                          color: "var(--hxs-fg)",
+                          fontFamily: "var(--hxs-font-heading)",
+                        }}
                       >
                         {title}
                       </h3>
@@ -504,8 +574,11 @@ function TabBlock({ block }: { block: Extract<Block, { type: "tab" }> }) {
             <button
               key={t.id}
               onClick={() => setActiveId(t.id)}
-              className="relative px-4 py-2.5 text-sm md:text-base font-semibold tracking-tight transition-colors"
+              className="relative px-4 py-2.5 font-semibold transition-colors"
               style={{
+                fontSize: 16,
+                lineHeight: "24px",
+                letterSpacing: "-0.025em",
                 color: isActive ? "var(--hxs-primary)" : "var(--hxs-fg)",
                 opacity: isActive ? 1 : 0.6,
                 fontFamily: "var(--hxs-font-heading)",
@@ -551,8 +624,14 @@ function StatBlock({ block }: { block: Extract<Block, { type: "stat" }> }) {
     >
       <div className="flex items-center gap-2">
         <span
-          className="text-6xl md:text-7xl font-extrabold tracking-tighter leading-none"
-          style={{ color: valueColor, fontFamily: "var(--hxs-font-heading)" }}
+          className="font-extrabold"
+          style={{
+            fontSize: 72,
+            lineHeight: 1,
+            letterSpacing: "-0.05em",
+            color: valueColor,
+            fontFamily: "var(--hxs-font-heading)",
+          }}
         >
           {value}
         </span>
@@ -562,8 +641,13 @@ function StatBlock({ block }: { block: Extract<Block, { type: "stat" }> }) {
       </div>
       {block.label && (
         <span
-          className="text-sm md:text-base mt-1"
-          style={{ color: "var(--hxs-muted)", fontFamily: "var(--hxs-font-body)" }}
+          className="mt-1"
+          style={{
+            fontSize: 16,
+            lineHeight: "24px",
+            color: "var(--hxs-muted)",
+            fontFamily: "var(--hxs-font-body)",
+          }}
         >
           {label}
         </span>
@@ -588,8 +672,10 @@ function FlowBlock({ block }: { block: Extract<Block, { type: "flow" }> }) {
         return (
           <span key={i} className="inline-flex items-center gap-3 md:gap-4">
             <span
-              className="inline-flex items-center px-4 py-2 text-sm md:text-base font-semibold"
+              className="inline-flex items-center px-4 py-2 font-semibold"
               style={{
+                fontSize: 16,
+                lineHeight: "24px",
                 color,
                 border: `1.5px solid ${color}`,
                 borderRadius: "var(--hxs-radius)",

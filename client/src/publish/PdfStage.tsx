@@ -9,7 +9,10 @@ import type { Deck as DeckT } from "@shared/dsl";
 // 关键设计：
 // - 真正离屏（left:-99999）：modern-screenshot 用 SVG foreignObject 序列化节点，不依赖元素在视口内
 //   PublishDialog backdrop 仅 50% 透明，若 PdfStage 在视口内会从蒙层下透出 → 闪烁
-// - 每页 transition 强制 "none"，禁用 framer-motion 入场动画（initial=animate=opacity:1 立即可见，避免截到 opacity:0）
+// - 每页 transition 强制 "none" + Slide staticMode：禁用 framer-motion 入场动画，
+//   初始 opacity=1 立即可见，避免截到 opacity:0 的中间状态
+// - 字号 / spacing 一致性由 renderer/blocks/index.tsx 在源头 inline px 解决，
+//   PdfStage 不再需要注入 LOCK CSS 或 onCloneEachNode 钩子
 export const PdfStage = forwardRef<
   HTMLDivElement,
   { deck: DeckT; index: number }

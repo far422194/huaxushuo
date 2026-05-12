@@ -11,7 +11,7 @@ import { getActiveConfig } from "./settings";
 import { getProvider } from "./providers";
 import { getStylePrompt } from "@/data/stylePrompts";
 import { useEditorStore } from "@/store/editor";
-import { detectSegments, type PromptSegment } from "./segmentMessage";
+import { detectSegments, buildVirtualPageSegments, type PromptSegment } from "./segmentMessage";
 import { matchSkill, buildSkillAddon } from "./skillMatcher";
 import { getSkill } from "@/data/skills";
 import { getCurrentLang } from "@/i18n";
@@ -159,12 +159,14 @@ function shouldBatchByPrompt(opts: AgentOptions): { batch: boolean; segments: Pr
 }
 
 // 构造单批 user message：含当前 chunk 内多段文案 + 批次说明（不重发完整原文，节省 prefill）
+// originalUserMessage：用于虚拟 chunk（短指令 + 大页数场景）回灌用户原始诉求；非虚拟 chunk 不使用
 function buildBatchPrompt(
   chunk: PromptSegment[],
   chunkIdx: number,
   totalChunks: number,
   accumulatedPages: number,
-  totalPages: number
+  totalPages: number,
+  originalUserMessage?: string,
 ): string {
   const isFirst = chunkIdx === 0;
   const pageStart = accumulatedPages + 1;
@@ -175,6 +177,19 @@ function buildBatchPrompt(
   const instructions = isFirst
     ? `\n首批要求：调用 \`create_deck\` 工具，生成本批 ${chunk.length} 页 + 完整 deck 元数据（meta/theme/version/variables）。后续批次会继续追加。\n`
     : `\n续接要求：调用 \`patch_deck\` 工具，按本批 ${chunk.length} 个 \`{op:"add", path:"/slides/-", value:<slide>}\` 顺序追加到末尾。**沿用首批已建立的 theme/colors/字体/layout 倾向，保持视觉一致**。不要修改已有页（不要发 replace/remove）。\n`;
+
+  // 虚拟 chunk（短指令 + 大页数场景）：所有 body 为空 → 不输出"本批文案"块，
+  // 改为回灌用户原始诉求 + 本批页码范围，让 LLM 自行规划本批主题
+  const isVirtualChunk = chunk.every((seg) => seg.body.trim() === "");
+  if (isVirtualChunk) {
+    const original = originalUserMessage?.trim();
+    const originalBlock = original ? `\n═══ 用户原始诉求 ═══\n${original}\n` : "";
+    const exactRule = `\n⚠️ **严格数量约束**：本批必须输出正好 ${chunk.length} 张 slide（${pageRange}），不可少 1 张也不可多 1 张。\n`;
+    const virtualHint = isFirst
+      ? `\n本批由 LLM 按用户原始诉求自行规划主题；不要把 ${totalPages} 页规划塞进 ${chunk.length} 页，本批仅承担前 ${chunk.length} 页（封面/概览/起手主题）。\n`
+      : `\n本批仍按用户原始诉求自行规划主题；已生成的页见上下文 deck（已有 ${accumulatedPages} 页），**禁止重复**已有主题，按 deck 已建立的节奏推进下 ${chunk.length} 页。**deck 必须最终达到 ${totalPages} 页才算完成**，本批不输出够 ${chunk.length} 张会导致整体缺页。\n`;
+    return `${header}${instructions}${originalBlock}${exactRule}${virtualHint}`;
+  }
 
   // chunk 内每段保留原始 body（已含原标记行），段间用分隔符强化页边界
   const bodyParts = chunk.map((seg, i) => `--- 第 ${pageStart + i} 页内容 ---\n${seg.body.trim()}`);
@@ -526,7 +541,7 @@ async function runBatchAttempt(args: {
 
   const batchResult = await generateOnce(
     {
-      userMessage: buildBatchPrompt(chunk, i, totalBatches, pageOffsetExpected, totalPages),
+      userMessage: buildBatchPrompt(chunk, i, totalBatches, pageOffsetExpected, totalPages, opts.userMessage),
       currentDeck: baseDeck,
       contextDeck: buildContextDeck(baseDeck),
       styleId: opts.styleId,
@@ -559,7 +574,7 @@ async function runBatchAttempt(args: {
       };
       return generateOnce(
         {
-          userMessage: buildBatchPrompt(segs, i, totalBatches, startOffset, totalPages),
+          userMessage: buildBatchPrompt(segs, i, totalBatches, startOffset, totalPages, opts.userMessage),
           currentDeck: curBase,
           contextDeck: buildContextDeck(curBase),
           styleId: opts.styleId,
@@ -769,6 +784,34 @@ async function generateBatched(opts: AgentOptions, segments: PromptSegment[]): P
     }
   }
 
+  // 缺页兜底：LLM 在 patch_deck 续批里少加 1-2 张是常见软违规（"K 个 op:add"是软约束）。
+  // 循环补齐：合并后若 < totalPages 且无 fatal 失败，跑补齐批（LLM 看已合并 deck + 缺额张数 → patch_deck 续 missing 张）。
+  // 每轮若 mergedSlides 没增长 → break（LLM 误判 deck 已完成 / patch ops 为空，再补也无用）。最多 3 轮上限防死循环。
+  const MAX_FILLUP_ROUNDS = 3;
+  for (let round = 0; round < MAX_FILLUP_ROUNDS; round++) {
+    if (opts.signal?.aborted) break;
+    if (firstFatalError) break;
+    if (mergedSlides.length >= totalPages) break;
+    if (mergedSlides.length <= baselineCount) break;
+    const missing = totalPages - mergedSlides.length;
+    const before = mergedSlides.length;
+    const fillupBase: Deck = { ...baseline, slides: mergedSlides.slice() };
+    const fillupChunk = buildVirtualPageSegments(missing);
+    const fillupAttempt = await runBatchAttempt({
+      chunkIdx: totalBatches + round,
+      chunk: fillupChunk,
+      baseDeck: fillupBase,
+      pageOffsetExpected: mergedSlides.length,
+      totalBatches: totalBatches + round + 1,
+      totalPages,
+      opts,
+    });
+    if (!fillupAttempt.cancelled && fillupAttempt.deck) {
+      mergedSlides.push(...fillupAttempt.deck.slides.slice(mergedSlides.length));
+    }
+    if (mergedSlides.length === before) break; // LLM 没真补 → 退出避免无意义循环
+  }
+
   const finalDeck: Deck = { ...baseline, slides: mergedSlides };
 
   if (firstFatalError && mergedSlides.length === baselineCount) {
@@ -842,18 +885,29 @@ export async function generate(opts: AgentOptions): Promise<AgentResult> {
   // 降级为 generateOnce 让用户回到「create_deck 单次模式」体验：streamingMode 启动、
   // slide 事件逐页落地、SlideGridProgress 矩阵逐格亮、phaseLabel 显示「正在生成第 X / Y 页…」
   let useBatched = decision.batch;
-  if (decision.batch) {
-    const active = getActiveConfig();
-    const pagesPerBatch = active
-      ? inferPagesPerBatch(active.config.model, active.provider, active.config.maxOutputTokens)
-      : 3;
-    if (decision.segments.length <= pagesPerBatch) {
-      useBatched = false;
+  let batchSegments = decision.segments;
+  const active = getActiveConfig();
+  const pagesPerBatch = active
+    ? inferPagesPerBatch(active.config.model, active.provider, active.config.maxOutputTokens)
+    : 3;
+  if (decision.batch && decision.segments.length <= pagesPerBatch) {
+    useBatched = false;
+  }
+
+  // 虚拟分批：短指令 + 明确大页数（如"做个 20 页性能说明"）落到单次路径时，
+  // 中小模型一次性吐 20 页 deck 容易 stop_reason=end_turn 自我截断在 3-5 页。
+  // 触发条件：未走分批 + 非 patch 模式 + explicit pages > 单批粒度 → 按页数构造虚拟 segments。
+  // explicit pages ≤ pagesPerBatch 时单批就能装下，保留单次路径以保留 streamingMode 体验。
+  if (!useBatched && !opts.currentDeck) {
+    const explicit = extractExplicitPageCount(opts.userMessage);
+    if (explicit !== undefined && explicit > pagesPerBatch) {
+      useBatched = true;
+      batchSegments = buildVirtualPageSegments(explicit);
     }
   }
 
   const result = useBatched
-    ? await generateBatched(opts, decision.segments)
+    ? await generateBatched(opts, batchSegments)
     : await generateOnce(opts);
 
   // 后台异步把 picsum 占位 URL 替换为关键词匹配的 Pexels 真图

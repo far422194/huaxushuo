@@ -24,8 +24,18 @@ export function processToolCall({ toolName, toolInput, currentDeck }: ProcessOpt
     if (!deckCandidate) {
       const raw = (toolInput as any)?.deck;
       const isString = typeof raw === "string";
-      const isTruncatedString =
+      // 截断判定：既看末尾是否 `}`，又看内部 JSON 是否能 parse
+      // 部分 OpenAI 兼容协议会自动补 `}` 闭合 streaming arguments，导致表面像完整但内部 deck-as-string
+      // 仍是被截断的（停在 theme.colors.fg 等中间字段）。看不出截断 → 用户拿不到 hint。
+      let isTruncatedString =
         isString && raw.indexOf("{") >= 0 && !raw.trimEnd().endsWith("}");
+      if (isString && !isTruncatedString) {
+        try {
+          JSON.parse(raw);
+        } catch {
+          isTruncatedString = true;
+        }
+      }
       let stringifiedWarning = "";
       if (isString) {
         stringifiedWarning =
@@ -67,10 +77,18 @@ export function processToolCall({ toolName, toolInput, currentDeck }: ProcessOpt
     const patches = coercePatches(toolInput);
     if (!patches) {
       // 检测「字符串化」/「字符串化 + 截断」组合
+      // 末尾闭合检查 + 内部 parse 二次判定（OpenAI 协议自动补 `]` 时表面像完整、内部仍截断）
       const raw = (toolInput as any)?.patches;
       const isString = typeof raw === "string";
-      const isTruncatedString =
+      let isTruncatedString =
         isString && raw.indexOf("[") >= 0 && !raw.trimEnd().endsWith("]");
+      if (isString && !isTruncatedString) {
+        try {
+          JSON.parse(raw);
+        } catch {
+          isTruncatedString = true;
+        }
+      }
 
       // 重试时回灌给 LLM 的错误：用极强势的语气 + 具体示例，避免 LLM 反复犯同样错
       let stringifiedWarning = "";

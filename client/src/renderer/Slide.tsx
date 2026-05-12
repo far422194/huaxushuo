@@ -51,10 +51,14 @@ export function Slide({
   slide,
   isAuto = false,
   showPageNumber = false,
+  staticMode = false,
 }: {
   slide: SlideT;
   isAuto?: boolean;
   showPageNumber?: boolean;
+  // staticMode：跳过入场 / 退场动画，用 div 替代 motion.div
+  // 缩略图（SlideList）+ PDF 导出场景使用，避免重渲时被入场 variant 拉成"flicker"
+  staticMode?: boolean;
 }) {
   const variant = TRANSITION_VARIANTS[slide.transition];
   // 背景与底纹层已由 Deck 层独立渲染（按 bgKey 智能转场，同背景切页时不重渲）
@@ -69,25 +73,38 @@ export function Slide({
     slide.transitionDuration !== undefined
       ? { ...(variant.transition ?? {}), duration: slide.transitionDuration / 1000 }
       : variant.transition;
-  return (
-    <motion.div
-      key={slide.id}
-      // 仅 Web 自适应（auto）画幅允许纵向滚动；16:9 / 4:3 严格 overflow-hidden 防止溢出
-      className={cn(
-        "absolute inset-0 z-10",  // z-10 确保位于背景层之上
-        isAuto ? "overflow-y-auto overflow-x-hidden" : "overflow-hidden",
-        ...otherUtils
-      )}
-      initial={variant.initial}
-      animate={variant.animate}
-      exit={variant.exit}
-      transition={transition}
-    >
+
+  const containerClassName = cn(
+    "absolute inset-0 z-10",  // z-10 确保位于背景层之上
+    // 仅 Web 自适应（auto）画幅允许纵向滚动；16:9 / 4:3 严格 overflow-hidden 防止溢出
+    isAuto ? "overflow-y-auto overflow-x-hidden" : "overflow-hidden",
+    ...otherUtils,
+  );
+
+  const inner = (
+    <>
       {/* 内容层：背景由 Deck 的 BackgroundLayer 持续渲染（同背景切页时不会重渲，达到"仅内容动"效果） */}
       <div className="relative w-full min-h-full h-full">
         <LayoutRenderer slide={slide} />
       </div>
       {showPageNumber && <SlidePageNumber />}
+    </>
+  );
+
+  if (staticMode) {
+    return <div key={slide.id} className={containerClassName}>{inner}</div>;
+  }
+
+  return (
+    <motion.div
+      key={slide.id}
+      className={containerClassName}
+      initial={variant.initial}
+      animate={variant.animate}
+      exit={variant.exit}
+      transition={transition}
+    >
+      {inner}
     </motion.div>
   );
 }

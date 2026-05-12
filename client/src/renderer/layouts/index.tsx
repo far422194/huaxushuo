@@ -9,8 +9,11 @@ import { cn } from "@/lib/cn";
 
 type LayoutProps = { slide: Slide };
 
-const PADDING_DEFAULT = "px-10 py-14 md:px-20 md:py-20";
-const PADDING_NARROW = "px-10 py-12 md:px-16 md:py-16";
+// padding / gap 用 inline px style 而非 Tailwind className：
+// 避免 PDF 导出（modern-screenshot SVG image document）中 rem 解析异常 / md:* 评估异常
+// 让预览 / PDF / 缩略图都走同一 hard-code px 路径
+const PADDING_DEFAULT_STYLE: React.CSSProperties = { padding: 80 };
+const PADDING_NARROW_STYLE: React.CSSProperties = { padding: 64 };
 
 // magic 转场默认时长（ms）；与 SlidePanel 的 defaultDurationMs("magic") 对齐
 const MAGIC_DEFAULT_MS = 250;
@@ -269,10 +272,8 @@ function FreeBlockWrap({
 function HeroLayout({ slide }: LayoutProps) {
   return (
     <div
-      className={cn(
-        "min-h-full w-full flex flex-col items-center justify-center text-center gap-7 md:gap-10",
-        PADDING_DEFAULT
-      )}
+      className="min-h-full w-full flex flex-col items-center justify-center text-center"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 40 }}
     >
       {slide.blocks.map((b, i) => (
         <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
@@ -284,7 +285,10 @@ function HeroLayout({ slide }: LayoutProps) {
 // 标题正文：左对齐叙事，第一个 heading 后多空一截制造章节感
 function TitleContentLayout({ slide }: LayoutProps) {
   return (
-    <div className={cn("min-h-full w-full max-w-5xl mx-auto flex flex-col gap-7 md:gap-9", PADDING_DEFAULT)}>
+    <div
+      className="min-h-full w-full max-w-5xl mx-auto flex flex-col"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 36 }}
+    >
       {slide.blocks.map((b, i) => (
         <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
       ))}
@@ -304,21 +308,24 @@ function TwoColumnLayout({ slide }: LayoutProps) {
     else left.push({ block: b, index: i });
   });
   return (
-    <div className={cn("min-h-full w-full flex flex-col gap-10 max-w-7xl mx-auto", PADDING_DEFAULT)}>
+    <div
+      className="min-h-full w-full flex flex-col max-w-7xl mx-auto"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 40 }}
+    >
       {center.length > 0 && (
-        <div className="flex flex-col gap-5 items-center text-center">
+        <div className="flex flex-col items-center text-center" style={{ gap: 20 }}>
           {center.map(({ block, index }) => (
             <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
           ))}
         </div>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 flex-1">
-        <div className="flex flex-col gap-5">
+      <div className="grid grid-cols-2 flex-1" style={{ gap: 48 }}>
+        <div className="flex flex-col" style={{ gap: 20 }}>
           {left.map(({ block, index }) => (
             <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
           ))}
         </div>
-        <div className="flex flex-col gap-5">
+        <div className="flex flex-col" style={{ gap: 20 }}>
           {right.map(({ block, index }) => (
             <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
           ))}
@@ -331,7 +338,10 @@ function TwoColumnLayout({ slide }: LayoutProps) {
 // 要点列表：受限宽度居中，列表项目获得"专注感"
 function BulletListLayout({ slide }: LayoutProps) {
   return (
-    <div className={cn("min-h-full w-full flex flex-col justify-center gap-7 md:gap-10 max-w-4xl mx-auto", PADDING_DEFAULT)}>
+    <div
+      className="min-h-full w-full flex flex-col justify-center max-w-4xl mx-auto"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 40 }}
+    >
       {slide.blocks.map((b, i) => (
         <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
       ))}
@@ -343,27 +353,25 @@ function BulletListLayout({ slide }: LayoutProps) {
 function QuoteLayout({ slide }: LayoutProps) {
   return (
     <div
-      className={cn(
-        "relative min-h-full w-full flex flex-col items-center justify-center text-center gap-6 max-w-3xl mx-auto",
-        PADDING_DEFAULT
-      )}
+      className="relative min-h-full w-full flex flex-col items-center justify-center text-center max-w-3xl mx-auto"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 24 }}
     >
       <span
         aria-hidden
-        className="absolute top-6 left-6 md:top-10 md:left-12 text-7xl md:text-9xl leading-none font-serif select-none pointer-events-none"
-        style={{ color: "var(--hxs-primary)", opacity: 0.18 }}
+        className="absolute leading-none font-serif select-none pointer-events-none"
+        style={{ top: 40, left: 48, fontSize: 128, color: "var(--hxs-primary)", opacity: 0.18 }}
       >
         “
       </span>
-      <div className="relative z-10 flex flex-col items-center gap-5">
+      <div className="relative z-10 flex flex-col items-center" style={{ gap: 20 }}>
         {slide.blocks.map((b, i) => (
           <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
         ))}
       </div>
       <span
         aria-hidden
-        className="absolute bottom-6 right-6 md:bottom-10 md:right-12 text-7xl md:text-9xl leading-none font-serif select-none pointer-events-none"
-        style={{ color: "var(--hxs-primary)", opacity: 0.18 }}
+        className="absolute leading-none font-serif select-none pointer-events-none"
+        style={{ bottom: 40, right: 48, fontSize: 128, color: "var(--hxs-primary)", opacity: 0.18 }}
       >
         ”
       </span>
@@ -382,16 +390,14 @@ function CtaLayout({ slide }: LayoutProps) {
     .filter((x) => x.b.type === "button");
   return (
     <div
-      className={cn(
-        "min-h-full w-full flex flex-col items-center justify-center text-center gap-8 md:gap-10",
-        PADDING_DEFAULT
-      )}
+      className="min-h-full w-full flex flex-col items-center justify-center text-center"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 40 }}
     >
       {nonButtons.map(({ b, i }) => (
         <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
       ))}
       {buttons.length > 0 && (
-        <div className="flex flex-wrap items-center justify-center gap-3 md:gap-4 mt-2">
+        <div className="flex flex-wrap items-center justify-center mt-2" style={{ gap: 16 }}>
           {buttons.map(({ b, i }) => (
             <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
           ))}
@@ -404,7 +410,10 @@ function CtaLayout({ slide }: LayoutProps) {
 // 嵌入
 function EmbedLayout({ slide }: LayoutProps) {
   return (
-    <div className={cn("min-h-full w-full flex flex-col gap-4", PADDING_NARROW)}>
+    <div
+      className="min-h-full w-full flex flex-col"
+      style={{ ...PADDING_NARROW_STYLE, gap: 16 }}
+    >
       {slide.blocks.map((b, i) => (
         <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
       ))}
@@ -428,17 +437,20 @@ function MultiColumnLayout({ slide, cols }: LayoutProps & { cols: 3 | 4 | 5 }) {
   });
   const gridCls = cols === 3 ? "grid-cols-3" : cols === 4 ? "grid-cols-4" : "grid-cols-5";
   return (
-    <div className={cn("min-h-full w-full flex flex-col gap-8 max-w-7xl mx-auto", PADDING_NARROW)}>
+    <div
+      className="min-h-full w-full flex flex-col max-w-7xl mx-auto"
+      style={{ ...PADDING_NARROW_STYLE, gap: 32 }}
+    >
       {center.length > 0 && (
-        <div className="flex flex-col gap-4 items-center text-center">
+        <div className="flex flex-col items-center text-center" style={{ gap: 16 }}>
           {center.map(({ block, index }) => (
             <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
           ))}
         </div>
       )}
-      <div className={cn("grid gap-6 md:gap-8 flex-1", gridCls)}>
+      <div className={cn("grid flex-1", gridCls)} style={{ gap: 32 }}>
         {columns.map((col, ci) => (
-          <div key={ci} className="flex flex-col gap-4">
+          <div key={ci} className="flex flex-col" style={{ gap: 16 }}>
             {col.map(({ block, index }) => (
               <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
             ))}

@@ -165,6 +165,7 @@ function SlideThumb(props: ThumbProps) {
               showNavigation={false}
               transitionMode="sync"
               resolvePattern={getPattern}
+              staticExport
             />
           </div>
         </ScaleStage>

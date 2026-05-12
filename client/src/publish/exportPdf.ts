@@ -33,6 +33,9 @@ async function waitForResources(root: HTMLElement) {
 }
 
 // 把 deck 每页 1280×720 截图后拼成 16:9 横向 PDF
+// 字号 / spacing 一致性：所有 size critical 的 block（heading/text/list/button/badge/card title/...）
+// 已在 renderer/blocks/index.tsx 直接 inline px style 渲染，预览 / PDF 走同一条 hard-code 路径，
+// 不依赖 Tailwind className → CSS rem 解析（SVG image document 内 rem 行为不可控会导致截图偏大）
 export async function exportAsPdf(opts: ExportPdfOptions): Promise<Blob> {
   const { deck, renderRoot, setIndex, onProgress, signal } = opts;
   const pdf = new jsPDF({
