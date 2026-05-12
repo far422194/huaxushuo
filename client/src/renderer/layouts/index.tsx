@@ -7,7 +7,10 @@ import { useRuntime } from "../runtime";
 import { useEditorStore } from "@/store/editor";
 import { cn } from "@/lib/cn";
 
-type LayoutProps = { slide: Slide };
+// staticMode：缩略图 / PDF 导出 / 静态预览场景；下游 BlockWrap 在 staticMode=true 时
+// 不挂 motion.div layoutId，避免 framer-motion 把缩略图与主舞台的同 magicId 元素视为
+// "同一元素"导致跨容器联动飞行
+type LayoutProps = { slide: Slide; staticMode?: boolean };
 
 // padding / gap 用 inline px style 而非 Tailwind className：
 // 避免 PDF 导出（modern-screenshot SVG image document）中 rem 解析异常 / md:* 评估异常
@@ -27,11 +30,13 @@ function BlockWrap({
   index,
   slideId,
   magicDurationMs,
+  staticMode = false,
 }: {
   block: Block;
   index: number;
   slideId: string;
   magicDurationMs: number;
+  staticMode?: boolean;
 }) {
   const { editor } = useRuntime();
   const isEditing = !!editor;
@@ -82,9 +87,11 @@ function BlockWrap({
   };
 
   // 外层普通 div 处理 native drag-and-drop（motion.div 的 onDragStart 被 framer-motion 占用为 PanInfo 回调）
-  // 内层 motion.div 仅在 magicId 存在时挂载，做 Keynote 风格飞行过渡
+  // 内层 motion.div 仅在 magicId 存在 且 非 staticMode 时挂载，做 Keynote 风格飞行过渡
+  // staticMode（缩略图 / 静态预览）必须跳过 layoutId，否则缩略图里的元素与主舞台同 magicId
+  // 元素被 framer-motion 视为"同一元素"，主舞台切页时缩略图会跟着联动飞行
   // 用 tween + duration 让用户在 SlidePanel 调的转场时长精确生效（spring 不接受 duration）
-  const inner = magicId ? (
+  const inner = magicId && !staticMode ? (
     <motion.div
       layoutId={magicId}
       layout="position"
@@ -133,11 +140,13 @@ function FreeBlockWrap({
   index,
   slideId,
   magicDurationMs,
+  staticMode = false,
 }: {
   block: Block;
   index: number;
   slideId: string;
   magicDurationMs: number;
+  staticMode?: boolean;
 }) {
   const { editor } = useRuntime();
   const isEditing = !!editor;
@@ -225,7 +234,8 @@ function FreeBlockWrap({
     wrapper.addEventListener("pointercancel", onUp);
   };
 
-  const inner = magicId ? (
+  // staticMode 下跳过 layoutId，理由同 BlockWrap：避免缩略图与主舞台跨容器联动
+  const inner = magicId && !staticMode ? (
     <motion.div
       layoutId={magicId}
       layout="position"
@@ -269,35 +279,35 @@ function FreeBlockWrap({
 }
 
 // 封面：大字号居中 + 上下留白拉满，给观众"震撼"的第一印象
-function HeroLayout({ slide }: LayoutProps) {
+function HeroLayout({ slide, staticMode }: LayoutProps) {
   return (
     <div
       className="min-h-full w-full flex flex-col items-center justify-center text-center"
       style={{ ...PADDING_DEFAULT_STYLE, gap: 40 }}
     >
       {slide.blocks.map((b, i) => (
-        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
       ))}
     </div>
   );
 }
 
 // 标题正文：左对齐叙事，第一个 heading 后多空一截制造章节感
-function TitleContentLayout({ slide }: LayoutProps) {
+function TitleContentLayout({ slide, staticMode }: LayoutProps) {
   return (
     <div
-      className="min-h-full w-full max-w-5xl mx-auto flex flex-col"
-      style={{ ...PADDING_DEFAULT_STYLE, gap: 36 }}
+      className="min-h-full w-full mx-auto flex flex-col"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 36, maxWidth: 1024 }}
     >
       {slide.blocks.map((b, i) => (
-        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
       ))}
     </div>
   );
 }
 
 // 两栏：列间距大，制造对比张力
-function TwoColumnLayout({ slide }: LayoutProps) {
+function TwoColumnLayout({ slide, staticMode }: LayoutProps) {
   const left: { block: Block; index: number }[] = [];
   const right: { block: Block; index: number }[] = [];
   const center: { block: Block; index: number }[] = [];
@@ -309,25 +319,25 @@ function TwoColumnLayout({ slide }: LayoutProps) {
   });
   return (
     <div
-      className="min-h-full w-full flex flex-col max-w-7xl mx-auto"
-      style={{ ...PADDING_DEFAULT_STYLE, gap: 40 }}
+      className="min-h-full w-full flex flex-col mx-auto"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 40, maxWidth: 1280 }}
     >
       {center.length > 0 && (
         <div className="flex flex-col items-center text-center" style={{ gap: 20 }}>
           {center.map(({ block, index }) => (
-            <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+            <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
           ))}
         </div>
       )}
       <div className="grid grid-cols-2 flex-1" style={{ gap: 48 }}>
         <div className="flex flex-col" style={{ gap: 20 }}>
           {left.map(({ block, index }) => (
-            <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+            <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
           ))}
         </div>
         <div className="flex flex-col" style={{ gap: 20 }}>
           {right.map(({ block, index }) => (
-            <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+            <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
           ))}
         </div>
       </div>
@@ -336,25 +346,25 @@ function TwoColumnLayout({ slide }: LayoutProps) {
 }
 
 // 要点列表：受限宽度居中，列表项目获得"专注感"
-function BulletListLayout({ slide }: LayoutProps) {
+function BulletListLayout({ slide, staticMode }: LayoutProps) {
   return (
     <div
-      className="min-h-full w-full flex flex-col justify-center max-w-4xl mx-auto"
-      style={{ ...PADDING_DEFAULT_STYLE, gap: 40 }}
+      className="min-h-full w-full flex flex-col justify-center mx-auto"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 40, maxWidth: 896 }}
     >
       {slide.blocks.map((b, i) => (
-        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
       ))}
     </div>
   );
 }
 
 // 引用：超大引号装饰 + 居中 + 收紧宽度
-function QuoteLayout({ slide }: LayoutProps) {
+function QuoteLayout({ slide, staticMode }: LayoutProps) {
   return (
     <div
-      className="relative min-h-full w-full flex flex-col items-center justify-center text-center max-w-3xl mx-auto"
-      style={{ ...PADDING_DEFAULT_STYLE, gap: 24 }}
+      className="relative min-h-full w-full flex flex-col items-center justify-center text-center mx-auto"
+      style={{ ...PADDING_DEFAULT_STYLE, gap: 24, maxWidth: 768 }}
     >
       <span
         aria-hidden
@@ -365,7 +375,7 @@ function QuoteLayout({ slide }: LayoutProps) {
       </span>
       <div className="relative z-10 flex flex-col items-center" style={{ gap: 20 }}>
         {slide.blocks.map((b, i) => (
-          <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+          <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
         ))}
       </div>
       <span
@@ -380,7 +390,7 @@ function QuoteLayout({ slide }: LayoutProps) {
 }
 
 // 行动号召：居中 + 按钮组横排（如有多个 button）
-function CtaLayout({ slide }: LayoutProps) {
+function CtaLayout({ slide, staticMode }: LayoutProps) {
   // 把 button 类型放最后一组以便横向并排
   const nonButtons = slide.blocks
     .map((b, i) => ({ b, i }))
@@ -394,12 +404,12 @@ function CtaLayout({ slide }: LayoutProps) {
       style={{ ...PADDING_DEFAULT_STYLE, gap: 40 }}
     >
       {nonButtons.map(({ b, i }) => (
-        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
       ))}
       {buttons.length > 0 && (
         <div className="flex flex-wrap items-center justify-center mt-2" style={{ gap: 16 }}>
           {buttons.map(({ b, i }) => (
-            <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+            <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
           ))}
         </div>
       )}
@@ -408,14 +418,14 @@ function CtaLayout({ slide }: LayoutProps) {
 }
 
 // 嵌入
-function EmbedLayout({ slide }: LayoutProps) {
+function EmbedLayout({ slide, staticMode }: LayoutProps) {
   return (
     <div
       className="min-h-full w-full flex flex-col"
       style={{ ...PADDING_NARROW_STYLE, gap: 16 }}
     >
       {slide.blocks.map((b, i) => (
-        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+        <BlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
       ))}
     </div>
   );
@@ -423,7 +433,7 @@ function EmbedLayout({ slide }: LayoutProps) {
 
 // 通用多栏布局：3/4/5 栏
 // col1-col5 分配到各列；center 作全宽头部；无 column 字段的块归入 col1
-function MultiColumnLayout({ slide, cols }: LayoutProps & { cols: 3 | 4 | 5 }) {
+function MultiColumnLayout({ slide, cols, staticMode }: LayoutProps & { cols: 3 | 4 | 5 }) {
   const columns: { block: Block; index: number }[][] = Array.from({ length: cols }, () => []);
   const center: { block: Block; index: number }[] = [];
   slide.blocks.forEach((b, i) => {
@@ -438,13 +448,13 @@ function MultiColumnLayout({ slide, cols }: LayoutProps & { cols: 3 | 4 | 5 }) {
   const gridCls = cols === 3 ? "grid-cols-3" : cols === 4 ? "grid-cols-4" : "grid-cols-5";
   return (
     <div
-      className="min-h-full w-full flex flex-col max-w-7xl mx-auto"
-      style={{ ...PADDING_NARROW_STYLE, gap: 32 }}
+      className="min-h-full w-full flex flex-col mx-auto"
+      style={{ ...PADDING_NARROW_STYLE, gap: 32, maxWidth: 1280 }}
     >
       {center.length > 0 && (
         <div className="flex flex-col items-center text-center" style={{ gap: 16 }}>
           {center.map(({ block, index }) => (
-            <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+            <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
           ))}
         </div>
       )}
@@ -452,7 +462,7 @@ function MultiColumnLayout({ slide, cols }: LayoutProps & { cols: 3 | 4 | 5 }) {
         {columns.map((col, ci) => (
           <div key={ci} className="flex flex-col" style={{ gap: 16 }}>
             {col.map(({ block, index }) => (
-              <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+              <BlockWrap key={index} block={block} index={index} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
             ))}
           </div>
         ))}
@@ -462,11 +472,11 @@ function MultiColumnLayout({ slide, cols }: LayoutProps & { cols: 3 | 4 | 5 }) {
 }
 
 // 自由布局：每个 block 用 absolute + 百分比定位，编辑模式下可鼠标拖动
-function FreeLayout({ slide }: LayoutProps) {
+function FreeLayout({ slide, staticMode }: LayoutProps) {
   return (
     <div className="relative w-full h-full overflow-hidden" data-free-stage>
       {slide.blocks.map((b, i) => (
-        <FreeBlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} />
+        <FreeBlockWrap key={i} block={b} index={i} slideId={slide.id} magicDurationMs={slide.transitionDuration ?? MAGIC_DEFAULT_MS} staticMode={staticMode} />
       ))}
     </div>
   );
@@ -486,7 +496,7 @@ const REGISTRY: Record<Layout, React.FC<LayoutProps>> = {
   "free": FreeLayout,
 };
 
-export function LayoutRenderer({ slide }: LayoutProps) {
+export function LayoutRenderer({ slide, staticMode }: LayoutProps) {
   const Component = REGISTRY[slide.layout];
-  return <Component slide={slide} />;
+  return <Component slide={slide} staticMode={staticMode} />;
 }

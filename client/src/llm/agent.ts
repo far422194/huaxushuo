@@ -129,9 +129,10 @@ function buildBatchPrompt(
   const pageRange = chunk.length === 1 ? `第 ${pageStart} 页` : `第 ${pageStart}-${pageEnd} 页`;
 
   const header = `[分批生成模式 第 ${chunkIdx + 1}/${totalChunks} 批]\n本批输出：${pageRange}（共 ${totalPages} 页 deck）\n`;
+  const orderRule = `\n⚠️ **严格页码顺序约束**：本批输出的 slide 必须严格按"本批文案"中给出的页码顺序生成（第 ${pageStart} 页 → 第 ${pageEnd} 页），不可调换顺序、合并段落、跳过页码。用户在大纲中标的页号即 deck 内 slide 索引序，乱序会让用户看到错位的内容。\n`;
   const instructions = isFirst
-    ? `\n首批要求：调用 \`create_deck\` 工具，生成本批 ${chunk.length} 页 + 完整 deck 元数据（meta/theme/version/variables）。后续批次会继续追加。\n`
-    : `\n续接要求：调用 \`patch_deck\` 工具，按本批 ${chunk.length} 个 \`{op:"add", path:"/slides/-", value:<slide>}\` 顺序追加到末尾。**沿用首批已建立的 theme/colors/字体/layout 倾向，保持视觉一致**。不要修改已有页（不要发 replace/remove）。\n`;
+    ? `\n首批要求：调用 \`create_deck\` 工具，生成本批 ${chunk.length} 页 + 完整 deck 元数据（meta/theme/version/variables）。后续批次会继续追加。${orderRule}`
+    : `\n续接要求：调用 \`patch_deck\` 工具，按本批 ${chunk.length} 个 \`{op:"add", path:"/slides/-", value:<slide>}\` **严格按页码顺序**追加到末尾（op 数组中第一个对应第 ${pageStart} 页，最后一个对应第 ${pageEnd} 页）。**沿用首批已建立的 theme/colors/字体/layout 倾向，保持视觉一致**。不要修改已有页（不要发 replace/remove）。${orderRule}`;
 
   // 虚拟 chunk（短指令 + 大页数场景）：所有 body 为空 → 不输出"本批文案"块，
   // 改为回灌用户原始诉求 + 本批页码范围，让 LLM 自行规划本批主题
@@ -207,7 +208,7 @@ async function generateOnce(opts: AgentOptions, skipStoreStreaming = false): Pro
   // auto 画幅不需要（允许滚动）；固定画幅必须强约束
   let aspectLen = 0;
   if (opts.aspectRatio && opts.aspectRatio !== "auto") {
-    const aspectSeg = "\n\n" + buildFixedAspectConstraint(opts.aspectRatio);
+    const aspectSeg = "\n\n" + buildFixedAspectConstraint(opts.aspectRatio, targetLang);
     systemPrompt += aspectSeg;
     aspectLen = aspectSeg.length;
   }
@@ -218,7 +219,7 @@ async function generateOnce(opts: AgentOptions, skipStoreStreaming = false): Pro
   let pagesLen = 0;
   const explicitPages = extractExplicitPageCount(promptForEstimate);
   if (explicitPages !== undefined) {
-    const pagesSeg = "\n\n" + buildUserPageCountConstraint(explicitPages);
+    const pagesSeg = "\n\n" + buildUserPageCountConstraint(explicitPages, targetLang);
     systemPrompt += pagesSeg;
     pagesLen = pagesSeg.length;
   }
@@ -327,6 +328,42 @@ async function generateOnce(opts: AgentOptions, skipStoreStreaming = false): Pro
     batchInfo: opts.batchInfo,
   });
 
+  // 429 限流退避：与 runaway 分支并列。
+  // 这里识别 provider 透传的 rateLimited 标记（providers/{anthropic,openai}.ts 在 catch 落地处设置）。
+  // 与 runaway 的差异：429 是请求频率/并发超限，与 max_tokens 无关 → 不能走减半 max_tokens 那条路径，
+  // 减半下次照样 429。正确响应是指数退避（1.5s → 3s）等服务端 reset bucket。
+  //
+  // 边界：若首次请求同时撞了 reasoning runaway + 429，让 runaway 分支优先处理（!runawayTriggered 守卫）；
+  // runaway 减半 max_tokens 比 429 退避更可能解决"复合故障"。重试期间若新触发 runaway，
+  // runawayCtrl 会 abort retry 请求 → result.cancelled=true → 跳出循环走 runaway 分支级联恢复。
+  const RATE_LIMIT_MAX_RETRY = 2;
+  let rateLimitAttempt = 0;
+  while (
+    result.rateLimited &&
+    !runawayTriggered &&
+    rateLimitAttempt < RATE_LIMIT_MAX_RETRY &&
+    !externalSignal?.aborted
+  ) {
+    const delay = 1500 * Math.pow(2, rateLimitAttempt) + Math.random() * 500;
+    rateLimitAttempt++;
+    opts.onProgress?.({ kind: "thinking" });  // UI 退回 thinking 文案，避免错误条闪一下
+    await new Promise((r) => setTimeout(r, delay));
+    if (externalSignal?.aborted) break;
+    // max_tokens / config 不变（429 与 token 数无关），纯退避重试
+    result = await provider.generate({
+      systemPrompt,
+      tools: TOOLS,
+      userMessage: finalUserMessage,
+      currentDeck: opts.currentDeck,
+      contextDeck: opts.contextDeck,
+      config: active.config,
+      onProgress: wrappedOnProgress,
+      estimatedPages,
+      signal: runawayCtrl.signal,
+      batchInfo: opts.batchInfo,
+    });
+  }
+
   // runaway 触发的取消（非用户主动取消）→ 自动重试一次，max_tokens 减半 + 强制 fixed mode
   // reasoning 阶段还没进入 tool_use，streamingStarted 仍为 false，store 状态干净，可直接重试
   if (
@@ -418,7 +455,7 @@ async function generateOnce(opts: AgentOptions, skipStoreStreaming = false): Pro
 }
 
 // 续接批最大并发数：受 provider rate limit 制约，3 是 80% 收益且 429 触发率低的折中
-const MAX_CONCURRENT_BATCHES = 3;
+export const MAX_CONCURRENT_BATCHES = 3;
 
 // 受控并发：从 items 头开始最多 concurrency 个并发执行 worker；返回与 items 同序的 R[]
 async function runWithConcurrency<T, R>(
@@ -493,12 +530,16 @@ async function runBatchAttempt(args: {
     opts.onProgress?.({ ...e, batch: info });
   };
 
+  // 本批所处阶段的真实并发数：首批同步建 baseline (i=0) 实际只有 1 路在跑；
+  // 续接批共享 baseline 后才进入 runWithConcurrency 并发池，最多 min(MAX_CONCURRENT_BATCHES, totalBatches-1) 路
+  const remainingBatches = totalBatches - 1;
   const batchInfo: BatchInfo = {
     current: i + 1,
     total: totalBatches,
     pageOffset: pageOffsetExpected,
     pageCount: chunk.length,
     totalPages,
+    concurrency: isFirstBatch ? 1 : Math.max(1, Math.min(MAX_CONCURRENT_BATCHES, remainingBatches)),
   };
 
   const batchResult = await generateOnce(

@@ -1,16 +1,23 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Copy, Trash2, MoveUp, MoveDown, GripVertical } from "lucide-react";
-import type { Slide, Theme } from "@shared/dsl";
+import type { Slide, Theme, Deck as DeckT } from "@shared/dsl";
 import { useEditorStore } from "@/store/editor";
 import { Deck } from "@/renderer/Deck";
 import { ScaleStage } from "./ScaleStage";
 import { getPattern } from "@/data/patterns";
 import { cn } from "@/lib/cn";
 
-// 缩略图 viewport：1280×720 逻辑舞台 → ScaleStage 等比缩放到容器（约 224×126）
-// 让 hero/title-content 这类按全屏演示设计的内容（heading text-7xl 等）在小缩略图里也能完整呈现
-const THUMB_STAGE = { w: 1280, h: 720 };
+type AspectRatio = DeckT["meta"]["aspectRatio"];
+
+// 缩略图按 deck 画幅选 viewport：与主舞台 Canvas 的 STAGE_16_9 / STAGE_4_3 严格对齐
+// auto 画幅没有固定 viewport：缩略图取 1280×720 作为"首屏快照"，超出部分被 overflow-hidden 裁剪
+// 不再 hard-code 16:9 → 之前的写法在 4:3 deck 下会让缩略图比例变形、auto deck 下与主舞台 wrap point 不一致
+function getThumbStage(aspectRatio: AspectRatio): { w: number; h: number; aspectClass: string } {
+  if (aspectRatio === "4:3") return { w: 1024, h: 768, aspectClass: "aspect-[4/3]" };
+  // 16:9 / auto 都用 1280×720 + 16:9 容器（auto 取首屏快照）
+  return { w: 1280, h: 720, aspectClass: "aspect-[16/9]" };
+}
 
 export function SlideList() {
   const { t } = useTranslation("editor");
@@ -56,6 +63,7 @@ export function SlideList() {
             key={slide.id}
             slide={slide}
             theme={theme}
+            aspectRatio={meta.aspectRatio}
             index={idx}
             total={slides.length}
             isCurrent={idx === currentIndex}
@@ -102,6 +110,7 @@ export function SlideList() {
 interface ThumbProps {
   slide: Slide;
   theme: Theme;
+  aspectRatio: AspectRatio;
   index: number;
   total: number;
   isCurrent: boolean;
@@ -123,23 +132,38 @@ interface ThumbProps {
 function SlideThumb(props: ThumbProps) {
   const { t } = useTranslation("editor");
   const { t: tCommon } = useTranslation("common");
-  const { slide, theme, index, total, isCurrent, isSelected, isDragging, isDragOver } = props;
+  const { slide, theme, aspectRatio, index, total, isCurrent, isSelected, isDragging, isDragOver } = props;
+  const rootRef = useRef<HTMLDivElement>(null);
 
-  // mini deck：仅含本页，固定 16:9 + 整体 theme；variables 不传（缩略图无交互）
-  // useMemo 依赖未变（同一 slide 引用 + 同一 theme 引用）时返回相同对象 → Deck 内部不会重跑 effect
+  // 缩略图与主舞台严格按同一画幅渲染；auto 画幅取 16:9 首屏快照
+  const stage = useMemo(() => getThumbStage(aspectRatio), [aspectRatio]);
+
+  // mini deck：仅含本页 + 与主 deck 同画幅 + 整体 theme；variables 不传（缩略图无交互）
+  // useMemo 依赖未变时返回相同对象 → Deck 内部不会重跑 effect
   const miniDeck = useMemo(
     () => ({
       version: "1.0" as const,
-      meta: { title: "", aspectRatio: "16:9" as const },
+      meta: { title: "", aspectRatio },
       theme,
       variables: {},
       slides: [{ ...slide, id: "thumb" }],
     }),
-    [slide, theme]
+    [slide, theme, aspectRatio]
   );
+
+  // currentIndex 切换到本页时，自动滚动到可见区
+  // block: "nearest" 已在视口内不动；半遮挡 / 完全不可见时才滚 → 与浏览器原生焦点行为一致
+  // smooth 让滚动有动画反馈,不突兀
+  useEffect(() => {
+    if (!isCurrent) return;
+    const el = rootRef.current;
+    if (!el) return;
+    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+  }, [isCurrent]);
 
   return (
     <div
+      ref={rootRef}
       onClick={props.onSelect}
       draggable
       onDragStart={props.onDragStart}
@@ -155,9 +179,9 @@ function SlideThumb(props: ThumbProps) {
         isDragOver && "border-blue-500 ring-2 ring-blue-300 ring-offset-1"
       )}
     >
-      {/* 缩略图主体：真实 Deck 渲染（pointer-events-none 阻止内部交互冒泡） */}
-      <div className="aspect-[16/9] relative overflow-hidden bg-slate-50 pointer-events-none">
-        <ScaleStage w={THUMB_STAGE.w} h={THUMB_STAGE.h}>
+      {/* 缩略图主体：真实 Deck 渲染（pointer-events-none 阻止内部交互冒泡）；容器比例随画幅切换 */}
+      <div className={cn(stage.aspectClass, "relative overflow-hidden bg-slate-50 pointer-events-none")}>
+        <ScaleStage w={stage.w} h={stage.h}>
           <div className="absolute inset-0">
             <Deck
               deck={miniDeck}

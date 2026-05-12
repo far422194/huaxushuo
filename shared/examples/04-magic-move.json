@@ -2,17 +2,22 @@
   "version": "1.0",
   "meta": {
     "title": "Magic Move 示范",
-    "description": "演示 Keynote 风格的魔法移动转场：相同 magicId 的元素在两页之间飞行",
-    "aspectRatio": "16:9"
+    "description": "演示 Keynote 风格的魔法移动:相同 magicId 的元素在页与页之间平滑飞行;同步展示 6 级标题 + stat / table / flow / card 等装饰块",
+    "aspectRatio": "16:9",
+    "showPageNumbers": true
   },
   "theme": {
     "mode": "light",
     "colors": {
-      "bg": "#ffffff",
+      "bg": "#fafafa",
       "fg": "#0f172a",
       "primary": "#7c3aed",
       "accent": "#ec4899",
-      "muted": "#64748b"
+      "muted": "#64748b",
+      "success": "#10b981",
+      "warning": "#f59e0b",
+      "danger": "#ef4444",
+      "info": "#0ea5e9"
     },
     "fonts": { "heading": "Inter", "body": "Inter" },
     "radius": "lg"
@@ -30,8 +35,16 @@
         "angle": 135
       },
       "blocks": [
-        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
-        { "type": "heading", "level": 1, "text": "Lumen", "magicId": "brand" },
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "magicId": "tag" },
+        {
+          "type": "heading",
+          "level": 1,
+          "text": [
+            { "text": "Lumen", "bold": true },
+            { "text": " · 光的革命" }
+          ],
+          "magicId": "brand"
+        },
         { "type": "text", "text": "把光带到每一寸黑暗。", "magicId": "tagline" },
         {
           "type": "button",
@@ -43,62 +56,142 @@
     },
     {
       "id": "s2",
-      "layout": "title-content",
+      "layout": "three-column",
       "transition": "magic",
       "blocks": [
-        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
-        { "type": "heading", "level": 2, "text": "Lumen", "magicId": "brand" },
-        { "type": "text", "text": "把光带到每一寸黑暗。", "magicId": "tagline" },
-        { "type": "list", "items": ["10 倍亮度", "续航 18 小时", "IPX8 防水"] },
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "column": "center", "magicId": "tag" },
         {
-          "type": "button",
-          "label": "下一页 →",
-          "variant": "outline",
-          "onClick": { "action": "next" }
-        }
+          "type": "heading",
+          "level": 3,
+          "text": "Lumen · 三项硬指标",
+          "align": "center",
+          "column": "center",
+          "magicId": "brand"
+        },
+        { "type": "stat", "value": "10×", "label": "亮度", "tone": "primary", "trend": "up", "column": "col1" },
+        { "type": "stat", "value": "18h", "label": "续航", "tone": "success", "column": "col2" },
+        { "type": "stat", "value": "IPX8", "label": "防水", "tone": "info", "column": "col3" }
       ]
     },
     {
       "id": "s3",
-      "layout": "two-column",
+      "layout": "title-content",
       "transition": "magic",
       "blocks": [
-        { "type": "heading", "level": 3, "text": "Lumen", "column": "left", "magicId": "brand" },
-        { "type": "text", "text": "把光带到每一寸黑暗。", "column": "left", "magicId": "tagline" },
-        { "type": "badge", "text": "DEMO", "tone": "accent", "column": "left", "magicId": "tag" },
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "magicId": "tag" },
         {
-          "type": "card",
-          "column": "right",
-          "title": "对比传统手电",
-          "children": [
-            { "type": "list", "items": ["亮度 × 10", "续航 × 3", "防水等级 × 2"] }
-          ]
+          "type": "heading",
+          "level": 4,
+          "text": "Lumen · 对比传统手电",
+          "magicId": "brand"
         },
+        { "type": "text", "text": "把光带到每一寸黑暗。", "magicId": "tagline" },
         {
-          "type": "button",
-          "label": "下一页 →",
-          "variant": "ghost",
-          "column": "right",
-          "onClick": { "action": "next" }
+          "type": "table",
+          "headers": ["指标", "传统手电", "Lumen"],
+          "rows": [
+            ["亮度", "100 lm", { "text": "1000 lm", "tone": "primary", "bold": true }],
+            ["续航", "6 h", { "text": "18 h", "tone": "success", "bold": true }],
+            ["防水", "IPX4", { "text": "IPX8", "tone": "info", "bold": true }]
+          ],
+          "highlightCol": 2
         }
       ]
     },
     {
       "id": "s4",
+      "layout": "three-column",
+      "transition": "magic",
+      "blocks": [
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "三种使用场景",
+          "align": "center",
+          "column": "center"
+        },
+        {
+          "type": "card",
+          "column": "col1",
+          "title": "露营",
+          "utilities": ["hxs-bar-l-success"],
+          "children": [
+            { "type": "icon", "name": "Compass", "tone": "success", "size": 32, "align": "center" },
+            { "type": "text", "text": "整夜照明,续航穿越长途夜路。", "align": "center" }
+          ]
+        },
+        {
+          "type": "card",
+          "column": "col2",
+          "title": "应急",
+          "utilities": ["hxs-bar-l-warning"],
+          "children": [
+            { "type": "icon", "name": "Zap", "tone": "warning", "size": 32, "align": "center" },
+            { "type": "text", "text": "停电瞬间亮起,信号灯一键切换。", "align": "center" }
+          ]
+        },
+        {
+          "type": "card",
+          "column": "col3",
+          "title": "海边",
+          "utilities": ["hxs-bar-l-info"],
+          "children": [
+            { "type": "icon", "name": "Sparkles", "tone": "info", "size": 32, "align": "center" },
+            { "type": "text", "text": "IPX8 全浸防水,潜入海中仍可用。", "align": "center" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "s5",
+      "layout": "title-content",
+      "transition": "magic",
+      "blocks": [
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "magicId": "tag" },
+        {
+          "type": "heading",
+          "level": 4,
+          "text": "三步上手",
+          "magicId": "brand"
+        },
+        { "type": "text", "text": "把光带到每一寸黑暗。", "magicId": "tagline" },
+        {
+          "type": "flow",
+          "steps": [
+            { "label": "长按开机", "tone": "primary" },
+            { "label": "短按调档", "tone": "warning" },
+            { "label": "潜入水中也能用", "tone": "info" }
+          ],
+          "arrow": "chevron",
+          "align": "center"
+        }
+      ]
+    },
+    {
+      "id": "s6",
       "layout": "cta",
       "transition": "magic",
       "background": {
         "type": "gradient",
         "from": "#1e1b4b",
-        "to": "#7c3aed"
+        "to": "#7c3aed",
+        "angle": 135
       },
       "blocks": [
-        { "type": "badge", "text": "DEMO", "tone": "accent", "magicId": "tag" },
-        { "type": "heading", "level": 1, "text": "Lumen", "magicId": "brand" },
+        { "type": "badge", "text": "NEW LAUNCH", "tone": "accent", "magicId": "tag" },
+        {
+          "type": "heading",
+          "level": 1,
+          "text": [
+            { "text": "Lumen", "bold": true },
+            { "text": " · 光的革命" }
+          ],
+          "magicId": "brand"
+        },
         { "type": "text", "text": "把光带到每一寸黑暗。", "magicId": "tagline" },
         {
           "type": "button",
-          "label": "返回首页",
+          "label": "回到第 1 页",
           "variant": "primary",
           "onClick": { "action": "jumpTo", "slideId": "s1" }
         }

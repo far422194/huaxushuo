@@ -49,8 +49,9 @@ export function FormBlock({ block }: { block: FormBlockType }) {
   if (submitted) {
     return (
       <div
-        className="w-full max-w-xl rounded-2xl px-7 py-8"
+        className="w-full rounded-2xl px-7 py-8"
         style={{
+          maxWidth: 576,
           backgroundColor: "color-mix(in srgb, var(--hxs-primary) 8%, transparent)",
           border: "1px solid color-mix(in srgb, var(--hxs-primary) 25%, transparent)",
           borderRadius: "var(--hxs-radius)",
@@ -74,8 +75,8 @@ export function FormBlock({ block }: { block: FormBlockType }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="w-full max-w-xl flex flex-col"
-      style={{ gap: 16, color: "var(--hxs-fg)", fontFamily: "var(--hxs-font-body)" }}
+      className="w-full flex flex-col"
+      style={{ maxWidth: 576, gap: 16, color: "var(--hxs-fg)", fontFamily: "var(--hxs-font-body)" }}
     >
       {block.fields.map((field) => (
         <FieldControl

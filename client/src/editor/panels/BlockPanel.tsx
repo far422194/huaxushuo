@@ -260,7 +260,7 @@ function IconBtn({
 function defaultChild(type: (typeof SIMPLE_BLOCK_TYPES)[number]): Block {
   switch (type) {
     case "text": return { type: "text", text: "新文本" };
-    case "heading": return { type: "heading", level: 3, text: "新标题" };
+    case "heading": return { type: "heading", level: 3, text: "新标题" }; // 默认中标题(L3=旧 L1 视觉)
     case "image": return { type: "image", url: "https://", alt: "", fit: "cover" };
     case "button":
       return {

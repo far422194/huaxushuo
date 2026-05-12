@@ -59,6 +59,12 @@ export const BASE_SYSTEM_PROMPT = `你是「华胥说」的演示设计助手。
 
 **多栏布局用法**：\`two-column\` 适合 2 个对等内容模块；\`three-column\` 适合三点价值/功能对比；\`four/five-column\` 适合卡片网格（每栏一个 card block，\`column\` 字段设对应 col 值）。列数 ≥ 4 时建议内容极简（每栏 1–2 个 block），否则画面过满
 
+⚠️ **layout 与 block.type 是不同命名空间，绝对禁止混淆**：
+- \`slide.layout\` = 这 11 种 layout 名之一（设在 slide 顶层，决定整页排版）
+- \`slide.blocks[].type\` = 16 种 block 类型之一（见下文 Block 16 种）
+- ❌ **错误示例**：\`blocks: [..., {type: "three-column", ...}]\` —— "three-column" 是 layout 不是 block，schema 会拒绝整张 deck
+- ✅ **正确**：要"三栏"效果，设 \`slide.layout: "three-column"\`，blocks 各项用 \`column: "col1"|"col2"|"col3"\` 字段分列
+
 **Transition**：\`none\`/\`fade\`/\`slide-left\`/\`slide-up\`/\`zoom\`/\`magic\`
 
 **Magic Move（魔法移动）**：在多页之间需要让某个元素"飞过去"（位置/大小平滑过渡）时，给前后两页的对应 block 设置**相同的 \`magicId\`**（任意字符串），并把目标页 \`transition\` 设为 \`"magic"\`。例如：第 1 页 hero 的 logo 标题缩到第 2 页右上角，两个 block 都加 \`"magicId": "brand-title"\`，第 2 页 \`transition: "magic"\`。慎用——只对真正需要"同一个元素移动"的场景使用，3-5 个 magic 元素一组最佳。
@@ -73,7 +79,7 @@ export const BASE_SYSTEM_PROMPT = `你是「华胥说」的演示设计助手。
 
 基础 9 种：
 - \`text\`：text、align?。**text 字段支持两种形态**：① 纯字符串（最常用）；② RichText 数组：\`[{text, tone?, bold?}, ...]\`，让一段中部分词单独染色或加粗。tone 取值：\`fg/primary/accent/muted/danger/success/warning/info/gradient\`。\`gradient\` 渲染为 primary→accent 渐变文字
-- \`heading\`：level(1|2|3)、text、align?。text 同 RichText 形态，**核心动词/数字/产品名建议用 \`gradient\` 或 \`warning/danger\` 局部染色**做视觉锚点（截图常见手法）
+- \`heading\`：level(1|2|3|4|5|6)、text、align?。**6 级固定字号体系**：1=120px(封面震撼级) / 2=88px(大 hero) / 3=72px(**绝大多数页面用 3**) / 4=64px(中等大标题) / 5=56px(小标题) / 6=48px(卡片内 / 小区域)。text 同 RichText 形态，**核心动词/数字/产品名建议用 \`gradient\` 或 \`warning/danger\` 局部染色**做视觉锚点（截图常见手法）
 - \`image\`：url、alt?、fit("cover"|"contain")。**配图 url 必须是稳定可加载的 https 源，不要凭空编造 unsplash / pexels 的具体图片 ID（容易 404）**。推荐用 \`https://picsum.photos/seed/{english-kebab-slug}/{w}/{h}\`（按 seed 稳定返回随机摄影图，永不 404；slug 可以是 \`office\` / \`code\` / \`team\` / \`abstract-tech\` / \`nature\` 等英文关键词）。常用尺寸：16:9 用 \`1280/720\`，4:3 用 \`1024/768\`，竖屏 / auto 用 \`800/1200\`，方图用 \`800/800\`
 - \`button\`：label、variant("primary"|"secondary"|"ghost"|"outline")、onClick
 - \`list\`：items[]、ordered。**items 单条支持两种形态**：① 字符串（最常用）；② 对象 \`{text, tone?, iconName?}\`（per-item 染色 / 自定义图标替代默认编号或圆点）。多条用不同 tone 形成"4 色循环编号"效果
@@ -243,9 +249,11 @@ export function buildSystemPrompt(opts: {
     prompt += getCreativeAddons(lang);
   }
   if (opts.aspectRatio) {
-    prompt += `\n\n## 画幅约束（用户已指定，不可更改）\n\`meta.aspectRatio\` 必须设为 \`"${opts.aspectRatio}"\`，不接受其他值。`;
+    prompt += lang === "en"
+      ? `\n\n## Canvas constraint (locked by user, do not change)\n\`meta.aspectRatio\` must be set to \`"${opts.aspectRatio}"\` and nothing else.`
+      : `\n\n## 画幅约束（用户已指定，不可更改）\n\`meta.aspectRatio\` 必须设为 \`"${opts.aspectRatio}"\`，不接受其他值。`;
     if (opts.aspectRatio !== "auto") {
-      prompt += "\n\n" + buildFixedAspectConstraint(opts.aspectRatio);
+      prompt += "\n\n" + buildFixedAspectConstraint(opts.aspectRatio, lang);
     }
   }
   // 输出语言指令放在最末尾，让 LLM 最后读到，优先级高
@@ -260,7 +268,21 @@ export { extractTotalPageCount as extractExplicitPageCount } from "./pageCountPa
 
 // 用户页数严格遵守约束：当用户在 prompt 里明确给出 N 页时注入
 // 优先级仅次于画幅 overflow-hidden 的物理限制，高于"主动拆页"等任何建议
-export function buildUserPageCountConstraint(n: number): string {
+// 双语版本：英文 UI 下英文输入约束，避免中英文混合 prompt 让 LLM 注意力被分散
+export function buildUserPageCountConstraint(n: number, lang: Lang = "zh-CN"): string {
+  if (lang === "en") {
+    return (
+      `## User explicitly requested page count = ${n} pages — HIGH priority constraint\n` +
+      `**Priority statement**: This constraint outranks every skill recipe, pattern reference, "split pages aggressively" suggestion, and visual rhythm guideline.\n\n` +
+      `You MUST produce exactly **${n} pages**, no more no less:\n` +
+      `1. **Do not silently add pages**: if a section looks dense, trim copy / merge bullets / drop decorative blocks to fit ${n} pages.\n` +
+      `2. **Do not silently drop pages**: if a section looks thin, expand each topic with proper depth to fill the ${n}-page rhythm.\n` +
+      `3. **If the user's text is pre-segmented** (e.g. \`## Page 1\` / \`## Page 2\` or distinctly marked sections), map each segment 1:1 to a slide. **DO NOT** merge multiple segments into one page or split a segment across pages.\n` +
+      `4. **Relation to canvas constraint**: fitting a single page into the canvas is a physical limit (must obey). Versus the canvas constraint's "split aggressively" suggestion, **this page-count constraint takes higher priority** — better to make a page denser / trim copy further than to break the ${n}-page plan.\n` +
+      `5. **Applies to patches too**: if the user asks to "change to ${n} pages" on an existing deck, you must add/remove slides to land on exactly ${n} pages.\n\n` +
+      `Rationale: when the user gives an explicit number, they have a clear sense of content rhythm and presentation length. The model must not "outsmart" the user by adjusting page count.`
+    );
+  }
   return (
     `## 用户已明确规划页数 = ${n} 页 —— 高优先级强制约束\n` +
     `**优先级声明**：本约束高于任何 skill 配方、pattern 引用、"主动拆页"建议、装饰节奏建议。\n\n` +
@@ -276,19 +298,74 @@ export function buildUserPageCountConstraint(n: number): string {
 
 // 固定画幅强约束：导出独立函数，让 agent.ts 在 skill / pattern fewshot 注入后再追加一次
 // 让 LLM 最后读到画幅约束，避免被多 block 多视觉的风格配方稀释注意力
-export function buildFixedAspectConstraint(aspectRatio: "16:9" | "4:3"): string {
+// 双语版本：英文 UI 下英文输入约束，避免中英文混合 prompt 让 LLM 注意力被分散
+export function buildFixedAspectConstraint(
+  aspectRatio: "16:9" | "4:3",
+  lang: Lang = "zh-CN",
+): string {
   const safeArea = aspectRatio === "16:9" ? "1280×620" : "1024×668";
+  // H1/H2/H3 单行 + 10% 安全留白规则的字数硬上限（按画幅动态选）
+  // 计算依据：可视宽 × 80%（每侧 10% 留白）÷ 字号；中文字宽 ≈ 字号 × 1.0，西文字符 ≈ 字号 × 0.55
+  // 16:9 可视宽 1280：H1(120)≤8 中/14 西；H2(88)≤11/20；H3(72)≤14/25
+  // 4:3  可视宽 1024：H1(120)≤6 中/11 西；H2(88)≤9/17；H3(72)≤11/20
+  const headingLimitsEn = aspectRatio === "16:9"
+    ? "H1 ≤ 8 CJK / 14 Latin · H2 ≤ 11 / 20 · H3 ≤ 14 / 25"
+    : "H1 ≤ 6 CJK / 11 Latin · H2 ≤ 9 / 17 · H3 ≤ 11 / 20";
+  const headingLimitsZh = aspectRatio === "16:9"
+    ? "H1 ≤ 8 中文字 / 14 西文字符 · H2 ≤ 11 / 20 · H3 ≤ 14 / 25"
+    : "H1 ≤ 6 中文字 / 11 西文字符 · H2 ≤ 9 / 17 · H3 ≤ 11 / 20";
+  if (lang === "en") {
+    return (
+      `## Single-page content MUST fit inside the canvas (${aspectRatio}) — HIGHEST priority\n` +
+      `**Priority statement**: This constraint outranks every skill recipe / pattern fewshot reference / style instruction. When a skill recommends "multi-block, multi-visual" or a referenced pattern has many blocks, you MUST rewrite to fit this constraint — drop non-essential blocks, shorten copy, split into multiple pages if needed. \`patternRef\` is fine but the \`blocks\` field must be trimmed per this constraint; do not copy pattern block count or copy length verbatim.\n\n` +
+      `The container is \`overflow-hidden\` — any overflowing content is **clipped and invisible**, the user cannot scroll. Every page must obey:\n` +
+      `1. **Block density hard cap**: ≤ 5 blocks per page on normal layouts; ≤ 3 on hero/quote/cta. **A block / card / table containing an image, or a card with ≥ 3 children, counts as 2 blocks** (each fills half the canvas).\n` +
+      `2. **Heading single-line + 10% safe-margin rule** (H1/H2/H3 only, the huge-size tier 120 / 88 / 72 px):\n` +
+      `   - Headings MUST stay on ONE line — prefer shortening over wrapping. Leave ≥ 10% horizontal margin on each side of the canvas.\n` +
+      `   - Char hard cap at ${aspectRatio}: **${headingLimitsEn}**.\n` +
+      `   - **H4 / H5 / H6** (64 / 56 / 48 px, body / section header / card-internal) are NOT bound by this rule — follow generic readability only.\n` +
+      `   - Mapping convention: hero page main title → H1 or H2; section header → H3; in-card / sub-region title → H5 or H6.\n` +
+      `3. **Other text length cap**: text paragraph ≤ 60 chars; list ≤ 6 items, each ≤ 20 chars.\n` +
+      `4. **Nesting depth**: card/tab/modal \`children\` ≤ 3, avoid stacking too tall.\n` +
+      `5. **Bottom safe zone**: a progress capsule (~60px tall, centered) sits at the bottom in presentation mode. **DO NOT put any content (especially buttons, CTAs, key text, the last item of a list) in the bottom ~80-100px**. Plan layouts assuming the visible safe area is ${safeArea}; push content upward, leave breathing room at the bottom.\n` +
+      `6. **Split pages aggressively**: better to add one more page than to cram a page until the user can't see everything.\n` +
+      `7. **No huge paragraphs**: long source text → distill into lists or split across pages, never paste raw paragraphs into a text block.\n` +
+      `8. **Fixed vs auto**: fixed canvases (${aspectRatio}) are NOT scrollable; only \`aspectRatio: "auto"\` allows vertical scrolling. Current canvas is fixed, so **DO NOT** produce anything that exceeds the visible viewport.\n\n` +
+      `## N equivalent cards / comparison items → **MUST** use N-column horizontal layout, NEVER stack vertically (the most common failure case)\n` +
+      `**Bad example (overflows ${aspectRatio}, bottom clipped by progress capsule)**:\n` +
+      `❌ \`layout: "title-content"\` or \`"hero"\` + heading + card1(image+list) + card2(image+list)\n` +
+      `   → two image-cards stacked vertically exceed the 720px visible area; the second card is clipped.\n` +
+      `**Good example**:\n` +
+      `✅ \`layout: "two-column"\` + heading(column:"center") + card1(column:"left") + card2(column:"right")\n` +
+      `✅ three equivalent items → \`"three-column"\` with col1/col2/col3; four or five → \`"four/five-column"\`.\n` +
+      `Rule: **as soon as a page contains ≥ 2 image-cards / cards with ≥ 3 children / comparison items, you MUST use an N-column layout**, never hero / title-content / bullet-list / quote / cta (which stack vertically).\n\n` +
+      `Philosophy: a deck is "one screen, one message" — not a document dump. "Cropped" and "pinned under the capsule" are worse than "more pages".`
+    );
+  }
   return (
     `## 单页内容必须严格放进画幅（${aspectRatio}）—— 最高优先级强制约束\n` +
     `**优先级声明**：本约束高于任何 skill 配方 / pattern fewshot 引用 / 风格指令。当 skill 推荐"多 block 多视觉"或被引用 pattern 含较多 block 时，必须按本约束精简改写——删除非核心 block、缩短文案、必要时拆成多页。Pattern 的 patternRef 引用允许，但 \`blocks\` 字段必须按本约束精简，不要直接照抄 pattern 内的 block 数量与文案长度。\n\n` +
     `容器是 \`overflow-hidden\`，超出部分**直接被裁剪不可见**，用户无法滚动浏览。每页生成时必须遵守：\n` +
-    `1. **block 密度硬上限**：常规布局每页 ≤ 5 个 block；hero/quote/cta 等留白布局 ≤ 3 个 block。塞太多会被画幅裁切\n` +
-    `2. **文本长度上限**：heading ≤ 14 字（hero ≤ 10 字）；text 段 ≤ 60 字；list 项 ≤ 6 条且每条 ≤ 20 字\n` +
-    `3. **嵌套深度**：card/tab/modal 内的 children ≤ 3 个，避免叠层撑高\n` +
-    `4. **底部安全区**：演示态每页底部固定有进度胶囊（约 60px 高，居中），**不要把任何内容（特别是按钮、CTA、关键 text、底部 list 末项）放进底部约 80-100px 区域**。规划布局时把可见安全高度按 ${safeArea} 来设计；内容主体往上靠、底部留呼吸空间\n` +
-    `5. **内容多时主动拆页**：宁可多生成 1 页拆开，也不要把一页塞满让用户看不到全部\n` +
-    `6. **不要用大段段落**：若用户文案某段很长，提炼要点为 list 或拆成多页，不要原样灌入 text block\n` +
-    `7. **画幅锁定 vs 自适应**：固定画幅（${aspectRatio}）不可滚动；只有 \`aspectRatio: "auto"\` 才允许长内容纵向滚动。当前画幅是固定值，所以**严禁**生成超出可视区域的页面\n\n` +
+    `1. **block 密度硬上限**：常规布局每页 ≤ 5 个 block；hero/quote/cta 等留白布局 ≤ 3 个 block。**含 image 的 block / card / table / 含 image 的 children 数 ≥ 3 的 card** 单个就占满半屏，按"2 个 block"计入上限\n` +
+    `2. **标题单行 + 10% 安全留白规则**（仅 H1/H2/H3，超大字号档 120 / 88 / 72px）：\n` +
+    `   - 标题尽量**单行展示**——文案过长就缩短或拆词，不要让标题换行。左右各预留至少 10% 安全留白\n` +
+    `   - ${aspectRatio} 画幅字数硬上限：**${headingLimitsZh}**\n` +
+    `   - **H4 / H5 / H6**（64 / 56 / 48px，正文 / 章节小标 / 卡内）**不受**此规则约束，按常规可读性即可\n` +
+    `   - 级别使用约定：hero 页主标题 → H1 或 H2；章节标题 → H3；card 内 / 子区域标题 → H5 或 H6\n` +
+    `3. **其他文本长度上限**：text 段 ≤ 60 字；list 项 ≤ 6 条且每条 ≤ 20 字\n` +
+    `4. **嵌套深度**：card/tab/modal 内的 children ≤ 3 个，避免叠层撑高\n` +
+    `5. **底部安全区**：演示态每页底部固定有进度胶囊（约 60px 高，居中），**不要把任何内容（特别是按钮、CTA、关键 text、底部 list 末项）放进底部约 80-100px 区域**。规划布局时把可见安全高度按 ${safeArea} 来设计；内容主体往上靠、底部留呼吸空间\n` +
+    `6. **内容多时主动拆页**：宁可多生成 1 页拆开，也不要把一页塞满让用户看不到全部\n` +
+    `7. **不要用大段段落**：若用户文案某段很长，提炼要点为 list 或拆成多页，不要原样灌入 text block\n` +
+    `8. **画幅锁定 vs 自适应**：固定画幅（${aspectRatio}）不可滚动；只有 \`aspectRatio: "auto"\` 才允许长内容纵向滚动。当前画幅是固定值，所以**严禁**生成超出可视区域的页面\n\n` +
+    `## N 个对等卡片 / 对比项 → **必须** N-column 横向并排，绝不上下堆叠（最容易翻车的场景）\n` +
+    `**反例（${aspectRatio} 下会溢出画幅、底部被进度胶囊压住）**：\n` +
+    `❌ \`layout: "title-content"\` 或 \`"hero"\` + heading + card1(图+列表) + card2(图+列表)\n` +
+    `   → 两个含图卡片纵向叠加超过 720px 可见区域，第二张卡片必被裁切。\n` +
+    `**正例**：\n` +
+    `✅ \`layout: "two-column"\` + heading(column:"center") + card1(column:"left") + card2(column:"right")\n` +
+    `✅ 三个对等项用 \`"three-column"\` + col1/col2/col3；四五个用 \`"four/five-column"\`\n` +
+    `规则：**只要一页内 ≥ 2 个含图 card / 含 3+ 子块的 card / 对比项，必须用 N-column 横向布局**，不能用 hero / title-content / bullet-list / quote / cta 这类纵向堆叠布局。\n\n` +
     `理念：演示稿是「一屏一信息」节奏，不是文档堆砌。"看不全"和"被胶囊压住"都比"页数多"更糟。`
   );
 }

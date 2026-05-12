@@ -67,8 +67,9 @@ function TextBlock({ block }: { block: Extract<Block, { type: "text" }> }) {
   const textUtils = getBlockTextUtilities(block);
   return (
     <p
-      className={cn("max-w-3xl", ...textUtils)}
+      className={cn(...textUtils)}
       style={{
+        maxWidth: 768,
         fontSize: 20,
         lineHeight: 1.75,
         textAlign: align,
@@ -93,40 +94,20 @@ function HeadingBlock({ block }: { block: Extract<Block, { type: "heading" }> })
   const align = block.align ?? "left";
   const level = block.level;
   const textUtils = getBlockTextUtilities(block);
-  // 动态字号：短标题用大字保留 hero 视觉，长标题降一档给 PDF 截图字宽容差留 buffer
-  // PDF 中 SVG image document 内字体 fallback 让 CJK advance width 比预览大 ~15%，
-  // 长标题在 multi-column 窄 padding 下会触发末字换行 —— 按"加权字符数"自适应字号
-  // 中文 / 标点权重 1.0（advance ≈ font-size），英文 / 空格 0.5（advance ≈ 0.5×font-size）
-  const text = rich.isString
-    ? rich.text
-    : rich.segments.map((s) => s.text).join("");
-  // CJK 字符范围（用 \uXXXX 转义而非字面字符，避免肉眼像乱码）：
-  // 一-鿿  CJK 统一汉字
-  // 　-〿  CJK 符号 / 标点（含全角空格）
-  // ＀-￯  全角字符（含全角逗号 / 句号 / 问号）
-  // 额外覆盖 CJK 扩展 A (㐀-䶿 罕用字/古字) + 兼容汉字 (豈-﫿 繁体/异体字)
-  const cjkCount = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef\uf900-\ufaff]/g) ?? []).length;
-  const otherCount = text.length - cjkCount;
-  const weightedLen = cjkCount + otherCount * 0.5;
-  // L1 阈值：> 9 → 降到 64（"AI 是生成者,人是决策者" / "交互式演示网站怎么做?" 都触发降级）
-  // L2 阈值：> 14（L2 字号 48，容器更宽，容差更大）
-  // letterSpacing 对齐原 Tailwind tracking-tighter / tracking-tight
+  // 6 级标题固定字号：H1=120 / H2=88 / H3=72 / H4=64 / H5=56 / H6=48
+  // letterSpacing / lineHeight / fontWeight 按级别渐进，长标题不再动态降档
   const sizeStyle: React.CSSProperties =
     level === 1
-      ? {
-          fontSize: weightedLen > 9 ? 64 : 72,
-          lineHeight: 1.05,
-          letterSpacing: "-0.05em",
-          fontWeight: 800,
-        }
+      ? { fontSize: 120, lineHeight: 1.0, letterSpacing: "-0.06em", fontWeight: 900 }
       : level === 2
-      ? {
-          fontSize: weightedLen > 14 ? 40 : 48,
-          lineHeight: 1.1,
-          letterSpacing: "-0.05em",
-          fontWeight: 700,
-        }
-      : { fontSize: 24, lineHeight: 1.375, letterSpacing: "-0.025em", fontWeight: 600 };
+      ? { fontSize: 88, lineHeight: 1.02, letterSpacing: "-0.055em", fontWeight: 800 }
+      : level === 3
+      ? { fontSize: 72, lineHeight: 1.05, letterSpacing: "-0.05em", fontWeight: 800 }
+      : level === 4
+      ? { fontSize: 64, lineHeight: 1.05, letterSpacing: "-0.05em", fontWeight: 700 }
+      : level === 5
+      ? { fontSize: 56, lineHeight: 1.1, letterSpacing: "-0.04em", fontWeight: 700 }
+      : { fontSize: 48, lineHeight: 1.1, letterSpacing: "-0.04em", fontWeight: 600 };
   const Tag = (`h${level}` as unknown) as keyof JSX.IntrinsicElements;
   return (
     <Tag
@@ -503,13 +484,17 @@ function ModalBlock({ block }: { block: Extract<Block, { type: "modal" }> }) {
                 style={{ padding: 32, backgroundColor: "rgba(15, 23, 42, 0.55)" }}
               >
                 <motion.div
-                  className="relative max-w-2xl w-full max-h-[85vh] overflow-y-auto"
+                  className="relative w-full overflow-y-auto"
                   initial={{ opacity: 0, scale: 0.95, y: 8 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.96, y: 4 }}
                   transition={{ duration: 0.22, ease: "easeOut" }}
                   onClick={(e) => e.stopPropagation()}
                   style={{
+                    // 与 layouts/index.tsx 用 inline px 替代 Tailwind max-w-* / max-h-[*] 同策略，
+                    // 避免 PDF 导出 (modern-screenshot SVG image document) 中 rem / viewport 单位解析异常
+                    maxWidth: 672,  // 与 Tailwind max-w-2xl (42rem ≈ 672px) 对齐
+                    maxHeight: "85vh",
                     backgroundColor: "var(--hxs-bg)",
                     color: "var(--hxs-fg)",
                     borderRadius: "var(--hxs-radius)",
@@ -567,7 +552,7 @@ function TabBlock({ block }: { block: Extract<Block, { type: "tab" }> }) {
   const layoutNamespace = (block as any).magicId ?? reactId;
   if (!active) return null;
   return (
-    <div className="w-full max-w-3xl">
+    <div className="w-full" style={{ maxWidth: 768 }}>
       <div
         className="flex items-center gap-1 mb-4 border-b"
         style={{ borderColor: "color-mix(in srgb, var(--hxs-fg) 12%, transparent)" }}

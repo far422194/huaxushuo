@@ -124,7 +124,10 @@ const TextBlock = z.object({
 
 const HeadingBlock = z.object({
   type: z.literal("heading"),
-  level: z.union([z.literal(1), z.literal(2), z.literal(3)]).default(1),
+  // 6 级标题：固定字号 120 / 88 / 72 / 64 / 56 / 48 px
+  level: z.union([
+    z.literal(1), z.literal(2), z.literal(3), z.literal(4), z.literal(5), z.literal(6),
+  ]).default(3),
   text: RichTextSchema,
   align: z.enum(["left", "center", "right"]).optional(),
   column: Column.optional(),

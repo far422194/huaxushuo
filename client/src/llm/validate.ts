@@ -1,7 +1,7 @@
 import { applyPatch, type Operation } from "fast-json-patch";
 import { nanoid } from "nanoid";
 import type { ZodError } from "zod";
-import { DeckSchema, type Deck } from "@shared/dsl";
+import { DeckSchema, type Deck, LAYOUTS } from "@shared/dsl";
 
 // 各 provider 共用的工具调用处理逻辑
 export interface ProcessOptions {
@@ -62,12 +62,19 @@ export function processToolCall({ toolName, toolInput, currentDeck }: ProcessOpt
       };
     }
     const filled = fillSlideIds(deckCandidate);
+    // 过滤掉"伪 block"（block.type 是 layout 名而非 block 类型）—— LLM 常见混淆
+    // 边界：layout 是 slide.layout 字段值；block.type 是 slide.blocks[].type 字段值，二者命名空间不同
+    const droppedFakeBlocks = stripFakeBlocks(filled);
     const result = DeckSchema.safeParse(filled);
     if (!result.success) return { error: formatZodError(result.error, filled) };
     return {
       deck: normalizeThemeContrast(result.data),
       source: "create",
-      summary: `已生成 ${result.data.slides.length} 页演示`,
+      summary:
+        `已生成 ${result.data.slides.length} 页演示` +
+        (droppedFakeBlocks > 0
+          ? `（自动丢弃 ${droppedFakeBlocks} 个把 layout 名误填到 block.type 的伪 block）`
+          : ""),
     };
   }
 
@@ -365,6 +372,38 @@ export function normalizeThemeContrast(deck: Deck): Deck {
       },
     },
   };
+}
+
+// 过滤掉 block.type ∈ LAYOUTS 的伪 block（LLM 把 layout 名误填进 block 数组）
+// 返回被丢弃的伪 block 总数,给 summary 用作"自动恢复"提示
+function stripFakeBlocks(deck: unknown): number {
+  if (!deck || typeof deck !== "object") return 0;
+  const layoutSet = new Set<string>(LAYOUTS);
+  let dropped = 0;
+  const cleanArr = (arr: any[]): any[] =>
+    arr.filter((b) => {
+      if (b && typeof b === "object" && typeof b.type === "string" && layoutSet.has(b.type)) {
+        dropped++;
+        return false;
+      }
+      // 递归 card / modal / tab 子块
+      if (b && typeof b === "object") {
+        if (Array.isArray(b.children)) b.children = cleanArr(b.children);
+        if (Array.isArray(b.tabs)) {
+          for (const tab of b.tabs) {
+            if (Array.isArray(tab?.blocks)) tab.blocks = cleanArr(tab.blocks);
+          }
+        }
+      }
+      return true;
+    });
+  const d = deck as any;
+  if (Array.isArray(d.slides)) {
+    for (const slide of d.slides) {
+      if (Array.isArray(slide?.blocks)) slide.blocks = cleanArr(slide.blocks);
+    }
+  }
+  return dropped;
 }
 
 function fillSlideIds(deck: unknown): unknown {

@@ -29,6 +29,9 @@ export interface DeckProps {
   // 静态导出模式（PDF 导出）：跳过 AnimatePresence + 背景层 fade，所有 motion 立即定格
   // 避免：旧 slide 退出动画未完成时被截图导致重叠 / 背景渐显未结束导致色值偏淡
   staticExport?: boolean;
+  // flowMode：PDF 导出 auto 画幅时使用。让 Deck/Slide 容器从 h-full + overflow-y-auto 解放为
+  // min-h-full + 自然撑开，使长内容能完整渲染并被 modern-screenshot 截图截到
+  flowMode?: boolean;
 }
 
 export function Deck({
@@ -41,6 +44,7 @@ export function Deck({
   showNavigation = true,
   resolvePattern,
   staticExport = false,
+  flowMode = false,
 }: DeckProps) {
   const [internalIndex, setInternalIndex] = useState(0);
   const isControlled = controlledIndex !== undefined;
@@ -121,6 +125,8 @@ export function Deck({
 
   // auto 模式下允许内部纵向滚动（Web 自适应），固定比例时保持裁剪
   const isAuto = deck.meta.aspectRatio === "auto";
+  // flowAuto：PDF 导出 auto 画幅；Deck 容器去 h-full + overflow-y-auto，让内容撑开整个 PdfStage
+  const flowAuto = flowMode && isAuto;
 
   // 单页 showPageNumber 优先；未设则跟随 deck.meta.showPageNumbers
   const effectiveShowPageNumber =
@@ -134,7 +140,9 @@ export function Deck({
     <RuntimeProvider value={runtimeValue}>
       <div
         className={
-          isAuto
+          flowAuto
+            ? "relative w-full min-h-full overflow-x-hidden"  // flowAuto: 内容撑开 div，PDF 截全
+            : isAuto
             ? "relative w-full h-full overflow-y-auto overflow-x-hidden"
             : "relative w-full h-full overflow-hidden"
         }
@@ -163,6 +171,7 @@ export function Deck({
               isAuto={isAuto}
               showPageNumber={effectiveShowPageNumber}
               staticMode
+              flowMode={flowMode}
             />
           )
         ) : (

@@ -42,8 +42,6 @@ export function ChatPanel() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState<{ phase: ProgressEvent["kind"]; current: number; estimate: number; bytes?: number; batch?: BatchInfo; modelName?: string; promptInfo?: PromptInfo } | null>(null);
-  // 当前会话已累计耗时（秒）：每次新一轮 submit 时锁定为本次开始前的累计值，传给 ProgressBubble 让 elapsed 在此基础上累加
-  const [baseSecondsAtStart, setBaseSecondsAtStart] = useState(0);
   const scrollRef = useRef<HTMLDivElement>(null);
   const controllerRef = useRef<AbortController | null>(null);
 
@@ -105,13 +103,12 @@ export function ChatPanel() {
       phase: "connecting",
       current: 0,
       estimate: initialEstimate,
-      modelName: activeModel?.name,
+      // 显示真实模型 ID（如 mimo-v2.5-pro）而非用户自定义别名（如"我的 Mimo"）
+      modelName: activeModel?.model,
     });
 
-    // 锁定本次开始前已累计的会话耗时，让 ProgressBubble 的 elapsed 在此基础上继续递增
-    const existingBefore = conversationId ? loadConversations().find((c) => c.id === conversationId) : null;
-    setBaseSecondsAtStart(Math.floor((existingBefore?.durationMs ?? 0) / 1000));
-
+    // 每轮新提交从 0 计时:用户在多轮对话中调整 deck 时,看到的应该是"这一轮花了多久"
+    // 而不是整个会话的累计耗时(那个值已经存在 conversation.durationMs 里,历史窗口可看)
     const controller = new AbortController();
     controllerRef.current = controller;
     const startedAt = Date.now();
@@ -129,17 +126,29 @@ export function ChatPanel() {
           const tp = e.batch?.totalPages ?? 0;
           return tp > prevEstimate ? tp : prevEstimate;
         };
+        // batch chip 防闪烁：N 批并发时多个 worker 的 progress 事件交错到达，
+        // 直接覆盖 batch 会让 chip "(批 X/Y)" 在不同批次间反复跳变。
+        // 只在 e.batch.current >= prev.batch.current 时更新，保证 chip 单调递增
+        const mergeBatch = (prevBatch: typeof e.batch | undefined) =>
+          e.batch && (!prevBatch || e.batch.current >= prevBatch.current)
+            ? e.batch
+            : prevBatch;
         if (e.kind === "page") {
           // page 事件不让 e.estimate 覆盖（避免 LLM 实际输出页数推高 estimate 的旧 bug）；
           // 仅当分批 batch.totalPages 提供权威值时才修正
-          setProgress((prev) => prev ? { ...prev, phase: "page", current: e.current, batch: e.batch, estimate: mergeEstimate(prev.estimate) } : prev);
+          // current(批内页码)也只升不降，避免并发批之间跳变
+          setProgress((prev) => {
+            if (!prev) return prev;
+            const nextCurrent = e.current > prev.current ? e.current : prev.current;
+            return { ...prev, phase: "page", current: nextCurrent, batch: mergeBatch(prev.batch), estimate: mergeEstimate(prev.estimate) };
+          });
         } else if (e.kind === "slide" || e.kind === "tool") {
           // 流式承载会通过 store 更新 UI，这里仅同步 phase + batch
-          setProgress((prev) => (prev ? { ...prev, phase: "slide" as any, batch: e.batch, estimate: mergeEstimate(prev.estimate) } : prev));
+          setProgress((prev) => (prev ? { ...prev, phase: "slide" as any, batch: mergeBatch(prev.batch), estimate: mergeEstimate(prev.estimate) } : prev));
         } else if (e.kind === "receiving") {
-          setProgress((prev) => (prev ? { ...prev, phase: "receiving", bytes: e.bytes, batch: e.batch, estimate: mergeEstimate(prev.estimate) } : prev));
+          setProgress((prev) => (prev ? { ...prev, phase: "receiving", bytes: e.bytes, batch: mergeBatch(prev.batch), estimate: mergeEstimate(prev.estimate) } : prev));
         } else if (e.kind === "reasoning") {
-          setProgress((prev) => (prev ? { ...prev, phase: "reasoning", bytes: e.bytes, batch: e.batch, estimate: mergeEstimate(prev.estimate) } : prev));
+          setProgress((prev) => (prev ? { ...prev, phase: "reasoning", bytes: e.bytes, batch: mergeBatch(prev.batch), estimate: mergeEstimate(prev.estimate) } : prev));
         } else if (e.kind === "prompt") {
           setProgress((prev) => {
             if (!prev) return prev;
@@ -160,7 +169,7 @@ export function ChatPanel() {
             };
           });
         } else {
-          setProgress((prev) => (prev ? { ...prev, phase: e.kind, batch: e.batch, estimate: mergeEstimate(prev.estimate) } : prev));
+          setProgress((prev) => (prev ? { ...prev, phase: e.kind, batch: mergeBatch(prev.batch), estimate: mergeEstimate(prev.estimate) } : prev));
         }
       },
     });
@@ -314,7 +323,6 @@ export function ChatPanel() {
                 progress={progress}
                 streamingMode={streamingMode}
                 streamingSlideCount={streamingSlideCount}
-                baseSeconds={baseSecondsAtStart}
               />
             )}
           </div>
@@ -566,9 +574,9 @@ function ActiveModelBadge() {
   return (
     <span
       className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 truncate"
-      title={`${PROVIDER_LABELS[cfg.provider]} · ${cfg.model}`}
+      title={`${cfg.name} · ${PROVIDER_LABELS[cfg.provider]}`}
     >
-      {cfg.name}
+      {cfg.model}
     </span>
   );
 }

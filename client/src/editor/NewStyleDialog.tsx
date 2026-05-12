@@ -88,7 +88,8 @@ export function NewStyleDialog({
     // 命中模型按当前是否带图片走对应路由场景，与 generateStyleDefinition 内部一致
     const hasImg = images.length > 0;
     const activeModel = getActiveModelConfig(hasImg ? "image-recognition" : undefined);
-    setStatus({ kind: "generating", modelName: activeModel?.name });
+    // 显示真实模型 ID（如 mimo-v2.5-pro）而非用户自定义别名（如"我的 Mimo"）
+    setStatus({ kind: "generating", modelName: activeModel?.model });
     const startedAt = Date.now();
     const result = await generateStyleDefinition({ brief: brief.trim(), images });
     if (result.error || !result.theme) {

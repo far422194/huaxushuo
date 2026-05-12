@@ -240,7 +240,55 @@
     "title": "存储管理",
     "size": "占用空间",
     "clear": "清空所有数据",
-    "confirmClear": "确认清空？此操作不可恢复。"
+    "confirmClear": "确认清空？此操作不可恢复。",
+    "quotaWarn": "接近浏览器 localStorage 配额，建议清理对话历史或表单提交",
+    "otherKeys": "其他命名空间（非华胥说）",
+    "otherDesc": "未知命名空间（非华胥说写入）",
+    "notWritten": "尚未写入",
+    "countSuffix": "条",
+    "footerNote": "所有数据仅存浏览器本地，不会上传任何服务器",
+    "modules": {
+      "conversations": {
+        "label": "对话历史",
+        "desc": "ChatPanel 的所有会话流（最多 50 条）"
+      },
+      "stylePrompts": {
+        "label": "风格库",
+        "desc": "AI 生成的 + 用户保存的风格（含 sampleDeck）"
+      },
+      "contentPrompts": {
+        "label": "内容案例库",
+        "desc": "AI 生成的与用户保存的内容案例"
+      },
+      "patterns": {
+        "label": "模板库",
+        "desc": "编辑器保存 / AI 生成 / 提升为内置的视觉模板"
+      },
+      "skills": {
+        "label": "技能库",
+        "desc": "AI 生成 / 用户保存 / 提升为内置的生成策略配方"
+      },
+      "formSubmissions": {
+        "label": "表单提交",
+        "desc": "FormBlock 收集的访客提交记录（最多 500）"
+      },
+      "llmSettings": {
+        "label": "LLM 配置",
+        "desc": "API Key + 服务预设（不要导出分享）"
+      },
+      "deploySettings": {
+        "label": "部署设置",
+        "desc": "Cloudflare / Netlify 等部署目标的凭据与配置"
+      },
+      "pexels": {
+        "label": "Pexels API Key",
+        "desc": "用于把 picsum 占位图替换为关键词匹配的真实图"
+      },
+      "preferences": {
+        "label": "偏好设置",
+        "desc": "语言、UI 主题等本地偏好"
+      }
+    }
   },
   "preview": {
     "title": "全屏预览",
