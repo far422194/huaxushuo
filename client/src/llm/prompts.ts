@@ -80,7 +80,7 @@ export const BASE_SYSTEM_PROMPT = `你是「华胥说」的演示设计助手。
 - \`badge\`：text、tone（通用 tone 全集）
 - \`iframe\`：url、height?
 - \`icon\`：name（**仅白名单**）、size?(默认 32)、tone（通用 tone 全集 + \`current\` 继承父级）、strokeWidth?(0.5-3, 默认 2)、align?
-- \`card\`：title?、subtitle?、children[]（不能再嵌 card）
+- \`card\`：title?、subtitle?、children[]（可放 8 基础 + stat/flow/table/chrome 4 装饰，**卡片里嵌 KPI 数字 / 迷你流程 / 对比表 / 窗口装饰条都支持**，不能再嵌 card/form/modal/tab）
 
 **icon.name 白名单（共 ${HXS_ICON_NAMES.length} 个，仅这些可用）**：
 ${HXS_ICON_NAMES.join(", ")}
@@ -94,7 +94,7 @@ ${HXS_ICON_NAMES.join(", ")}
 
 高级 3 种（按需使用，不要为了用而用）：
 - \`form\`：表单收集——\`formId\`（字母数字下划线）、\`fields\`（1-10 个，每个含 \`name\`/\`label\`/\`type\`）、\`submitLabel\`、\`successMessage\`、\`onSubmit\`（\`{type:"none"|"next"|"jumpTo",slideId?}\`，默认 none）。字段类型 7 种：\`text\` / \`email\` / \`textarea\`（可设 rows）/ \`select\`（需 options[]）/ \`checkbox\` / \`number\`（可设 min/max）/ \`radio\`（需 options[]）。**重要**：\`field.name\` 仅允许字母数字下划线、字母开头（CSV 列名），中文写在 \`label\`。提交存浏览器 localStorage，演示者用编辑器查看 + 导出 CSV。仅在用户明确要"留资"「问卷」「联系表单」时使用
-- \`modal\`：\`triggerLabel\`（按钮文字）、\`triggerVariant\`、\`title?\`、\`children[]\`（基础 7 种 block + form，不能再嵌 modal/tab/card）。点按钮弹出。适合放"详情"「条款」「报名表单」
+- \`modal\`：\`triggerLabel\`（按钮文字）、\`triggerVariant\`、\`title?\`、\`children[]\`（8 基础 + form + stat/flow/table/chrome 4 装饰，**弹窗内可放表单 / KPI / 流程图 / 对比表**，不能再嵌 modal/tab/card）。点按钮弹出。适合放"详情"「条款」「报名表单」
 - \`tab\`：\`tabs[]\`（1-6 个，每个 tab 含 \`id\`/\`label\`/\`blocks[]\`）、\`defaultTabId?\`。子块同 modal。适合多视角对比：「方案 A / 方案 B」「初级 / 中级 / 高级」
 
 **视觉变体（utilities）—— 关键能力**：
@@ -253,58 +253,10 @@ export function buildSystemPrompt(opts: {
   return prompt;
 }
 
-// 数字解析（中/英/阿拉伯）—— 与 agent.ts parseNumWord 同标定
-const CN_DIGIT_LOCAL: Record<string, number> = {
-  一: 1, 两: 2, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10,
-};
-const EN_DIGIT_LOCAL: Record<string, number> = {
-  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
-  sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
-  twenty: 20, thirty: 30, forty: 40, fifty: 50,
-  sixty: 60, seventy: 70, eighty: 80, ninety: 90,
-};
-function parseCnNum(s: string): number {
-  if (!s) return 0;
-  if (/^\d+$/.test(s)) return Number(s);
-  const lower = s.toLowerCase();
-  if (lower in EN_DIGIT_LOCAL) return EN_DIGIT_LOCAL[lower]!;
-  if (/^[a-z]+[-\s][a-z]+$/i.test(s)) {
-    const parts = lower.split(/[-\s]+/);
-    let sum = 0;
-    for (const p of parts) sum += EN_DIGIT_LOCAL[p] ?? 0;
-    if (sum > 0) return sum;
-  }
-  if (s.length === 1) return CN_DIGIT_LOCAL[s] ?? 0;
-  if (s === "十") return 10;
-  if (s.startsWith("十")) return 10 + (CN_DIGIT_LOCAL[s[1]!] ?? 0);
-  if (s.endsWith("十")) return (CN_DIGIT_LOCAL[s[0]!] ?? 0) * 10;
-  if (s.includes("十")) {
-    const [a, b] = s.split("十");
-    return (CN_DIGIT_LOCAL[a!] ?? 0) * 10 + (CN_DIGIT_LOCAL[b!] ?? 0);
-  }
-  return 0;
-}
-
 // 从用户消息提取明确页数：仅在用户写明"N 页 / N 张 / N 篇 / N pages / N slides"等具体数字时返回；否则 undefined
-// 支持中文数字（一/两/三/…/十/十一/二十）、阿拉伯数字、英文数字（one-twenty + 整十 + twenty-one 复合）。
-// 排除「第 N 页 / 最后 N 页 / last N pages」局部页码引用。
-// 与 estimatePageCount 共用正则；区别在 estimatePageCount 找不到时回退默认（5 / deck.slides.length），
-// 这里 undefined 让调用方知道"用户没有明确规划"，避免误把默认页数当作"用户规划"
-export function extractExplicitPageCount(userMessage: string): number | undefined {
-  const NUM_PATTERN =
-    "\\d+|[一二两三四五六七八九十]+|(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[-\\s](?:one|two|three|four|five|six|seven|eight|nine))?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen";
-  const UNIT_PATTERN = "页|张|个?页面|个?幻灯片|篇|节|章节?|slides?|pages?";
-  const LOCAL_RE = new RegExp(`(?:第|最后|倒数|last)\\s*(?:${NUM_PATTERN})\\s*(?:${UNIT_PATTERN})`, "gi");
-  const cleaned = userMessage.replace(LOCAL_RE, "");
-  const TOTAL_RE = new RegExp(`(${NUM_PATTERN})\\s*(?:${UNIT_PATTERN}|个?PPT)`, "gi");
-  let max = 0;
-  for (const m of cleaned.matchAll(TOTAL_RE)) {
-    const n = parseCnNum(m[1]!);
-    if (n > 0 && n < 200 && n > max) max = n;
-  }
-  return max > 0 ? max : undefined;
-}
+// 用 pageCountParse 公共模块（与 estimatePageCount 共享同一套正则，避免双源漂移）
+// 区别在 estimatePageCount 找不到时回退默认（5 / deck.slides.length），这里 undefined 让调用方知道"用户没有明确规划"
+export { extractTotalPageCount as extractExplicitPageCount } from "./pageCountParse";
 
 // 用户页数严格遵守约束：当用户在 prompt 里明确给出 N 页时注入
 // 优先级仅次于画幅 overflow-hidden 的物理限制，高于"主动拆页"等任何建议

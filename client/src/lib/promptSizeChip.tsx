@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { FileText } from "lucide-react";
 import type { PromptSegments } from "@/llm/types";
 
 // 进度条上的 prompt 体积 chip：显示本次（或本批）发给 LLM 的 system + user message 总体积
@@ -92,11 +93,12 @@ export function PromptSizeChip({
     <span
       className={
         className ??
-        "px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium border border-slate-200 cursor-help tabular-nums"
+        "inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[10px] font-medium border border-slate-200 cursor-help tabular-nums"
       }
       title={tooltip}
     >
-      📝 {baseLabel}{maxLabel}
+      <FileText size={10} aria-hidden />
+      {baseLabel}{maxLabel}
     </span>
   );
 }

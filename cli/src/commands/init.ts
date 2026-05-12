@@ -7,8 +7,10 @@ import pc from "picocolors";
 import { log } from "../utils/log.js";
 import { hasPnpm, installDeps } from "../utils/run.js";
 
-const TEMPLATE_REPO = "far422194/huaxushuo";
-const TEMPLATE_BRANCH = "main";
+// 模板仓库 / 分支默认值；允许环境变量覆盖以应对模板仓库迁移、企业内网镜像、临时 fork 调试等场景
+// 优先级：环境变量 > 命令行 --template > 默认值
+const TEMPLATE_REPO = process.env.HUAXUSHUO_TEMPLATE_REPO ?? "far422194/huaxushuo";
+const TEMPLATE_BRANCH = process.env.HUAXUSHUO_TEMPLATE_BRANCH ?? "main";
 
 export interface InitOptions {
   template?: string;
@@ -29,7 +31,8 @@ export async function init(rawName: string | undefined, options: InitOptions = {
     });
     if (isCancel(answer)) {
       cancel("已取消");
-      process.exit(0);
+      // SIGINT 习惯退出码 130：父进程脚本能区分"用户主动取消"和"成功完成"
+      process.exit(130);
     }
     projectName = (answer as string) || "huaxushuo";
   }

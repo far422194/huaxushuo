@@ -67,12 +67,19 @@ export async function buildImageSubstitutions(
   }
   if (candidates.size === 0) return new Map();
 
+  // 限并发批处理：Pexels API 限流较严，长 deck 一次 20+ 张并发会 429
+  // 每批 5 张并发，串行下一批；deck 内通常 5-10 张图，1-2 批跑完
   const subs = new Map<string, string>();
-  await Promise.all(
-    Array.from(candidates.entries()).map(async ([url, { slug, orientation }]) => {
-      const res = await searchPexelsPhoto(slug, orientation);
-      if (res) subs.set(url, res);
-    })
-  );
+  const entries = Array.from(candidates.entries());
+  const BATCH_SIZE = 5;
+  for (let i = 0; i < entries.length; i += BATCH_SIZE) {
+    const batch = entries.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async ([url, { slug, orientation }]) => {
+        const res = await searchPexelsPhoto(slug, orientation);
+        if (res) subs.set(url, res);
+      })
+    );
+  }
   return subs;
 }

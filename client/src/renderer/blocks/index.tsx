@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "framer-motion";
 import { X, ArrowRight, ChevronRight, Plus, ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
@@ -104,7 +104,8 @@ function HeadingBlock({ block }: { block: Extract<Block, { type: "heading" }> })
   // 一-鿿  CJK 统一汉字
   // 　-〿  CJK 符号 / 标点（含全角空格）
   // ＀-￯  全角字符（含全角逗号 / 句号 / 问号）
-  const cjkCount = (text.match(/[\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]/g) ?? []).length;
+  // 额外覆盖 CJK 扩展 A (㐀-䶿 罕用字/古字) + 兼容汉字 (豈-﫿 繁体/异体字)
+  const cjkCount = (text.match(/[\u4e00-\u9fff\u3400-\u4dbf\u3000-\u303f\uff00-\uffef\uf900-\ufaff]/g) ?? []).length;
   const otherCount = text.length - cjkCount;
   const weightedLen = cjkCount + otherCount * 0.5;
   // L1 阈值：> 9 → 降到 64（"AI 是生成者,人是决策者" / "交互式演示网站怎么做?" 都触发降级）
@@ -369,8 +370,8 @@ function CardBlock({ block }: { block: Extract<Block, { type: "card" }> }) {
 
   return (
     <div
-      className={cn("p-7 md:p-9 flex flex-col gap-5 h-full")}
-      style={inlineStyle}
+      className={cn("flex flex-col h-full")}
+      style={{ padding: 36, gap: 20, ...inlineStyle }}
     >
       {block.title && (
         <div>
@@ -493,13 +494,13 @@ function ModalBlock({ block }: { block: Extract<Block, { type: "modal" }> }) {
           <AnimatePresence>
             {open && (
               <motion.div
-                className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-8"
+                className="fixed inset-0 z-[1000] flex items-center justify-center"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.2 }}
                 onClick={() => setOpen(false)}
-                style={{ backgroundColor: "rgba(15, 23, 42, 0.55)" }}
+                style={{ padding: 32, backgroundColor: "rgba(15, 23, 42, 0.55)" }}
               >
                 <motion.div
                   className="relative max-w-2xl w-full max-h-[85vh] overflow-y-auto"
@@ -524,7 +525,7 @@ function ModalBlock({ block }: { block: Extract<Block, { type: "modal" }> }) {
                   >
                     <X size={18} />
                   </button>
-                  <div className="px-7 py-7 md:px-9 md:py-9">
+                  <div style={{ padding: 36 }}>
                     {block.title && (
                       <h3
                         className="font-bold mb-5 pr-8"
@@ -560,6 +561,10 @@ function TabBlock({ block }: { block: Extract<Block, { type: "tab" }> }) {
   const initial = block.defaultTabId ?? block.tabs[0]?.id ?? "";
   const [activeId, setActiveId] = useState(initial);
   const active = block.tabs.find((t) => t.id === activeId) ?? block.tabs[0];
+  // 同一页多个 TabBlock 实例需要独立的 layoutId namespace 避免 framer-motion 把不同 tab 的下划线认成同一元素
+  // magicId 存在时（用户主动开启 Magic Move 跨 slide 飞行）优先用 magicId，否则用 React.useId() 保证唯一
+  const reactId = useId();
+  const layoutNamespace = (block as any).magicId ?? reactId;
   if (!active) return null;
   return (
     <div className="w-full max-w-3xl">
@@ -587,7 +592,7 @@ function TabBlock({ block }: { block: Extract<Block, { type: "tab" }> }) {
               {tabLabel}
               {isActive && (
                 <motion.span
-                  layoutId={`tab-underline-${(block as any).magicId ?? "tab"}-${block.tabs.length}`}
+                  layoutId={`tab-underline-${layoutNamespace}`}
                   className="absolute left-0 right-0 -bottom-px h-0.5"
                   style={{ backgroundColor: "var(--hxs-primary)" }}
                 />
@@ -664,13 +669,13 @@ function FlowBlock({ block }: { block: Extract<Block, { type: "flow" }> }) {
   const ArrowComp = block.arrow === "chevron" ? ChevronRight : block.arrow === "plus" ? Plus : ArrowRight;
   return (
     <div
-      className="flex flex-wrap items-center gap-3 md:gap-4"
-      style={{ justifyContent: justify, width: "100%" }}
+      className="flex flex-wrap items-center"
+      style={{ gap: 16, justifyContent: justify, width: "100%" }}
     >
       {block.steps.map((step, i) => {
         const color = toneToColor(step.tone ?? "primary");
         return (
-          <span key={i} className="inline-flex items-center gap-3 md:gap-4">
+          <span key={i} className="inline-flex items-center" style={{ gap: 16 }}>
             <span
               className="inline-flex items-center px-4 py-2 font-semibold"
               style={{

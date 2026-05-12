@@ -12,6 +12,7 @@ import { getProvider } from "./providers";
 import { getStylePrompt } from "@/data/stylePrompts";
 import { useEditorStore } from "@/store/editor";
 import { detectSegments, buildVirtualPageSegments, type PromptSegment } from "./segmentMessage";
+import { parseNumWord, extractTotalPageCount } from "./pageCountParse";
 import { matchSkill, buildSkillAddon } from "./skillMatcher";
 import { getSkill } from "@/data/skills";
 import { getCurrentLang } from "@/i18n";
@@ -42,43 +43,8 @@ export interface AgentOptions {
   batchInfo?: BatchInfo;
 }
 
-// 中文数字 → 阿拉伯数字（覆盖一-九十九，足够 deck 页数估算）
-const CN_DIGIT: Record<string, number> = {
-  一: 1, 两: 2, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6, 七: 7, 八: 8, 九: 9, 十: 10,
-};
-// 英文数字 → 阿拉伯（覆盖 one-ninety + 整十；deck 页数足够，hundreds 极少出现）
-const EN_DIGIT: Record<string, number> = {
-  one: 1, two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10,
-  eleven: 11, twelve: 12, thirteen: 13, fourteen: 14, fifteen: 15,
-  sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19,
-  twenty: 20, thirty: 30, forty: 40, fifty: 50,
-  sixty: 60, seventy: 70, eighty: 80, ninety: 90,
-};
-// 解析中/英/阿拉伯数字字符串为整数；不识别时返回 0
-function parseNumWord(s: string): number {
-  if (!s) return 0;
-  if (/^\d+$/.test(s)) return Number(s);
-  const lower = s.toLowerCase();
-  if (lower in EN_DIGIT) return EN_DIGIT[lower]!;
-  // 「twenty-one」「thirty five」等复合英文：拆开取和（容错处理，不强求语法）
-  if (/^[a-z]+[-\s][a-z]+$/i.test(s)) {
-    const parts = lower.split(/[-\s]+/);
-    let sum = 0;
-    for (const p of parts) sum += EN_DIGIT[p] ?? 0;
-    if (sum > 0) return sum;
-  }
-  // 中文：十X / X十 / X十Y / 单字
-  if (s.length === 1) return CN_DIGIT[s] ?? 0;
-  if (s === "十") return 10;
-  if (s.startsWith("十")) return 10 + (CN_DIGIT[s[1]!] ?? 0);
-  if (s.endsWith("十")) return (CN_DIGIT[s[0]!] ?? 0) * 10;
-  if (s.includes("十")) {
-    const [a, b] = s.split("十");
-    return (CN_DIGIT[a!] ?? 0) * 10 + (CN_DIGIT[b!] ?? 0);
-  }
-  return 0;
-}
-// 保留旧名（向后兼容内部调用）
+// 数字解析 / 页数正则迁移到 pageCountParse 公共模块
+// parseNumWord, extractTotalPageCount, NUM_PATTERN, UNIT_PATTERN 等共享给 prompts.ts 同步使用
 const parseChineseNum = parseNumWord;
 
 // 从用户输入估算预计页数：覆盖中英文常见量词（页/张/篇/节/章/幻灯片/PPT/slides/pages）。
@@ -89,20 +55,9 @@ const parseChineseNum = parseNumWord;
 // 找不到数字时：兜底数 markdown「## 第 N 页 / ## Page N」结构化标记数（≥ 3 个标记取最大编号），
 // 否则 patch 场景至少 5 页；create 默认 5。
 export function estimatePageCount(userMessage: string, currentDeck?: Deck): number {
-  // 先剔除「第 N 页/张」「最后 N 页」「倒数 N 页」类局部引用，避免「修改第 4 页」被当作 estimate=4
-  // 数字支持：阿拉伯 / 中文（一-十）/ 英文（one-twenty + 整十；含「twenty-one」复合）
-  const NUM_PATTERN =
-    "\\d+|[一二两三四五六七八九十]+|(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[-\\s](?:one|two|three|four|five|six|seven|eight|nine))?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen";
-  const UNIT_PATTERN = "页|张|个?页面|个?幻灯片|篇|节|章节?|slides?|pages?";
-  const LOCAL_RE = new RegExp(`(?:第|最后|倒数|last)\\s*(?:${NUM_PATTERN})\\s*(?:${UNIT_PATTERN})`, "gi");
-  const cleaned = userMessage.replace(LOCAL_RE, "");
-  const TOTAL_RE = new RegExp(`(${NUM_PATTERN})\\s*(?:${UNIT_PATTERN}|个?PPT)`, "gi");
-  let max = 0;
-  for (const m of cleaned.matchAll(TOTAL_RE)) {
-    const n = parseNumWord(m[1]!);
-    if (n > 0 && n < 200 && n > max) max = n;
-  }
-  if (max > 0) return max;
+  // 先尝试明确总页数（"N 页"），剔除「第 N 页 / 最后 N 页」等局部引用
+  const explicit = extractTotalPageCount(userMessage);
+  if (explicit !== undefined) return explicit;
 
   // 兜底：数 markdown / 纯文本结构化分段标记的最大编号
   // 用户写「## 第 1 页 ... ## 第 46 页 ...」或纯「第 1 页：xxx」「第 2 页：yyy」分段时，
@@ -526,8 +481,15 @@ async function runBatchAttempt(args: {
         } as Deck)
       : undefined;
 
+  // slide 事件落 store 仅在首批（i=0）启用：
+  // 多批并发时 3 个 worker 同时 append 会让用户中途看到乱序（高 chunkIdx 完成快的页先落地）；
+  // 续接批的 slide 事件只透传给 UI（进度 / 矩阵格亮）不写 store，等 attempt 完成后
+  // orchestrator 用 applyStreamingBatch 按 chunkIdx 顺序整体替换，保证最终顺序正确
+  const isFirstBatch = i === 0;
   const buildOnProgress = (info: BatchInfo) => (e: ProgressEvent) => {
-    if (e.kind === "slide") useEditorStore.getState().appendStreamingSlide(e.slide);
+    if (e.kind === "slide" && isFirstBatch) {
+      useEditorStore.getState().appendStreamingSlide(e.slide);
+    }
     opts.onProgress?.({ ...e, batch: info });
   };
 
@@ -922,9 +884,12 @@ export async function generate(opts: AgentOptions): Promise<AgentResult> {
 async function enrichDeckImagesAsync(deck: Deck): Promise<void> {
   try {
     const subs = await buildImageSubstitutions(deck);
-    if (subs.size > 0) {
-      useEditorStore.getState().replaceImageUrls(subs);
-    }
+    if (subs.size === 0) return;
+    // 版本号兜底：用 deck 引用做"未被用户编辑过"的判定
+    // 若用户在 buildImageSubstitutions 期间编辑了 deck，store 的 deck 引用已变（commit 会替换）
+    // → 跳过替换避免：① 覆盖用户改动 ② 不入 undo 栈导致无法回滚
+    if (useEditorStore.getState().deck !== deck) return;
+    useEditorStore.getState().replaceImageUrls(subs);
   } catch {
     // 静默失败：网络/限流/解析错误都不影响已渲染 deck
   }

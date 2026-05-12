@@ -201,10 +201,30 @@ function buildBackgroundKey(slide: SlideT | undefined): string {
 // image 背景特殊处理：图片层 + theme.bg 半透明渐变 overlay 两层
 // 目的：避免 LLM 选了高饱和图片后，前景标题/正文与图片色相近导致不可读
 // overlay 用 theme.bg（浅主题用浅覆盖、深主题用深覆盖），顶部更浓底部稍弱保证整体不闷
+// 渲染层级（image 背景时）：image → pattern utility → overlay → (内容层)
+//   底纹（noise / grid / dots）若画在 overlay 之上会稀释 overlay 的对比度保护 →
+//   overlay 必须最后画，确保是前景文字最近邻的"亮度调和"层
 function BackgroundLayer({ slide, instant }: { slide: SlideT; instant?: boolean }) {
   const bgStyle = backgroundToStyle(slide.background);
   const isImageBg = slide.background?.type === "image";
   const { pattern: patternUtils } = splitUtilities(filterUtilities(slide.utilities));
+  const patternNodes = patternUtils.map((u) => (
+    <div
+      key={u}
+      aria-hidden
+      className={cn("absolute inset-0 pointer-events-none", u)}
+    />
+  ));
+  const overlayNode = isImageBg ? (
+    <div
+      aria-hidden
+      className="absolute inset-0 pointer-events-none"
+      style={{
+        background:
+          "linear-gradient(to bottom, color-mix(in srgb, var(--hxs-bg) 60%, transparent) 0%, color-mix(in srgb, var(--hxs-bg) 30%, transparent) 100%)",
+      }}
+    />
+  ) : null;
   return (
     <motion.div
       className="absolute inset-0 z-0"
@@ -214,26 +234,9 @@ function BackgroundLayer({ slide, instant }: { slide: SlideT; instant?: boolean 
       exit={instant ? { opacity: 1 } : { opacity: 0 }}
       transition={{ duration: instant ? 0 : 0.4 }}
     >
-      {isImageBg && (
-        <>
-          <div aria-hidden className="absolute inset-0" style={bgStyle} />
-          <div
-            aria-hidden
-            className="absolute inset-0 pointer-events-none"
-            style={{
-              background:
-                "linear-gradient(to bottom, color-mix(in srgb, var(--hxs-bg) 60%, transparent) 0%, color-mix(in srgb, var(--hxs-bg) 30%, transparent) 100%)",
-            }}
-          />
-        </>
-      )}
-      {patternUtils.map((u) => (
-        <div
-          key={u}
-          aria-hidden
-          className={cn("absolute inset-0 pointer-events-none", u)}
-        />
-      ))}
+      {isImageBg && <div aria-hidden className="absolute inset-0" style={bgStyle} />}
+      {patternNodes}
+      {overlayNode}
     </motion.div>
   );
 }

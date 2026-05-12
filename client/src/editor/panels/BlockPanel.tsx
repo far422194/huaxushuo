@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { nanoid } from "nanoid";
 import type { Block, Slide } from "@shared/dsl";
 import { FORM_FIELD_TYPES, type FormField, type Tab } from "@shared/dsl";
-import { useEditorStore } from "@/store/editor";
+import { useEditorStore, BLOCKS_PER_SLIDE_MAX } from "@/store/editor";
 import { Section, Field, Select, TextInput, NumberInput, Toggle, StringListEditor } from "./forms";
 import { InlineBlockEditor } from "./InlineBlockEditor";
 import { Tabs } from "./Tabs";
@@ -37,7 +37,7 @@ const SIMPLE_BLOCK_TYPES = [
   "text", "heading", "image", "button", "list", "badge", "iframe", "icon",
   "stat", "flow", "table", "chrome",
 ] as const;
-// modal/tab 内可放的基础子块类型（与 schema 的 ContainerChildBlock 保持一致：基础 7 + icon + form）
+// modal/tab 内可放的子块类型（与 schema 的 ContainerChildBlock 对齐：基础 8 + form + 4 叶子容器）
 const CONTAINER_CHILD_TYPES = [
   "text",
   "heading",
@@ -48,6 +48,10 @@ const CONTAINER_CHILD_TYPES = [
   "iframe",
   "icon",
   "form",
+  "stat",
+  "flow",
+  "table",
+  "chrome",
 ] as const;
 
 export function BlockPanel({
@@ -554,13 +558,13 @@ function FormFieldsEditor({
 function useFormFieldTypeLabels(): Record<(typeof FORM_FIELD_TYPES)[number], string> {
   const { t } = useTranslation("editor");
   return {
-    text: t("block.text"),
-    email: "Email",
-    textarea: t("inline.rows"),
-    select: t("panels.form.options"),
-    checkbox: t("panels.form.required"),
-    number: t("inline.value"),
-    radio: t("panels.form.options"),
+    text: t("panels.form.fieldType.text"),
+    email: t("panels.form.fieldType.email"),
+    textarea: t("panels.form.fieldType.textarea"),
+    select: t("panels.form.fieldType.select"),
+    checkbox: t("panels.form.fieldType.checkbox"),
+    number: t("panels.form.fieldType.number"),
+    radio: t("panels.form.fieldType.radio"),
   };
 }
 
@@ -840,6 +844,10 @@ export function AddBlockToolbar({ slide }: { slide: Slide }) {
   const { t } = useTranslation("editor");
   const blockLabels = useBlockTypeLabels();
   const addBlock = useEditorStore((s) => s.addBlock);
+  const atLimit = slide.blocks.length >= BLOCKS_PER_SLIDE_MAX;
+  const limitTitle = atLimit
+    ? `已达单页 ${BLOCKS_PER_SLIDE_MAX} 块上限，请先删除或拆页`
+    : undefined;
   return (
     <Section title={t("panels.section.addBlock")}>
       <div className="grid grid-cols-2 gap-1">
@@ -847,7 +855,8 @@ export function AddBlockToolbar({ slide }: { slide: Slide }) {
           <button
             key={typ}
             onClick={() => addBlock(slide.id, defaultChild(typ))}
-            disabled={slide.blocks.length >= 6}
+            disabled={atLimit}
+            title={limitTitle}
             className="text-xs px-2 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
           >
             <Plus size={10} />
@@ -861,7 +870,8 @@ export function AddBlockToolbar({ slide }: { slide: Slide }) {
           onClick={() =>
             addBlock(slide.id, { type: "card", title: "", children: [] } as any)
           }
-          disabled={slide.blocks.length >= 6}
+          disabled={atLimit}
+          title={limitTitle}
           className="text-xs px-2 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
         >
           <Plus size={10} />
@@ -869,7 +879,8 @@ export function AddBlockToolbar({ slide }: { slide: Slide }) {
         </button>
         <button
           onClick={() => addBlock(slide.id, defaultFormBlock())}
-          disabled={slide.blocks.length >= 6}
+          disabled={atLimit}
+          title={limitTitle}
           className="text-xs px-2 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
         >
           <Plus size={10} />
@@ -877,7 +888,8 @@ export function AddBlockToolbar({ slide }: { slide: Slide }) {
         </button>
         <button
           onClick={() => addBlock(slide.id, defaultModalBlock())}
-          disabled={slide.blocks.length >= 6}
+          disabled={atLimit}
+          title={limitTitle}
           className="text-xs px-2 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
         >
           <Plus size={10} />
@@ -885,7 +897,8 @@ export function AddBlockToolbar({ slide }: { slide: Slide }) {
         </button>
         <button
           onClick={() => addBlock(slide.id, defaultTabBlock())}
-          disabled={slide.blocks.length >= 6}
+          disabled={atLimit}
+          title={limitTitle}
           className="text-xs px-2 py-1.5 rounded border border-slate-200 bg-white hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1"
         >
           <Plus size={10} />

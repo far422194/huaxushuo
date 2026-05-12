@@ -1,10 +1,23 @@
 import type { Deck, Theme } from "@shared/dsl";
+import i18n from "@/i18n";
 
 // 通用 4 页样板：用于风格预览（注入不同 theme）
+// 文案走 i18n（dialog:stylePreview.sampleDeck.*），随 UI 语言切换
+// 用 i18n 单例 t 函数：sampleDeck 不在 React 树内，无法用 useTranslation
 export function buildSampleDeckWithTheme(theme: Theme, brandName: string = "Northstar"): Deck {
+  const t = (key: string, opts?: Record<string, unknown>): string =>
+    i18n.t(`stylePreview.sampleDeck.${key}`, { ns: "dialog", ...opts }) as string;
+  const oldWayItems = i18n.t("stylePreview.sampleDeck.oldWayItems", {
+    ns: "dialog",
+    returnObjects: true,
+  }) as string[];
+  const newWayItems = i18n.t("stylePreview.sampleDeck.newWayItems", {
+    ns: "dialog",
+    returnObjects: true,
+  }) as string[];
   return {
     version: "1.0",
-    meta: { title: `${brandName} 风格预览`, aspectRatio: "16:9" },
+    meta: { title: t("previewTitle", { brand: brandName }), aspectRatio: "16:9" },
     theme,
     variables: {},
     slides: [
@@ -17,12 +30,12 @@ export function buildSampleDeckWithTheme(theme: Theme, brandName: string = "Nort
             ? { type: "gradient", from: theme.colors.bg, to: theme.colors.primary, angle: 135 }
             : undefined,
         blocks: [
-          { type: "badge", text: "新品发布", tone: "accent" },
+          { type: "badge", text: t("newProduct"), tone: "accent" },
           { type: "heading", level: 1, text: brandName },
-          { type: "text", text: "重新定义日常工作的开始。" },
+          { type: "text", text: t("heroSubtitle") },
           {
             type: "button",
-            label: "了解更多",
+            label: t("ctaLearnMore"),
             variant: "primary",
             onClick: { action: "next" },
           },
@@ -36,14 +49,14 @@ export function buildSampleDeckWithTheme(theme: Theme, brandName: string = "Nort
           {
             type: "card",
             column: "left",
-            title: "传统方式",
-            children: [{ type: "list", ordered: false, items: ["手工繁琐", "信息分散", "难以协作"] }],
+            title: t("oldWayTitle"),
+            children: [{ type: "list", ordered: false, items: oldWayItems }],
           },
           {
             type: "card",
             column: "right",
-            title: "我们的方式",
-            children: [{ type: "list", ordered: false, items: ["自动同步", "一处可见", "实时协作"] }],
+            title: t("newWayTitle"),
+            children: [{ type: "list", ordered: false, items: newWayItems }],
           },
         ],
       },
@@ -52,8 +65,8 @@ export function buildSampleDeckWithTheme(theme: Theme, brandName: string = "Nort
         layout: "quote",
         transition: "fade",
         blocks: [
-          { type: "heading", level: 2, text: `"用过 ${brandName} 后回不去了。"` },
-          { type: "text", text: "— 一位早期用户" },
+          { type: "heading", level: 2, text: t("quote", { brand: brandName }) },
+          { type: "text", text: t("quoteAttribution") },
         ],
       },
       {
@@ -61,11 +74,11 @@ export function buildSampleDeckWithTheme(theme: Theme, brandName: string = "Nort
         layout: "cta",
         transition: "fade",
         blocks: [
-          { type: "heading", level: 2, text: "立即开始" },
-          { type: "text", text: "30 天免费试用，无需信用卡。" },
+          { type: "heading", level: 2, text: t("ctaTitle") },
+          { type: "text", text: t("ctaSubtitle") },
           {
             type: "button",
-            label: "免费试用",
+            label: t("ctaButton"),
             variant: "primary",
             onClick: { action: "openLink", url: "https://example.com" },
           },
