@@ -204,12 +204,20 @@ export const useEditorStore = create<EditorState>((set, get) => ({
   setSelectedStyleId: (id) => set({ selectedStyleId: id }),
 
   setCurrentIndex: (i) => {
-    const len = get().deck.slides.length;
+    const { deck } = get();
+    const len = deck.slides.length;
     if (len === 0) {
       set({ currentIndex: 0 });
       return;
     }
-    set({ currentIndex: Math.max(0, Math.min(len - 1, i)) });
+    const clamped = Math.max(0, Math.min(len - 1, i));
+    // 用户主动切页(快捷键 / 工具栏按钮)需同步 selection 到新页,让右侧属性栏跟随更新;
+    // 原 block 选择跨页无意义,清掉。流式生成 / deck reload 等内部场景走直接 set,不经此入口
+    const newSlideId = deck.slides[clamped]?.id;
+    set({
+      currentIndex: clamped,
+      selection: newSlideId ? { slideId: newSlideId } : {},
+    });
   },
 
   selectSlide: (slideId) => {

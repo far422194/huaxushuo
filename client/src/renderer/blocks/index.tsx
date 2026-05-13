@@ -109,6 +109,11 @@ function HeadingBlock({ block }: { block: Extract<Block, { type: "heading" }> })
       ? { fontSize: 56, lineHeight: 1.1, letterSpacing: "-0.04em", fontWeight: 700 }
       : { fontSize: 48, lineHeight: 1.1, letterSpacing: "-0.04em", fontWeight: 600 };
   const Tag = (`h${level}` as unknown) as keyof JSX.IntrinsicElements;
+  // 富文本 segments(局部染色)走 nowrap:modern-screenshot 序列化 SVG foreignObject 时
+  // 相邻 inline <span> 边界处的测量比原生紧几像素,H1-H3 字号大 + 字距负值容易踩过
+  // 容器边界触发误折行(同 badge:300 的 PDF 截图测量差问题)。纯字符串无 span 边界
+  // 不受影响,保持浏览器原生折行兜底,避免超长标题硬溢出
+  const wrapStyle: React.CSSProperties = rich.isString ? {} : { whiteSpace: "nowrap" };
   return (
     <Tag
       className={cn(...textUtils)}
@@ -117,6 +122,7 @@ function HeadingBlock({ block }: { block: Extract<Block, { type: "heading" }> })
         textAlign: align,
         color: "var(--hxs-fg)",
         fontFamily: "var(--hxs-font-heading)",
+        ...wrapStyle,
       }}
     >
       {rich.isString ? rich.text : renderSegments(rich.segments)}

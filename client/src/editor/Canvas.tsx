@@ -115,10 +115,10 @@ export function Canvas() {
       showNavigation={false}
       editor={{ selectedBlockIndex: selection.blockIndex }}
       resolvePattern={getPattern}
-      // 静态渲染管线：与 SlideList 缩略图(staticExport)完全对齐，消除 AnimatePresence /
-      // motion.div magicId 飞行带来的 wrap point / layout 差异。
-      // 编辑器主舞台编辑场景不需要切页转场；放映态(预览按钮)仍走默认 motion 管线。
-      staticExport
+      // 编辑器主舞台用 sync 模式:popLayout 在 ScaleStage(transform: scale)
+      // 缩放容器内会让退场元素 boundingRect 测算被 scale 干扰 → 转场视觉错位/不可见;
+      // sync 让 fade / slide / zoom 稳定可见,且 magicId 的 layoutId 飞行不受影响
+      transitionMode="sync"
     />
   );
 
