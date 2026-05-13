@@ -18,10 +18,11 @@ import {
   Image as ImageIcon,
   ChevronDown,
 } from "lucide-react";
-import { getCurrentLang } from "@/i18n";
+import i18n, { getCurrentLang } from "@/i18n";
 import { nanoid } from "nanoid";
 import { useEditorStore, isPlaceholderSlideId, SKELETON_SLIDE_ID } from "@/store/editor";
 import { generate, estimatePageCount, type ProgressEvent } from "@/llm/agent";
+import { extractTotalPageCount } from "@/llm/pageCountParse";
 import { hasValidConfig, getActiveModelConfig, PROVIDER_LABELS } from "@/llm/settings";
 import {
   loadContentPromptsBySource,
@@ -59,7 +60,7 @@ import magicMoveEn from "@shared/examples/en/04-magic-move.json";
 
 type Status =
   | { kind: "idle" }
-  | { kind: "generating"; phase: ProgressEvent["kind"]; current: number; estimate: number; bytes?: number; batch?: BatchInfo; modelName?: string; promptInfo?: PromptInfo }
+  | { kind: "generating"; phase: ProgressEvent["kind"]; current: number; estimate: number; startedAt: number; bytes?: number; batch?: BatchInfo; modelName?: string; promptInfo?: PromptInfo }
   | { kind: "error"; message: string }
   | { kind: "cancelled"; kept: number };
 
@@ -138,17 +139,19 @@ export function Home() {
     }
     const initialEstimate = estimatePageCount(text);
     const activeModel = getActiveModelConfig();
+    const startedAt = Date.now();
     setStatus({
       kind: "generating",
       phase: "connecting",
       current: 0,
       estimate: initialEstimate,
-      modelName: activeModel?.name,
+      startedAt,
+      // 显示真实模型 ID（如 mimo-v2.5-pro）而非用户自定义别名（如"我的 Mimo"）
+      modelName: activeModel?.model,
     });
 
     const controller = new AbortController();
     controllerRef.current = controller;
-    const startedAt = Date.now();
 
     const result = await generate({
       userMessage: text,
@@ -161,15 +164,24 @@ export function Home() {
           // estimate 修正：分批 orchestrator 通过 batch.totalPages 主动告知真实总页数
           const tp = e.batch?.totalPages ?? 0;
           const estimate = tp > prev.estimate ? tp : prev.estimate;
+          // batch chip 防闪烁：N 批并发时多个 worker 的 progress 事件交错到达,
+          // 直接覆盖 batch 会让 chip "(批 X/Y)" 在不同批次间反复跳变。
+          // 只在 e.batch.current >= prev.batch.current 时更新,保证 chip 单调递增
+          const nextBatch =
+            e.batch && (!prev.batch || e.batch.current >= prev.batch.current)
+              ? e.batch
+              : prev.batch;
+          // current(批内页码)也只升不降：并发 worker 的 page event 会让矩阵格闪烁
+          // store 端 streamingSlideCount 才是全局累计已 emit 页数,ProgressBar 内 Math.max 取最大
           if (e.kind === "page") {
-            // 不让 e.estimate 覆盖（旧 bug 防护），仅用 batch.totalPages
-            return { ...prev, estimate, phase: "page", current: e.current, batch: e.batch };
+            const nextCurrent = e.current > prev.current ? e.current : prev.current;
+            return { ...prev, estimate, phase: "page", current: nextCurrent, batch: nextBatch };
           }
           if (e.kind === "receiving") {
-            return { ...prev, estimate, phase: "receiving", bytes: e.bytes, batch: e.batch };
+            return { ...prev, estimate, phase: "receiving", bytes: e.bytes, batch: nextBatch };
           }
           if (e.kind === "reasoning") {
-            return { ...prev, estimate, phase: "reasoning", bytes: e.bytes, batch: e.batch };
+            return { ...prev, estimate, phase: "reasoning", bytes: e.bytes, batch: nextBatch };
           }
           if (e.kind === "prompt") {
             // 累计：分批模式 += systemChars+userChars；单次模式 = 本次
@@ -189,7 +201,7 @@ export function Home() {
               },
             };
           }
-          return { ...prev, estimate, phase: e.kind, batch: e.batch };
+          return { ...prev, estimate, phase: e.kind, batch: nextBatch };
         });
       },
     });
@@ -384,7 +396,11 @@ export function Home() {
         )}
         <div className="flex justify-center mb-6">
           <button
-            onClick={() => loadMagicMoveDemo(loadDeck, setCurrentConversationId)}
+            onClick={() => loadMagicMoveDemo(
+              loadDeck,
+              setCurrentConversationId,
+              (message) => setStatus({ kind: "error", message }),
+            )}
             className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200"
           >
             <Wand2 size={11} />
@@ -448,6 +464,12 @@ export function Home() {
                   </button>
                 ))}
               </div>
+              <PageEstimateChip
+                text={input}
+                currentEstimate={
+                  status.kind === "generating" ? status.estimate : undefined
+                }
+              />
               <span className="text-xs text-slate-400 hidden sm:block">
                 {status.kind === "generating" ? t("input.stoppingHint") : t("input.shortcuts")}
               </span>
@@ -767,16 +789,15 @@ function ContentCard({
 
 // phaseLabel + formatBytes 已抽到 @/lib/phaseLabel 共用
 
-// 已等待秒数 hook（与 ChatPanel 同款）
-function useElapsedSeconds(): number {
+// 已等待秒数 hook：基于 startedAt(从 status 传入的生成开始时间戳),与组件挂载状态解耦
+// 旧版用 useRef(Date.now()) 在 mount 时锁定,父级 re-render / StrictMode 双重挂载会让 timer 重置为 0
+function useElapsedSeconds(startedAt: number): number {
   const [, setTick] = useState(0);
-  const startRef = useRef(Date.now());
   useEffect(() => {
-    startRef.current = Date.now();
     const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
   }, []);
-  return Math.floor((Date.now() - startRef.current) / 1000);
+  return Math.floor((Date.now() - startedAt) / 1000);
 }
 
 function ProgressBar({
@@ -784,12 +805,12 @@ function ProgressBar({
   streamingMode,
   streamingSlideCount,
 }: {
-  status: { phase: ProgressEvent["kind"]; current: number; estimate: number; bytes?: number; batch?: BatchInfo; modelName?: string; promptInfo?: PromptInfo };
+  status: { phase: ProgressEvent["kind"]; current: number; estimate: number; startedAt: number; bytes?: number; batch?: BatchInfo; modelName?: string; promptInfo?: PromptInfo };
   streamingMode: boolean;
   streamingSlideCount: number;
 }) {
   const { t: tChat } = useTranslation("chat");
-  const elapsed = useElapsedSeconds();
+  const elapsed = useElapsedSeconds(status.startedAt);
   const indeterminate = !streamingMode && status.phase !== "page";
   // 进度比例：分批模式下 streamingSlideCount 已是全局已生成页数（applyStreamingBatch 累积），保单调
   const ratio = streamingMode
@@ -866,11 +887,21 @@ function ProgressBar({
 
 function loadMagicMoveDemo(
   loadDeck: (d: Deck) => void,
-  setConvId: (id: string | undefined) => void
+  setConvId: (id: string | undefined) => void,
+  onError?: (message: string) => void,
 ) {
-  const example = getCurrentLang() === "en" ? magicMoveEn : magicMoveZh;
+  const lang = getCurrentLang();
+  const example = lang === "en" ? magicMoveEn : magicMoveZh;
   const result = DeckSchema.safeParse(example);
-  if (!result.success) return;
+  if (!result.success) {
+    // eslint-disable-next-line no-console
+    console.warn("[MagicMove demo] schema validation failed:", result.error.issues);
+    onError?.(i18n.t("home:magicMoveDemoFailed") as string);
+    return;
+  }
+  const introMsg = lang === "en"
+    ? "Magic Move demo loaded. Press → to see the Lumen brand title, tagline and badge fly between slides — plus stat / table / flow / card decoration blocks."
+    : "已加载 Magic Move 示范 deck。按 → 切页观察 Lumen 标题、标语、徽章在页面间飞行,同时展示 stat / table / flow / card 装饰块。";
   const conv = {
     id: nanoid(10),
     title: result.data.meta.title,
@@ -878,7 +909,7 @@ function loadMagicMoveDemo(
     messages: [
       {
         role: "assistant" as const,
-        text: "已加载 Magic Move 示范 deck。按 → 切页观察 Lumen 标题、副标题、徽章如何在页面间飞行。",
+        text: introMsg,
         timestamp: Date.now(),
       },
     ],
@@ -939,6 +970,54 @@ function ActiveModelBadge() {
       title={`${cfg.name} · ${PROVIDER_LABELS[cfg.provider]}`}
     >
       {cfg.model}
+    </span>
+  );
+}
+
+
+// 输入框旁的页数预估 chip：实时反馈 estimatePageCount 推断结果
+// 让用户知道当前会按多少页生成，避免误以为 LLM 偷工(实际是系统推断不到预期页数)
+// currentEstimate：生成期间从 status.estimate 透传，让 chip 与进度矩阵格数同源
+//   ① batch.totalPages 修正可能让矩阵格数 ≠ chip 静态预估值 → 强制对齐
+//   ② 未生成时(currentEstimate=undefined) 走 estimatePageCount 实时预估
+function PageEstimateChip({
+  text,
+  currentEstimate,
+}: {
+  text: string;
+  currentEstimate?: number;
+}) {
+  const { t } = useTranslation('home');
+  const { n, explicit } = useMemo(() => {
+    // 生成中：跟随矩阵 estimate，避免不一致
+    if (currentEstimate !== undefined && currentEstimate > 0) {
+      // explicit 判定仍按用户输入算，决定 chip 颜色
+      const ex = extractTotalPageCount(text.trim());
+      return { n: currentEstimate, explicit: ex !== undefined };
+    }
+    const trimmed = text.trim();
+    if (!trimmed) return { n: 0, explicit: false };
+    const ex = extractTotalPageCount(trimmed);
+    if (ex !== undefined) return { n: ex, explicit: true };
+    return { n: estimatePageCount(trimmed), explicit: false };
+  }, [text, currentEstimate]);
+  if (n <= 0) return null;
+  const label = explicit
+    ? t('input.pageEstimateExplicit', { n })
+    : t('input.pageEstimateInferred', { n });
+  const title = explicit
+    ? t('input.pageEstimateExplicitTitle', { n })
+    : t('input.pageEstimateInferredTitle', { n });
+  return (
+    <span
+      className={
+        explicit
+          ? 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium tabular-nums bg-emerald-50 text-emerald-700 border border-emerald-200 cursor-help'
+          : 'inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium tabular-nums bg-slate-100 text-slate-600 border border-slate-200 cursor-help'
+      }
+      title={title}
+    >
+      {label}
     </span>
   );
 }

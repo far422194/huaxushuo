@@ -240,7 +240,55 @@
     "title": "存储管理",
     "size": "占用空间",
     "clear": "清空所有数据",
-    "confirmClear": "确认清空？此操作不可恢复。"
+    "confirmClear": "确认清空？此操作不可恢复。",
+    "quotaWarn": "接近浏览器 localStorage 配额，建议清理对话历史或表单提交",
+    "otherKeys": "其他命名空间（非华胥说）",
+    "otherDesc": "未知命名空间（非华胥说写入）",
+    "notWritten": "尚未写入",
+    "countSuffix": "条",
+    "footerNote": "所有数据仅存浏览器本地，不会上传任何服务器",
+    "modules": {
+      "conversations": {
+        "label": "对话历史",
+        "desc": "ChatPanel 的所有会话流（最多 50 条）"
+      },
+      "stylePrompts": {
+        "label": "风格库",
+        "desc": "AI 生成的 + 用户保存的风格（含 sampleDeck）"
+      },
+      "contentPrompts": {
+        "label": "内容案例库",
+        "desc": "AI 生成的与用户保存的内容案例"
+      },
+      "patterns": {
+        "label": "模板库",
+        "desc": "编辑器保存 / AI 生成 / 提升为内置的视觉模板"
+      },
+      "skills": {
+        "label": "技能库",
+        "desc": "AI 生成 / 用户保存 / 提升为内置的生成策略配方"
+      },
+      "formSubmissions": {
+        "label": "表单提交",
+        "desc": "FormBlock 收集的访客提交记录（最多 500）"
+      },
+      "llmSettings": {
+        "label": "LLM 配置",
+        "desc": "API Key + 服务预设（不要导出分享）"
+      },
+      "deploySettings": {
+        "label": "部署设置",
+        "desc": "Cloudflare / Netlify 等部署目标的凭据与配置"
+      },
+      "pexels": {
+        "label": "Pexels API Key",
+        "desc": "用于把 picsum 占位图替换为关键词匹配的真实图"
+      },
+      "preferences": {
+        "label": "偏好设置",
+        "desc": "语言、UI 主题等本地偏好"
+      }
+    }
   },
   "preview": {
     "title": "全屏预览",
@@ -310,6 +358,21 @@
     "discardFallbackSaved": "已保存样板",
     "discardFallbackBuiltin": "内置通用样板",
     "savedNote": "✓ 当前显示已保存的风格样板",
+    "sampleDeck": {
+      "previewTitle": "{{brand}} 风格预览",
+      "newProduct": "新品发布",
+      "heroSubtitle": "重新定义日常工作的开始。",
+      "ctaLearnMore": "了解更多",
+      "oldWayTitle": "传统方式",
+      "oldWayItems": ["手工繁琐", "信息分散", "难以协作"],
+      "newWayTitle": "我们的方式",
+      "newWayItems": ["自动同步", "一处可见", "实时协作"],
+      "quote": "\"用过 {{brand}} 后回不去了。\"",
+      "quoteAttribution": "— 一位早期用户",
+      "ctaTitle": "立即开始",
+      "ctaSubtitle": "30 天免费试用，无需信用卡。",
+      "ctaButton": "免费试用"
+    },
     "themeColors": "主题色",
     "fontsTitle": "字体 / 圆角 / 模式",
     "heading": "标题",

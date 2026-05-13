@@ -51,10 +51,19 @@ export function Slide({
   slide,
   isAuto = false,
   showPageNumber = false,
+  staticMode = false,
+  flowMode = false,
 }: {
   slide: SlideT;
   isAuto?: boolean;
   showPageNumber?: boolean;
+  // staticMode：跳过入场 / 退场动画，用 div 替代 motion.div
+  // 缩略图（SlideList）+ PDF 导出场景使用，避免重渲时被入场 variant 拉成"flicker"
+  staticMode?: boolean;
+  // flowMode：PDF 导出 auto 画幅时使用。让 Slide 容器从 absolute inset-0 + overflow-y-auto 解放为
+  // relative + 自然撑开，使长内容（超过一屏）能完整渲染并被 modern-screenshot 截图截到。
+  // 不影响主舞台（编辑器要保留滚动语义）/ 缩略图（外层有 overflow-hidden 兜底）/ 固定画幅 PDF
+  flowMode?: boolean;
 }) {
   const variant = TRANSITION_VARIANTS[slide.transition];
   // 背景与底纹层已由 Deck 层独立渲染（按 bgKey 智能转场，同背景切页时不重渲）
@@ -69,25 +78,44 @@ export function Slide({
     slide.transitionDuration !== undefined
       ? { ...(variant.transition ?? {}), duration: slide.transitionDuration / 1000 }
       : variant.transition;
+
+  // 容器形态按 (flowMode, isAuto) 切换：
+  // - flowMode + isAuto: 流式撑开（PDF 完整截 auto 画幅长内容），无 absolute / 无 y-overflow
+  // - isAuto:            主舞台 / 缩略图 auto 画幅，absolute 锁高 + 内部 y-auto 滚动
+  // - 固定画幅:           absolute 锁高 + 严格 overflow-hidden 防溢出
+  const flowAuto = flowMode && isAuto;
+  const modeClassName = flowAuto
+    ? "relative w-full z-10 overflow-x-hidden"
+    : isAuto
+    ? "absolute inset-0 z-10 overflow-y-auto overflow-x-hidden"
+    : "absolute inset-0 z-10 overflow-hidden";
+  const containerClassName = cn(modeClassName, ...otherUtils);
+
+  const inner = (
+    <>
+      {/* 内容层：背景由 Deck 的 BackgroundLayer 持续渲染（同背景切页时不会重渲，达到"仅内容动"效果）
+          flowAuto 时去掉 h-full（让内容撑开高度），但保留 min-h-full（基线一屏） */}
+      <div className={cn("relative w-full min-h-full", flowAuto ? "" : "h-full")}>
+        <LayoutRenderer slide={slide} staticMode={staticMode} />
+      </div>
+      {showPageNumber && <SlidePageNumber />}
+    </>
+  );
+
+  if (staticMode) {
+    return <div key={slide.id} className={containerClassName}>{inner}</div>;
+  }
+
   return (
     <motion.div
       key={slide.id}
-      // 仅 Web 自适应（auto）画幅允许纵向滚动；16:9 / 4:3 严格 overflow-hidden 防止溢出
-      className={cn(
-        "absolute inset-0 z-10",  // z-10 确保位于背景层之上
-        isAuto ? "overflow-y-auto overflow-x-hidden" : "overflow-hidden",
-        ...otherUtils
-      )}
+      className={containerClassName}
       initial={variant.initial}
       animate={variant.animate}
       exit={variant.exit}
       transition={transition}
     >
-      {/* 内容层：背景由 Deck 的 BackgroundLayer 持续渲染（同背景切页时不会重渲，达到"仅内容动"效果） */}
-      <div className="relative w-full min-h-full h-full">
-        <LayoutRenderer slide={slide} />
-      </div>
-      {showPageNumber && <SlidePageNumber />}
+      {inner}
     </motion.div>
   );
 }

@@ -29,6 +29,9 @@ export interface DeckProps {
   // 静态导出模式（PDF 导出）：跳过 AnimatePresence + 背景层 fade，所有 motion 立即定格
   // 避免：旧 slide 退出动画未完成时被截图导致重叠 / 背景渐显未结束导致色值偏淡
   staticExport?: boolean;
+  // flowMode：PDF 导出 auto 画幅时使用。让 Deck/Slide 容器从 h-full + overflow-y-auto 解放为
+  // min-h-full + 自然撑开，使长内容能完整渲染并被 modern-screenshot 截图截到
+  flowMode?: boolean;
 }
 
 export function Deck({
@@ -41,6 +44,7 @@ export function Deck({
   showNavigation = true,
   resolvePattern,
   staticExport = false,
+  flowMode = false,
 }: DeckProps) {
   const [internalIndex, setInternalIndex] = useState(0);
   const isControlled = controlledIndex !== undefined;
@@ -121,6 +125,8 @@ export function Deck({
 
   // auto 模式下允许内部纵向滚动（Web 自适应），固定比例时保持裁剪
   const isAuto = deck.meta.aspectRatio === "auto";
+  // flowAuto：PDF 导出 auto 画幅；Deck 容器去 h-full + overflow-y-auto，让内容撑开整个 PdfStage
+  const flowAuto = flowMode && isAuto;
 
   // 单页 showPageNumber 优先；未设则跟随 deck.meta.showPageNumbers
   const effectiveShowPageNumber =
@@ -134,7 +140,9 @@ export function Deck({
     <RuntimeProvider value={runtimeValue}>
       <div
         className={
-          isAuto
+          flowAuto
+            ? "relative w-full min-h-full overflow-x-hidden"  // flowAuto: 内容撑开 div，PDF 截全
+            : isAuto
             ? "relative w-full h-full overflow-y-auto overflow-x-hidden"
             : "relative w-full h-full overflow-hidden"
         }
@@ -154,7 +162,7 @@ export function Deck({
         )}
 
         {/* mode="popLayout" 配合 Magic Move 跨 slide 共享布局；mode="sync" 用于全屏预览（转场更稳定）
-            staticExport 时跳过 AnimatePresence，旧 slide 立即卸载避免重叠 */}
+            staticExport 时跳过 AnimatePresence + 让 Slide 用静态 div，旧 slide 立即卸载避免重叠 / 缩略图入场动画 flicker */}
         {staticExport ? (
           current && (
             <Slide
@@ -162,6 +170,8 @@ export function Deck({
               slide={current}
               isAuto={isAuto}
               showPageNumber={effectiveShowPageNumber}
+              staticMode
+              flowMode={flowMode}
             />
           )
         ) : (
@@ -196,25 +206,46 @@ function buildBackgroundKey(slide: SlideT | undefined): string {
 // 背景层组件：渲染 slide.background + 底纹 utilities（hxs-bg-grid 等）
 // 独立 absolute inset-0；与内容层解耦，由 Deck 层的 AnimatePresence 控制是否重渲
 // instant=true：用于 PDF 导出，立即定格不渐显（避免截到背景 fade 中间帧导致颜色还原失真）
+//
+// image 背景特殊处理：图片层 + theme.bg 半透明渐变 overlay 两层
+// 目的：避免 LLM 选了高饱和图片后，前景标题/正文与图片色相近导致不可读
+// overlay 用 theme.bg（浅主题用浅覆盖、深主题用深覆盖），顶部更浓底部稍弱保证整体不闷
+// 渲染层级（image 背景时）：image → pattern utility → overlay → (内容层)
+//   底纹（noise / grid / dots）若画在 overlay 之上会稀释 overlay 的对比度保护 →
+//   overlay 必须最后画，确保是前景文字最近邻的"亮度调和"层
 function BackgroundLayer({ slide, instant }: { slide: SlideT; instant?: boolean }) {
   const bgStyle = backgroundToStyle(slide.background);
+  const isImageBg = slide.background?.type === "image";
   const { pattern: patternUtils } = splitUtilities(filterUtilities(slide.utilities));
+  const patternNodes = patternUtils.map((u) => (
+    <div
+      key={u}
+      aria-hidden
+      className={cn("absolute inset-0 pointer-events-none", u)}
+    />
+  ));
+  const overlayNode = isImageBg ? (
+    <div
+      aria-hidden
+      className="absolute inset-0 pointer-events-none"
+      style={{
+        background:
+          "linear-gradient(to bottom, color-mix(in srgb, var(--hxs-bg) 60%, transparent) 0%, color-mix(in srgb, var(--hxs-bg) 30%, transparent) 100%)",
+      }}
+    />
+  ) : null;
   return (
     <motion.div
       className="absolute inset-0 z-0"
-      style={bgStyle}
+      style={isImageBg ? undefined : bgStyle}
       initial={instant ? { opacity: 1 } : { opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={instant ? { opacity: 1 } : { opacity: 0 }}
       transition={{ duration: instant ? 0 : 0.4 }}
     >
-      {patternUtils.map((u) => (
-        <div
-          key={u}
-          aria-hidden
-          className={cn("absolute inset-0 pointer-events-none", u)}
-        />
-      ))}
+      {isImageBg && <div aria-hidden className="absolute inset-0" style={bgStyle} />}
+      {patternNodes}
+      {overlayNode}
     </motion.div>
   );
 }

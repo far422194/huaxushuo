@@ -27,7 +27,7 @@
     "batchProgress": "Batch {{current}}/{{total}}"
   },
   "phase": {
-    "batchPrefix": "(Batch {{current}}/{{total}}) ",
+    "batchPrefix": "({{total}} batches · {{concurrent}} running) ",
     "finishing": "Finishing up…",
     "streaming": "Generating slide {{current}} / {{total}}…",
     "connecting": "Connecting to the model… waiting for first response",
@@ -38,7 +38,7 @@
     "reasoningWarning": "Reasoning {{bytes}} · likely runaway, consider stopping and switching to a non-thinking model",
     "reasoning": "Model reasoning…",
     "receivingWithBytes": "Generating deck… {{bytes}}",
-    "receiving": "Generating deck… {{bytes}}",
+    "receiving": "Generating deck…",
     "page": "Generating slide {{current}} / {{estimate}}…",
     "tool": "Confirming tool…",
     "slideStart": "Preparing first slide…",

@@ -22,11 +22,18 @@ function getCanvasStyle(aspectRatio: string): React.CSSProperties {
       aspectRatio: "4 / 3",
     };
   }
-  // auto: 自适应 Web 全屏（容器内尽量撑满，模拟浏览器窗口）
+  // auto: 自适应 Web 视图，但宽度锁定 1280px 与缩略图 ScaleStage viewport 完全一致
+  // 之前 width: 100% + maxWidth: 1440 让主舞台 layout 跟随浏览器宽度变化，wrap point 与
+  // 缩略图（永远按 1280 viewport 渲染再 scale）不一致，导致同 H1 标题在主舞台换行而缩略图不换行
+  // 锁 1280 后保留 height: 100% + Deck 内部 overflow-y-auto，长内容仍可垂直滚动（auto 语义保留）
+  // **flexShrink: 0 至关重要**：父级是 flex item-stretch 容器，flex 子项默认 min-width: auto
+  // 会被 shrink 到 < 1280 以适应窄屏父级 → 实际容器宽度小于 1280，wrap point 与缩略图不一致。
+  // shrink: 0 强制 1280，父级 overflow-auto 处理超出部分（横向滚动）
+  // 代价：窄屏浏览器主舞台会出现横向滚动条；可接受
   return {
-    width: "100%",
+    width: 1280,
     height: "100%",
-    maxWidth: 1440,
+    flexShrink: 0,
   };
 }
 
@@ -108,6 +115,10 @@ export function Canvas() {
       showNavigation={false}
       editor={{ selectedBlockIndex: selection.blockIndex }}
       resolvePattern={getPattern}
+      // 静态渲染管线：与 SlideList 缩略图(staticExport)完全对齐，消除 AnimatePresence /
+      // motion.div magicId 飞行带来的 wrap point / layout 差异。
+      // 编辑器主舞台编辑场景不需要切页转场；放映态(预览按钮)仍走默认 motion 管线。
+      staticExport
     />
   );
 

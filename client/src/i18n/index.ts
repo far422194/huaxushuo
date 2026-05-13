@@ -66,10 +66,21 @@ i18n
     react: { useSuspense: false },
   });
 
+// 同步 document.documentElement.lang —— 让 a11y screen reader / 浏览器渲染 / SEO 正确识别页面语言
+// index.html 默认写死 "zh-CN"，切换语言后必须更新
+function syncHtmlLang(lang: Lang): void {
+  if (typeof document !== "undefined") {
+    document.documentElement.lang = lang;
+  }
+}
+
 const initial = normalizeLang(i18n.resolvedLanguage ?? i18n.language);
 if (initial !== i18n.resolvedLanguage) {
   void i18n.changeLanguage(initial);
 }
+syncHtmlLang(initial);
+// 后续语言事件（changeLanguage / detector 检测）也同步
+i18n.on("languageChanged", (lng) => syncHtmlLang(normalizeLang(lng)));
 
 export function getCurrentLang(): Lang {
   return normalizeLang(usePreferences.getState().language ?? i18n.resolvedLanguage ?? i18n.language);
@@ -80,6 +91,7 @@ export async function setLanguage(lang: Lang): Promise<void> {
   if (i18n.resolvedLanguage !== lang) {
     await i18n.changeLanguage(lang);
   }
+  syncHtmlLang(lang);
 }
 
 export default i18n;

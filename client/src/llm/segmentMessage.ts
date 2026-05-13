@@ -93,3 +93,14 @@ function makeAutoSeg(paragraphs: string[]): PromptSegment {
   const title = firstLine.length > 30 ? firstLine.slice(0, 30) + "…" : firstLine;
   return { title, body };
 }
+
+// 虚拟分页 segments：用户给"短指令 + 明确页数"（如"做个 20 页性能说明"）时，
+// 没有详细文案可切段，但仍需分批避免中小模型单次吐 20 页的自我截断。
+// body 留空 = 不在 user message 里灌入"本批文案"块；header 的"本批第 X-Y / 共 N 页"足够让 LLM 知道页码范围，
+// 续批靠 baseDeck 共享视觉风格 + LLM 自由规划主题。
+export function buildVirtualPageSegments(n: number): PromptSegment[] {
+  return Array.from({ length: n }, (_, i) => ({
+    title: `第 ${i + 1} 页`,
+    body: "",
+  }));
+}

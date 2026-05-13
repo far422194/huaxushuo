@@ -3,7 +3,7 @@ import type { BatchInfo, ProgressEvent } from "@/llm/types";
 
 // 进度阶段文字：从 ChatPanel/Home 抽出共用，加分批模式前缀
 // 调用者可传 streamingMode + streamingSlideCount 显示"边生成边渲染中… N 页"
-// 分批模式下整体前缀「(批 X/Y) 」让用户知道当前在第几批
+// 分批模式下整体前缀「(共 X 批 · Y 路并行) 」让用户知道当前批次与真实并发数
 export function phaseLabel(
   phase: ProgressEvent["kind"],
   current: number,
@@ -15,7 +15,13 @@ export function phaseLabel(
 ): string {
   const t = i18n.t.bind(i18n);
   const prefix = batch
-    ? (t("chat:phase.batchPrefix", { current: batch.current, total: batch.total }) as string)
+    ? (t("chat:phase.batchPrefix", {
+        total: batch.total,
+        // 真实并发数来自 BatchInfo.concurrency（agent.ts 构造批信息时填）：
+        // 首批同步建 baseline=1 路，续接批 = min(MAX_CONCURRENT_BATCHES, totalBatches-1)
+        // 未填（旧调用 / 异常路径）兜底显示 1 路
+        concurrent: batch.concurrency ?? 1,
+      }) as string)
     : "";
   // 流式模式下已落地至少 1 页：显示「正在生成第 X / Y 页…」（X = 已落地页数 + 1）
   // 全部 emit 完显示「整理收尾…」；0 页落地时落到下方原 phase 文案（让 connecting/thinking 等早期文本继续可见）

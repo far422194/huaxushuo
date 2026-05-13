@@ -227,17 +227,20 @@ function BlockTypeFields({
             </p>
           )}
           <Field label={t("inline.level")}>
-            <Select<"1" | "2" | "3">
+            <Select<"1" | "2" | "3" | "4" | "5" | "6">
               value={String(block.level) as any}
               onChange={(v) =>
                 onMutate((d) => {
-                  if (d.type === "heading") d.level = Number(v) as 1 | 2 | 3;
+                  if (d.type === "heading") d.level = Number(v) as 1 | 2 | 3 | 4 | 5 | 6;
                 })
               }
               options={[
-                { value: "1", label: "H1（最大）" },
-                { value: "2", label: "H2" },
-                { value: "3", label: "H3" },
+                { value: "1", label: "H1 (120)" },
+                { value: "2", label: "H2 (88)" },
+                { value: "3", label: "H3 (72)" },
+                { value: "4", label: "H4 (64)" },
+                { value: "5", label: "H5 (56)" },
+                { value: "6", label: "H6 (48)" },
               ]}
             />
           </Field>

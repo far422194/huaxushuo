@@ -122,7 +122,11 @@ export const anthropicProvider: Provider = {
         }
       } catch (err: any) {
         if (isAbortError(err, signal)) return { cancelled: true };
-        return { error: formatAnthropicError(err) };
+        // 429 单独透传 rateLimited 标记给 agent 层做指数退避；与 formatAnthropicError L37 判定保持一致
+        const status = err?.status ?? err?.response?.status;
+        const msg = err?.message ?? String(err);
+        const rateLimited = status === 429 || /rate.?limit/i.test(msg);
+        return { error: formatAnthropicError(err), ...(rateLimited ? { rateLimited: true } : {}) };
       }
 
       if (signal?.aborted) return { cancelled: true };

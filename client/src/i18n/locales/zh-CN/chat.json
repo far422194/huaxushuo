@@ -27,7 +27,7 @@
     "batchProgress": "第 {{current}}/{{total}} 批"
   },
   "phase": {
-    "batchPrefix": "(批 {{current}}/{{total}}) ",
+    "batchPrefix": "(共 {{total}} 批 · {{concurrent}} 路并行) ",
     "finishing": "整理收尾…",
     "streaming": "正在生成第 {{current}} / {{total}} 页…",
     "connecting": "连接模型…等待首次响应",

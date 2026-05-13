@@ -70,3 +70,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 功能实现参考 `docs/PRD.md` 对应模块章节
 - 设计决策历史查看 `SUMMARY.md`
 - 功能新增/变更，一定支持多语言版本（接入i18n）
+
+## LLM Prompt 多语言规约
+
+`client/src/llm/prompts.ts` 内给 LLM 的 system prompt 分两类，遵循不同维护策略：
+
+**1. 强指令类（必须双语同步）**：
+画幅约束、页数约束、列布局强约束、底部安全区等 LLM 必须严格遵守的"指令"。语言不匹配会让 LLM 注意力分散、遵循率下降 10-20%（实测会让英文用户的 16:9 deck 卡片底部被裁切）。
+
+涉及函数：`buildFixedAspectConstraint` / `buildUserPageCountConstraint` 等
+- 函数签名必须接 `lang: Lang` 参数（默认 `"zh-CN"`）
+- 中英两份逐条对齐，**新增/修改任一条都要双语同步改**
+- review 时检查 if-else 分支的条款数量是否一致
+
+**2. 技术 schema 描述类（中文一份即可）**：
+`BASE_SYSTEM_PROMPT` 的 DSL schema 字段说明、block 类型列表、utility 白名单等。这些"技术名词跨语种 OK"，LLM 都能理解，翻译双语 = 维护翻倍且无收益。
+
+**3. UI 端展示给用户的文案**：
+CREATIVE_ADDONS / OUTPUT_LANG_INSTRUCTION 等已迁到 `client/src/i18n/prompts/{zh-CN,en}.ts`，按用户界面语言切换，继续维护双语。

@@ -184,7 +184,13 @@ export const openaiCompatProvider: Provider = {
           const sizeHint = `\n\n[请求规模] system=${sysLen} 字符（约 ${Math.ceil(sysLen / 2.5)} token），user/assistant/tool=${totalUserLen} 字符${turnsHint}，max_tokens=${currentMaxTokens}（已尝试降到此值仍 400）。${tokenHint}\n建议：调小「最大输出 tokens」、或换一个上下文窗口更大的模型。`;
           return { error: formatOpenAIError(err, config.baseURL) + sizeHint };
         }
-        return { error: formatOpenAIError(err, config.baseURL) };
+        // 429 单独透传 rateLimited 标记给 agent 层做指数退避；与 formatOpenAIError L64 判定保持一致
+        const msg = err?.message ?? String(err);
+        const rateLimited = status === 429 || /rate.?limit/i.test(msg);
+        return {
+          error: formatOpenAIError(err, config.baseURL),
+          ...(rateLimited ? { rateLimited: true } : {}),
+        };
       }
 
       if (signal?.aborted) return { cancelled: true };

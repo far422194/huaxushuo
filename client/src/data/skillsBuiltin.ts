@@ -24,7 +24,10 @@ export const BUILTIN_SKILLS: Skill[] = [
     ],
     recommendTheme: {
       mode: "dark",
-      colors: { bg: "#0a0a0a", fg: "#e5e7eb", primary: "#22d3ee", accent: "#a78bfa", muted: "#475569" } as any,
+      colors: {
+        bg: "#0a0a0a", fg: "#e5e7eb", primary: "#22d3ee", accent: "#a78bfa", muted: "#475569",
+        success: "#22c55e", warning: "#f59e0b", danger: "#ef4444", info: "#3b82f6",
+      },
     },
     systemAddon: `### 当前命中风格：暗色 Notion / 小红书 教程长图
 
@@ -66,7 +69,10 @@ export const BUILTIN_SKILLS: Skill[] = [
     ],
     recommendTheme: {
       mode: "dark",
-      colors: { bg: "#0d1117", fg: "#c9d1d9", primary: "#00ff88", accent: "#58a6ff", muted: "#484f58" } as any,
+      colors: {
+        bg: "#0d1117", fg: "#c9d1d9", primary: "#00ff88", accent: "#58a6ff", muted: "#484f58",
+        success: "#3fb950", warning: "#d29922", danger: "#f85149", info: "#58a6ff",
+      },
     },
     systemAddon: `### 当前命中风格：暗夜赛博
 
@@ -90,7 +96,10 @@ export const BUILTIN_SKILLS: Skill[] = [
     recommendUtilities: ["hxs-bg-noise", "hxs-tracking-wide"],
     recommendTheme: {
       mode: "light",
-      colors: { bg: "#faf7f2", fg: "#1a1a1a", primary: "#8b1a1a", accent: "#a87a3c", muted: "#807060" } as any,
+      colors: {
+        bg: "#faf7f2", fg: "#1a1a1a", primary: "#8b1a1a", accent: "#a87a3c", muted: "#807060",
+        success: "#4a6741", warning: "#b8860b", danger: "#8b1a1a", info: "#4a5d7a",
+      },
     },
     systemAddon: `### 当前命中风格：杂志编辑感
 
@@ -111,7 +120,10 @@ export const BUILTIN_SKILLS: Skill[] = [
     recommendUtilities: ["hxs-rounded-sharp", "hxs-tracking-wide", "hxs-text-gradient"],
     recommendTheme: {
       mode: "dark",
-      colors: { bg: "#000000", fg: "#f5f5f5", primary: "#d4af37", accent: "#ffffff", muted: "#666" } as any,
+      colors: {
+        bg: "#000000", fg: "#f5f5f5", primary: "#d4af37", accent: "#ffffff", muted: "#666",
+        success: "#a3a380", warning: "#d4af37", danger: "#c44536", info: "#7d99c4",
+      },
     },
     systemAddon: `### 当前命中风格：极简高奢
 
@@ -132,7 +144,10 @@ export const BUILTIN_SKILLS: Skill[] = [
     recommendUtilities: ["hxs-bg-grid", "hxs-shadow-md"],
     recommendTheme: {
       mode: "light",
-      colors: { bg: "#ffffff", fg: "#0f172a", primary: "#0ea5e9", accent: "#6366f1" } as any,
+      colors: {
+        bg: "#ffffff", fg: "#0f172a", primary: "#0ea5e9", accent: "#6366f1",
+        muted: "#64748b", success: "#22c55e", warning: "#f97316", danger: "#ef4444", info: "#0ea5e9",
+      },
     },
     systemAddon: `### 当前命中风格：B2B 路演
 

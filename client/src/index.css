@@ -72,18 +72,45 @@
 .hxs-no-border    { border: 0 !important; }
 
 /* 卡片左侧 5px 高亮竖条（Notion / 小红书 风格关键 utility）
- * 仅设 border-left，不加 padding-left —— 让竖条紧贴 block 容器边缘
- * 内容与竖条的间距由 block 自己的内边距（如 card 的 p-7）保证；空隙就是 padding 没背景导致的视觉灾难
+ * 实现选型：box-shadow inset + padding-left
+ *   ① box-shadow inset 完美跟随 border-radius，PDF 截图引擎稳定支持
+ *   ② padding-left: 5px 必须设：BlockWrap outer 的 inset shadow 在 padding box 内绘制，
+ *      若 outer 无 padding，inner（CardBlock 等）的 backgroundColor 占满 content box
+ *      会从 0 开始完全覆盖 outer 的 inset shadow → 竖条不可见
+ *   ③ rainbow 用 background-image + background-size: 5px 100%，padding-left 同样必要
+ * 内容与竖条的间距由 block 自身内边距 + 这里的 5px buffer 共同保证
  */
-.hxs-bar-l-primary { border-left: 5px solid var(--hxs-primary) !important; }
-.hxs-bar-l-accent  { border-left: 5px solid var(--hxs-accent) !important; }
-.hxs-bar-l-success { border-left: 5px solid var(--hxs-success) !important; }
-.hxs-bar-l-warning { border-left: 5px solid var(--hxs-warning) !important; }
-.hxs-bar-l-danger  { border-left: 5px solid var(--hxs-danger) !important; }
-.hxs-bar-l-info    { border-left: 5px solid var(--hxs-info) !important; }
+.hxs-bar-l-primary {
+  box-shadow: inset 5px 0 0 0 var(--hxs-primary) !important;
+  padding-left: 5px !important;
+}
+.hxs-bar-l-accent {
+  box-shadow: inset 5px 0 0 0 var(--hxs-accent) !important;
+  padding-left: 5px !important;
+}
+.hxs-bar-l-success {
+  box-shadow: inset 5px 0 0 0 var(--hxs-success) !important;
+  padding-left: 5px !important;
+}
+.hxs-bar-l-warning {
+  box-shadow: inset 5px 0 0 0 var(--hxs-warning) !important;
+  padding-left: 5px !important;
+}
+.hxs-bar-l-danger {
+  box-shadow: inset 5px 0 0 0 var(--hxs-danger) !important;
+  padding-left: 5px !important;
+}
+.hxs-bar-l-info {
+  box-shadow: inset 5px 0 0 0 var(--hxs-info) !important;
+  padding-left: 5px !important;
+}
 .hxs-bar-l-rainbow {
-  border-left: 5px solid transparent !important;
-  border-image: linear-gradient(180deg, var(--hxs-warning), var(--hxs-info), var(--hxs-success)) 1 !important;
+  background-image:
+    linear-gradient(180deg, var(--hxs-warning), var(--hxs-info), var(--hxs-success)) !important;
+  background-size: 5px 100% !important;
+  background-repeat: no-repeat !important;
+  background-position: 0 0 !important;
+  padding-left: 5px !important;
 }
 
 /* ============ 形状 ============ */

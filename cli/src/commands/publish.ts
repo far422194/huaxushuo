@@ -11,8 +11,12 @@ export async function publish() {
     process.exit(1);
   }
 
-  const hasNetlify = existsSync(join(root, "netlify.toml"));
-  const hasVercel = existsSync(join(root, "vercel.json"));
+  // netlify.toml / vercel.json 同时探测 root 与 client 子目录
+  // monorepo 模板下部署配置常放在 client/ 内（与 client/dist 输出同级）
+  const hasNetlify =
+    existsSync(join(root, "netlify.toml")) || existsSync(join(root, "client", "netlify.toml"));
+  const hasVercel =
+    existsSync(join(root, "vercel.json")) || existsSync(join(root, "client", "vercel.json"));
   const distExists = existsSync(join(root, "client", "dist")) || existsSync(join(root, "dist"));
 
   if (!distExists) {
