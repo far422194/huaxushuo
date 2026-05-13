@@ -5,7 +5,8 @@
   "description": "华胥说: LLM 输出 DSL,运行时确定性渲染的可交互演示生成器",
   "scripts": {
     "ensure-deps": "[ -d node_modules/.pnpm ] || pnpm install",
-    "dev": "pnpm run ensure-deps && pnpm --filter huaxushuo-client dev",
+    "ensure-runtime": "[ -f client/public/runtime-template/runtime.html ] || pnpm run build:runtime",
+    "dev": "pnpm run ensure-deps && pnpm run ensure-runtime && pnpm --filter huaxushuo-client dev",
     "build": "pnpm run ensure-deps && pnpm --filter huaxushuo-client build",
     "build:runtime": "pnpm run ensure-deps && pnpm --filter huaxushuo-client build:runtime",
     "typecheck": "pnpm --filter huaxushuo-client typecheck && pnpm --filter @huaxushuo/cli typecheck",

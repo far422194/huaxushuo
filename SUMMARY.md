@@ -3,9 +3,27 @@
 > 自然语言生成交互式演示网站。MVP 单机 Web 编辑器形态。
 > 实施计划归档于 `~/.claude/plans/ppt-lively-patterson.md`，本文档跟踪进展。
 
-## 已完成功能（Week 1 + Week 2 + Week 3 + Week 4 + 业务扩展 + 风格系统 + Magic Move + 转场时长 + 自定义风格 + 流式可中断 + 边生边渲 + 高级交互块 + 编辑体验微调 + 视觉变体白名单 + 编辑/预览/对比度修正 + 大 deck 截断修复 + 体验修复 + computeMaxTokens 修正 + 长文本+风格 速度稳定优化 + Notion 长图风格扩张 + Pattern/Skill 创造性扩展 + 能力补充图片识别 + Cloudflare 一键直传 + 发布与对话历史微调 + SlideList 真缩略图 + PDF 导出 + i18n 多语言 + 配图体系 + Pexels 图库 + 配置入口聚合 + CLI 自动安装依赖）
+## 已完成功能（Week 1 + Week 2 + Week 3 + Week 4 + 业务扩展 + 风格系统 + Magic Move + 转场时长 + 自定义风格 + 流式可中断 + 边生边渲 + 高级交互块 + 编辑体验微调 + 视觉变体白名单 + 编辑/预览/对比度修正 + 大 deck 截断修复 + 体验修复 + computeMaxTokens 修正 + 长文本+风格 速度稳定优化 + Notion 长图风格扩张 + Pattern/Skill 创造性扩展 + 能力补充图片识别 + Cloudflare 一键直传 + 发布与对话历史微调 + SlideList 真缩略图 + PDF 导出 + i18n 多语言 + 配图体系 + Pexels 图库 + 配置入口聚合 + CLI 自动安装依赖 + runtime 模板首启动自检）
 
-### CLI npx scaffold 后自动安装依赖(最新)
+### 一键直传报"未找到 __DECK_JSON__ 占位符"修复(最新)
+
+`client/public/runtime-template/` 在 `.gitignore` 内，需 `pnpm build:runtime` 才生成。
+首次 `pnpm dev` 直接点"一键直传"时，`fetch('/runtime-template/runtime.html')`
+被 Vite SPA fallback 兜底回主站 `index.html`(HTTP 200),里头没有占位符,
+触发了误导性的"模板版本不匹配"错误。
+
+**改动**:
+- 根 `package.json` 新增 `ensure-runtime` 脚本(对齐已有 `ensure-deps` 模式):
+  `[ -f client/public/runtime-template/runtime.html ] || pnpm run build:runtime`
+- `dev` 脚本前置 `ensure-runtime`,首次启动按需补建;build/build:runtime 不变
+- `client/src/publish/runtime.ts` 报错文案细化:检测响应体若像主站 shell
+  (含 `id="root"` 且无 `deck-data`),给出"dev 兜底返回主站 index.html"专属提示,
+  否则提示模板过期;两者都明确指引执行 `pnpm build:runtime`
+
+**结论**:之后 `pnpm dev` 第一次开就有 runtime-template,不需要手动 `build:runtime`;
+若运行时模板源代码改了导致老产物失效,新错误文案也能精准指路。
+
+### CLI npx scaffold 后自动安装依赖
 
 `npx @huaxushuo/cli init xxx` 之前需要用户手动跑 `cd / pnpm install / pnpm dev` 三步,
 对齐 create-vite/create-next-app 的体验,改成 scaffold 后自动安装,最终用户只剩

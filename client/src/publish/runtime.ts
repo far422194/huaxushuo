@@ -73,7 +73,12 @@ export async function buildPublishFiles(deck: Deck): Promise<PublishFile[]> {
   }
 
   if (!html.includes("__DECK_JSON__")) {
-    throw new Error("runtime 模板中未找到 __DECK_JSON__ 占位符，可能模板版本不匹配");
+    // dev 模式下若 runtime-template 未生成，Vite 的 SPA fallback 会把请求兜底回主站 index.html
+    const looksLikeAppShell = /id=["']root["']/.test(html) && !html.includes("deck-data");
+    const hint = looksLikeAppShell
+      ? "runtime 模板未生成（dev 兜底返回了主站 index.html）。请在项目根运行 `pnpm build:runtime` 后重试。"
+      : "runtime 模板中未找到 __DECK_JSON__ 占位符，模板可能已过期。请在项目根重新运行 `pnpm build:runtime`。";
+    throw new Error(hint);
   }
 
   // 注入 deck JSON
