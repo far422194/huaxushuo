@@ -18,6 +18,31 @@ Existing tools either ship pure static decks (Gamma / Tome — no interactivity)
 
 Huaxushuo takes a third path: **LLM emits DSL, runtime renders deterministically**.
 
+<table>
+<tr>
+<td width="33%">
+<a href="https://7de549bc.huaxushuo.pages.dev/">
+<img src="https://github.com/user-attachments/assets/ab34163d-d8ef-4416-9d16-ae1e1ac6d3f6" alt="Case 1:How to create an interactive demonstration website? " />
+</a>
+</td>
+<td width="33%">
+<a href="https://fabda521.huaxushuo.pages.dev/">
+<img src="https://github.com/user-attachments/assets/cb003b87-3570-48fb-b7bb-1f59099d692e" alt="Case 2:AI Sharing" />
+</a>
+</td>
+<td width="33%">
+<a href="https://dbd4b9d2.huaxushuo.pages.dev/">
+<img src="https://github.com/user-attachments/assets/a8341c6c-c872-4eb9-a086-9407d60a4b77" alt="Case 3:The World of Monkeys" />
+</a>
+</td>
+</tr>
+<tr>
+<td align="center"><b>案例一</b><br/>交互式演示网站怎么做？</td>
+<td align="center"><b>案例二</b><br/>AI分享</td>
+<td align="center"><b>案例三</b><br/>猴子的世界</td>
+</tr>
+</table>
+
 > Goal: natural language → presentable content in minutes (10 slides in 30 seconds, 20–30 slides in 5–10 minutes).
 
 - vs PPT — clickable, animated, supports variable state, one-click publish to a public URL

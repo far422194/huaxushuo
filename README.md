@@ -18,6 +18,31 @@ cd huaxushuo && pnpm dev
 
 华胥说选择第三条路：**用LLM 输出 DSL，实现确定性渲染**。
 
+<table>
+<tr>
+<td width="33%">
+<a href="https://7de549bc.huaxushuo.pages.dev/">
+<img src="https://github.com/user-attachments/assets/ab34163d-d8ef-4416-9d16-ae1e1ac6d3f6" alt="案例一：交互式演示网站怎么做？" />
+</a>
+</td>
+<td width="33%">
+<a href="https://fabda521.huaxushuo.pages.dev/">
+<img src="https://github.com/user-attachments/assets/cb003b87-3570-48fb-b7bb-1f59099d692e" alt="案例二：AI分享" />
+</a>
+</td>
+<td width="33%">
+<a href="https://dbd4b9d2.huaxushuo.pages.dev/">
+<img src="https://github.com/user-attachments/assets/a8341c6c-c872-4eb9-a086-9407d60a4b77" alt="案例三：猴子的世界" />
+</a>
+</td>
+</tr>
+<tr>
+<td align="center"><b>案例一</b><br/>交互式演示网站怎么做？</td>
+<td align="center"><b>案例二</b><br/>AI分享</td>
+<td align="center"><b>案例三</b><br/>猴子的世界</td>
+</tr>
+</table>
+
 > 致力于：用自然语言短时间就能生成可讲解的篇幅内容（30秒生成10页，5-10分钟生成20～30页）
 
 - vs PPT：可点击、有动效、有变量状态、可一键发布到公网
