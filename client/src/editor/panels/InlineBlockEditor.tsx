@@ -858,5 +858,40 @@ function BlockTypeFields({
           </Field>
         </>
       );
+    case "code":
+      return (
+        <>
+          <Field label={t("block.code")}>
+            <TextAreaInput
+              value={block.code}
+              onChange={(e) =>
+                onMutate((d) => {
+                  if (d.type === "code") d.code = e.target.value;
+                })
+              }
+            />
+          </Field>
+          <Field label={t("inline.codeLang")}>
+            <TextInput
+              value={block.lang ?? ""}
+              onChange={(e) =>
+                onMutate((d) => {
+                  if (d.type === "code") d.lang = e.target.value || undefined;
+                })
+              }
+            />
+          </Field>
+          <Field label={t("inline.codeTitle")}>
+            <TextInput
+              value={block.title ?? ""}
+              onChange={(e) =>
+                onMutate((d) => {
+                  if (d.type === "code") d.title = e.target.value || undefined;
+                })
+              }
+            />
+          </Field>
+        </>
+      );
   }
 }

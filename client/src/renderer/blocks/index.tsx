@@ -84,6 +84,57 @@ function TextBlock({ block }: { block: Extract<Block, { type: "text" }> }) {
   );
 }
 
+// 代码块：等宽字体 + whitespace:pre 保留缩进与换行，承载代码 / 目录树 / 配置片段
+// 底色用 color-mix 基于 --hxs-fg，自动适配 light/dark 主题；inline px style 保证 PDF 截图一致
+// 字体走系统 monospace stack（主题无 mono 变量），whitespace:pre 不折行以守住目录树/缩进对齐
+function CodeBlock({ block }: { block: Extract<Block, { type: "code" }> }) {
+  const label = block.title ?? block.lang;
+  const mono =
+    '"SF Mono", "Menlo", "Monaco", "Consolas", "Liberation Mono", monospace';
+  return (
+    <div
+      style={{
+        maxWidth: "100%",
+        borderRadius: "var(--hxs-radius)",
+        overflow: "hidden",
+        border: "1px solid color-mix(in srgb, var(--hxs-fg) 12%, transparent)",
+        backgroundColor: "color-mix(in srgb, var(--hxs-fg) 5%, transparent)",
+        fontFamily: mono,
+      }}
+    >
+      {label && (
+        <div
+          style={{
+            padding: "8px 16px",
+            fontSize: 14,
+            color: "var(--hxs-fg)",
+            opacity: 0.55,
+            borderBottom:
+              "1px solid color-mix(in srgb, var(--hxs-fg) 10%, transparent)",
+          }}
+        >
+          {label}
+        </div>
+      )}
+      <pre
+        style={{
+          margin: 0,
+          padding: "16px 20px",
+          fontSize: 16,
+          lineHeight: 1.6,
+          color: "var(--hxs-fg)",
+          opacity: 0.9,
+          whiteSpace: "pre",
+          overflowX: "auto",
+          fontFamily: "inherit",
+        }}
+      >
+        <code style={{ fontFamily: "inherit" }}>{block.code}</code>
+      </pre>
+    </div>
+  );
+}
+
 // 标题：分级字号差距更大，用 heading 字体；text 同样支持 RichText 数组（核心词局部染色）
 // 字号 / 行高 / 字距用 inline style 而非 Tailwind className：
 // 1) 避免 PDF 导出（modern-screenshot SVG foreignObject → img data URL）中 rem 解析被解析为非 16px 导致字号放大
@@ -829,6 +880,7 @@ function ChromeBlock({ block }: { block: Extract<Block, { type: "chrome" }> }) {
 export function BlockRenderer({ block }: { block: Block }) {
   switch (block.type) {
     case "text": return <TextBlock block={block} />;
+    case "code": return <CodeBlock block={block} />;
     case "heading": return <HeadingBlock block={block} />;
     case "image": return <ImageBlock block={block} />;
     case "button": return <ButtonBlock block={block} />;

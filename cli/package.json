@@ -1,6 +1,6 @@
 {
   "name": "@huaxushuo/cli",
-  "version": "0.1.2",
+  "version": "0.1.4",
   "description": "华胥说 CLI: 一键初始化 / 启动 / 构建 / 发布 LLM 演示项目",
   "type": "module",
   "bin": {

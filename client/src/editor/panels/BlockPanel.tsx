@@ -15,6 +15,7 @@ function useBlockTypeLabels(): Record<Block["type"], string> {
   const { t } = useTranslation("editor");
   return {
     text: t("block.text"),
+    code: t("block.code"),
     heading: t("block.heading"),
     image: t("block.image"),
     button: t("block.button"),
@@ -34,7 +35,7 @@ function useBlockTypeLabels(): Record<Block["type"], string> {
 }
 
 const SIMPLE_BLOCK_TYPES = [
-  "text", "heading", "image", "button", "list", "badge", "iframe", "icon",
+  "text", "code", "heading", "image", "button", "list", "badge", "iframe", "icon",
   "stat", "flow", "table", "chrome",
 ] as const;
 // modal/tab 内可放的子块类型（与 schema 的 ContainerChildBlock 对齐：基础 8 + form + 4 叶子容器）
@@ -260,6 +261,7 @@ function IconBtn({
 function defaultChild(type: (typeof SIMPLE_BLOCK_TYPES)[number]): Block {
   switch (type) {
     case "text": return { type: "text", text: "新文本" };
+    case "code": return { type: "code", code: "项目根目录/\n├─ src/\n└─ package.json", lang: "目录树" };
     case "heading": return { type: "heading", level: 3, text: "新标题" }; // 默认中标题(L3=旧 L1 视觉)
     case "image": return { type: "image", url: "https://", alt: "", fit: "cover" };
     case "button":

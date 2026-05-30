@@ -185,6 +185,7 @@
   "block": {
     "heading": "Heading",
     "text": "Text",
+    "code": "Code",
     "image": "Image",
     "button": "Button",
     "list": "List",
@@ -209,6 +210,8 @@
     "bold": "Bold",
     "tone": "Tone",
     "iconName": "Icon",
+    "codeLang": "Language / type label (optional)",
+    "codeTitle": "Header / filename (optional)",
     "level": "Level",
     "url": "URL",
     "alt": "Alt text",

@@ -5,7 +5,91 @@
 
 ## 已完成功能（Week 1 + Week 2 + Week 3 + Week 4 + 业务扩展 + 风格系统 + Magic Move + 转场时长 + 自定义风格 + 流式可中断 + 边生边渲 + 高级交互块 + 编辑体验微调 + 视觉变体白名单 + 编辑/预览/对比度修正 + 大 deck 截断修复 + 体验修复 + computeMaxTokens 修正 + 长文本+风格 速度稳定优化 + Notion 长图风格扩张 + Pattern/Skill 创造性扩展 + 能力补充图片识别 + Cloudflare 一键直传 + 发布与对话历史微调 + SlideList 真缩略图 + PDF 导出 + i18n 多语言 + 配图体系 + Pexels 图库 + 配置入口聚合 + CLI 自动安装依赖 + runtime 模板首启动自检）
 
-### 一键直传报"未找到 __DECK_JSON__ 占位符"修复(最新)
+### 正文「一张图」被误当总页数=1 修复(最新)
+
+测试 64 页大纲时概算显示 1。根因:`extractTotalPageCount` 的单位正则把「张」当页数量词,
+大纲第37页正文「贴一张图」里的**「一张」被匹配成「1 张幻灯片」=明确总页数 1**,
+`estimatePageCount` 第一步 `extractTotal !== undefined` 直接 `return 1`,根本走不到 marker
+统计(64)。排查教训:前几次用简化大纲重建未含这句正文,误判成浏览器缓存——实为单位误匹配。
+
+**改动**:`pageCountParse.ts` 的 `UNIT_PATTERN` 给「张」加 negative lookahead
+`张(?![图表纸卡照])`,排除「一张图/一张表/一张照片/一张卡」等图片实物量词;保留
+「N 张 / N 张幻灯片 / N 张 PPT」的页数语义。同时影响 `extractExplicitPageCount`(prompts.ts
+共用此正则),一致收口。
+
+**验证**(esbuild bundle 真实函数,6 场景全过):含「贴一张图」的 64 页大纲→estimate 64;
+「做8页PPT」→8;「3张幻灯片」→3;「做10张」→10;「一张表/一张照片」→不误判(undefined)。
+
+### 单个「## 第N页」大纲概算偏高修复
+
+测试发现:提示词只有 1 个 `## 第1页 xxx` 标题(+ 代码块),概算页数却显示 5。根因在
+`estimatePageCount`(agent.ts):明确总页数解析把「第N页」当局部引用剔除 → undefined;
+marker 统计要求 `≥3` 个才采信 → 单个标记被挡;最终回退 create 默认值 5。那个 `≥3` 阈值
+本是防「修改第4页加图」这类句中引用,但句中引用行首不是 `#`。
+
+**改动**:`estimatePageCount` 重排为——①明确"N页"优先;②复用 `detectSegments` 段数
+(≥3 段,与实际分批口径一致、含 `- 第N页` 列表项);③<3 段时数页标记**数量**(带 `#`
+单个即采信,无 `#` 需 ≥3)。**关键:用"数量"而非"最大页码编号"**——否则用户跳号 /
+只填少量内容却随意写 `## 第50页` 时,取最大编号会让概算虚高到 50;改数量后只反映实际
+写了几块内容(随意单个→1、跳号两个→2、密集跳号3个→3)。不影响生成正确性(原概算偏差
+只影响 max_tokens 预算与进度条 estimate)。
+
+**验证**(esbuild bundle 真实函数,6 场景全过):单个 `## 第1页`→1;多个 `## 第N页`→
+最大编号;纯文本 3 段→3;单行 patch 指令「第4页换图」→兜底 5;明确「8页PPT」→8;
+不带 `#` 的句中「第2页」引用→兜底 5。
+
+### 提示词代码块/目录树呈现支持
+
+之前 DSL 无代码块类型,用户提示词里 ``` 围栏的代码/目录树/文件结构生成时只能塞进
+text/list,缩进和对齐全丢;且分段逻辑会把代码块内以 `#` / `-` / 「第N页」开头的行误当
+分段标记切碎。本次补齐"承载 + 呈现 + 不被切碎"全链路。
+
+**改动**:
+- `shared/dsl/schema.ts` 新增 `code` block(`code` 必填多行 / `lang?` / `title?`),
+  加入 `BlockSchema` union
+- `client/src/renderer/blocks/index.tsx` 新增 `CodeBlock` 组件:`<pre>` + 系统 monospace
+  字体 + `white-space:pre` 保留缩进;底色用 `color-mix` 基于 `--hxs-fg` 适配 light/dark;
+  全 inline px style 保证 PDF 截图一致;注册进 `BlockRenderer` switch
+- `client/src/llm/segmentMessage.ts` 新增 `computeFencedLines`,`detectSegments` 的命中
+  统计与切段两处都跳过 ``` 围栏内的行,代码块不再被切碎(围栏不配对时保守地不切)
+- `client/src/llm/prompts.ts` 基础块 9→10 种,新增 `code` 用法引导(遇围栏/目录树/文件
+  结构/命令片段必须用 code block,不要塞 text/list)
+- 编辑器面板 `BlockPanel`/`SlidePanel` 的 block 类型标签映射 + `blockSummary` 补 `code`
+  分支;i18n `editor` 命名空间 zh/en 加 `block.code`
+- `InlineBlockEditor` 补 `case "code"`(code/lang/title 字段编辑)——否则生成出的 code
+  block 点开编辑面板为空白、内容不可改(switch 无 default,原会返回 undefined)
+
+**边界已收口**:`code` 加入 `SIMPLE_BLOCK_TYPES` + `defaultChild` 工厂(默认目录树示例),
+可从编辑器"添加块"手动插入。子块嵌套已对齐 UI 列表与 schema union——**card 可嵌 code**
+(CardEditor 用 SIMPLE_BLOCK_TYPES,故同步给 schema 的 `CardChildBlock` 加 `CodeBlock`,
+prompt 的 card 子块清单也补 code);**modal/tab 不嵌 code**(其 UI 用 `CONTAINER_CHILD_TYPES`
+不含 code,`ContainerChildBlock` 也不含,两侧一致,不会产生非法子块)。非文本 utilities
+(阴影/边框/frost 等)经 `BlockWrap` 统一应用、对 code 自动生效(原以为未接是误判,文本类
+utilities 对代码块无意义故不接);`InlineBlockEditor` 的 lang/title label 改用 i18n 键
+`inline.codeLang`/`inline.codeTitle`(zh/en 双语)。
+
+**验证**:`pnpm typecheck` 通过;围栏检测 node 实测——代码块内的假标记(`## 第3页`/
+`- 第5页`)被拦截,围栏外真实页码正常切段。
+
+### 大纲列表项页码漏识别导致页数被吞修复
+
+输入 63 页大纲,点生成只出 49 页。根因:部分页码写成 `- 第8页` / `  - 第36页`
+markdown 列表项,而 `segmentMessage.ts` 分段标记正则前缀只认 `#+` 标题,不认列表符号,
+这 14 个列表页码行未被当作分段标记、被并进上一段 → 63−14=49,与实际页数吻合。
+(注:这类纯大纲输入页数由分段切割决定;`extractTotalPageCount` 会把"第N页"当局部
+引用剔除,返回 undefined,不参与定页。)
+
+**改动**:
+- `client/src/llm/segmentMessage.ts` 前两条 MARKER 的可选前缀抽成 `LEAD` 常量,
+  从仅 `#+` 扩展为 `#+` 或列表符号 `- * +`;缩进列表靠 `^\s*` 吃掉缩进同样命中
+- 第三条(纯编号无"页"字)与分隔线不动,第三条仍要求 `#` 前缀避免误命中正文 `- 1. xxx`
+- `detectSegments` 内 title 前缀清理同步对齐 `LEAD`(原仅剥 `#+`),列表项 segment 的
+  title 不再残留 `- ` 前缀,与标题页统一为「第N页 …」(该字段当前无消费者,属一致性收口)
+
+**验证**:标题(`## 第3页`)/ 列表(`- 第8页`)/ 缩进列表(`  - 第9页`)/ `*` 列表 /
+纯文本(`第5页:`)全部命中;正文行(`- 每次会话建立即加载`、`- 系统层级…`)正确不误命中。
+
+### 一键直传报"未找到 __DECK_JSON__ 占位符"修复
 
 `client/public/runtime-template/` 在 `.gitignore` 内，需 `pnpm build:runtime` 才生成。
 首次 `pnpm dev` 直接点"一键直传"时，`fetch('/runtime-template/runtime.html')`
