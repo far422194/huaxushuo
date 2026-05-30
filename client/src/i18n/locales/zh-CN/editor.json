@@ -185,6 +185,7 @@
   "block": {
     "heading": "标题",
     "text": "正文",
+    "code": "代码",
     "image": "图片",
     "button": "按钮",
     "list": "列表",
@@ -209,6 +210,8 @@
     "bold": "加粗",
     "tone": "颜色",
     "iconName": "图标",
+    "codeLang": "语言 / 类型标签（可选）",
+    "codeTitle": "顶部标签 / 文件名（可选）",
     "level": "级别",
     "url": "链接",
     "alt": "替代文本",

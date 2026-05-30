@@ -247,6 +247,7 @@ function useBlockTypeShortLabels(): Record<Block["type"], string> {
   const { t } = useTranslation("editor");
   return {
     text: t("block.text"),
+    code: t("block.code"),
     heading: t("block.heading"),
     image: t("block.image"),
     button: t("block.button"),
@@ -276,6 +277,7 @@ function flatText(value: unknown): string {
 function blockSummary(b: Block): string {
   switch (b.type) {
     case "text":    return flatText(b.text).slice(0, 32);
+    case "code":    return b.title || b.lang || b.code.slice(0, 32);
     case "heading": return flatText(b.text).slice(0, 32);
     case "image":   return b.alt || (b.url.startsWith("data:") ? "本地图片" : b.url.slice(0, 40));
     case "button":  return b.label;

@@ -55,38 +55,38 @@ const parseChineseNum = parseNumWord;
 // 找不到数字时：兜底数 markdown「## 第 N 页 / ## Page N」结构化标记数（≥ 3 个标记取最大编号），
 // 否则 patch 场景至少 5 页；create 默认 5。
 export function estimatePageCount(userMessage: string, currentDeck?: Deck): number {
-  // 先尝试明确总页数（"N 页"），剔除「第 N 页 / 最后 N 页」等局部引用
+  // 1. 明确总页数（"N 页"）优先，剔除「第 N 页 / 最后 N 页」等局部引用
   const explicit = extractTotalPageCount(userMessage);
   if (explicit !== undefined) return explicit;
 
-  // 兜底：数 markdown / 纯文本结构化分段标记的最大编号
-  // 用户写「## 第 1 页 ... ## 第 46 页 ...」或纯「第 1 页：xxx」「第 2 页：yyy」分段时，
-  // 上面 cleaned 把所有「第 N 页」剔除会让 max=0，矩阵格数缩回 default 5（或被零散误匹配压到更小）。
-  // 这里数行首「(可选 #) 第 N 页/部分/章/节 / Page N / Slide N」标记，≥ 3 个时取最大编号。
-  // ≥ 3 限制避免「修改第 4 页加图」单一引用被当作总页数；# 前缀可选覆盖纯文本大纲。
-  const lines = userMessage.split("\n");
-  const markerRe =
-    /^\s*(?:#+\s*)?(?:第\s*(\d+|[一二两三四五六七八九十]+)\s*[\s.、)：:．\-—]?\s*(?:页|部分|章|节)|(?:Page|Slide|Section)\s+(\d+))/i;
-  let markerMax = 0;
-  let markerCount = 0;
-  for (const line of lines) {
-    const m = line.match(markerRe);
-    if (m) {
-      const n = parseChineseNum(m[1] ?? m[2] ?? "");
-      if (n > 0 && n < 200) {
-        markerCount++;
-        if (n > markerMax) markerMax = n;
-      }
-    }
-  }
-  if (markerCount >= 3 && markerMax > 0) return markerMax;
-
-  // 最终兜底：复用 detectSegments（含 autoSegmentFallback）切段结果。
-  // 覆盖以下场景：用户用「---」分隔符、「## 1. 标题」纯编号标题、纯散文长文按段落自动切分等。
-  // ≥ 3 段才用作 estimate，与 shouldBatchByPrompt 阈值对齐。
+  // 2. 结构化分段：detectSegments 切几段就是生成几页（与实际分批口径完全一致——含「- 第N页」
+  //    列表项标记、``` 围栏内跳过等规则）。≥ 3 段才构成分段方案。
+  //    用"段数"而非"最大页码编号"是关键：用户跳号 / 只填少量内容却随意写「## 第50页」时，
+  //    段数只反映实际写了几块内容，不会被一个大编号带飞（取最大编号会虚高到 50）。
   const segs = detectSegments(userMessage);
   if (segs.length >= 3) return segs.length;
 
+  // 3. < 3 段：数行首页标记的"数量"（每个标记 = 一页），同样不取最大编号。
+  //    带 # 的「## 第 N 页」是无歧义大纲标题，≥ 1 即采信；
+  //    无 # 的纯文本标记需 ≥ 3（避免单行「第 4 页换图」这类句中/指令引用被当页数；
+  //    该情况通常已被上面 detectSegments 拦截，这里是防御性兜底）。
+  const lines = userMessage.split("\n");
+  const markerRe =
+    /^\s*(?:#+\s*)?(?:第\s*(\d+|[一二两三四五六七八九十]+)\s*[\s.、)：:．\-—]?\s*(?:页|部分|章|节)|(?:Page|Slide|Section)\s+(\d+))/i;
+  let markerCount = 0;
+  let hashMarkerCount = 0; // 带 markdown 标题前缀（#+）的页标记数量
+  for (const line of lines) {
+    const m = line.match(markerRe);
+    if (!m) continue;
+    const n = parseChineseNum(m[1] ?? m[2] ?? "");
+    if (n <= 0 || n >= 200) continue; // 过滤无效 / 超范围编号
+    markerCount++;
+    if (/^\s*#/.test(line)) hashMarkerCount++;
+  }
+  if (hashMarkerCount > 0) return hashMarkerCount;
+  if (markerCount >= 3) return markerCount;
+
+  // 4. 兜底
   if (currentDeck) return Math.max(currentDeck.slides.length, 5);
   return 5;
 }

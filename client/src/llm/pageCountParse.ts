@@ -46,7 +46,9 @@ export const NUM_PATTERN =
   "\\d+|[一二两三四五六七八九十]+|(?:twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety)(?:[-\\s](?:one|two|three|four|five|six|seven|eight|nine))?|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen";
 
 // 单位模式：覆盖中英文常见量词（页/张/篇/节/章/幻灯片/PPT/slides/pages）
-export const UNIT_PATTERN = "页|张|个?页面|个?幻灯片|篇|节|章节?|slides?|pages?";
+// 「张」后接「图/表/纸/卡/照(片)」等具体名词时是图片/实物量词而非页数（如正文「贴一张图」
+// 会被误当成「1 张幻灯片」→ 整个 deck 概算成 1 页），用 negative lookahead 排除这些搭配
+export const UNIT_PATTERN = "页|张(?![图表纸卡照])|个?页面|个?幻灯片|篇|节|章节?|slides?|pages?";
 
 // 「第 N 页 / 最后 N 页 / 倒数 N 页 / last N pages」等局部页码引用 —— 这些是页面索引不是总页数，需先剔除
 export function buildLocalReferenceRegex(): RegExp {

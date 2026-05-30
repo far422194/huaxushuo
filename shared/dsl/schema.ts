@@ -122,6 +122,19 @@ const TextBlock = z.object({
   position: PositionSchema,
 });
 
+// 代码 / 目录树 / 文件结构 / 命令片段：等宽字体 + 保留缩进换行（white-space: pre）
+// 承载用户提示词里 ``` 围栏块、目录树（├─ 之类）、配置片段——这些塞进 text/list 会丢掉对齐
+const CodeBlock = z.object({
+  type: z.literal("code"),
+  code: z.string(), // 多行原文，保留 \n 与缩进
+  lang: z.string().optional(), // 语言/类型标签（bash / json / 目录树），仅作顶部角标展示
+  title: z.string().optional(), // 顶部标签，如文件名 CLAUDE.md
+  column: Column.optional(),
+  magicId: MagicId,
+  utilities: UtilityList,
+  position: PositionSchema,
+});
+
 const HeadingBlock = z.object({
   type: z.literal("heading"),
   // 6 级标题：固定字号 120 / 88 / 72 / 64 / 56 / 48 px
@@ -284,6 +297,7 @@ const ChromeBlock = z.object({
 // stat / flow / table / chrome 均为叶子块，允许嵌入 —— 卡片里放 KPI、迷你流程、对比表是常见诉求
 const CardChildBlock = z.discriminatedUnion("type", [
   TextBlock,
+  CodeBlock,
   HeadingBlock,
   ImageBlock,
   ButtonBlock,
@@ -410,6 +424,7 @@ const TabBlock = z.object({
 
 export const BlockSchema = z.discriminatedUnion("type", [
   TextBlock,
+  CodeBlock,
   HeadingBlock,
   ImageBlock,
   ButtonBlock,

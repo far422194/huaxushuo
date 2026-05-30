@@ -8,25 +8,45 @@ export interface PromptSegment {
 
 // 标记行匹配优先级：从上到下逐条尝试，命中即定该 deck 的分段方案
 // 兼容 ## ~ ###### 任意级别 markdown 标题（用户写大纲时常嵌套多级，如「### 第1页」「###### 第6页」）
-// `#+` 前缀可选：用户用纯文本「第 1 页：xxx」「第 2 页：yyy」做大纲也能识别
+// 标题前缀（#+）/ 列表前缀（- * +）/ 纯文本均可：用户常把部分页码写成「- 第8页 xxx」列表项，
+//   缩进列表「  - 第36页」也要识别，否则这些行被并进上一段，页数被吞（实测 63 页大纲漏成 49 页）
 // （≥ 3 行命中才视为分段方案，单行「修改第 4 页加图」无法触发，无误判风险）
+const LEAD = "(?:(?:#+|[-*+])\\s*)?"; // 可选前缀：markdown 标题 # / 列表符号 - * +
 const MARKERS: RegExp[] = [
-  /^\s*(?:#+\s*)?第\s*\d+\s*[\s.、)：:．\-—]?\s*(?:页|部分|章|节)/, // (#+) 第 1 页 / 第 1 部分
-  /^\s*(?:#+\s*)?(?:Page|Slide|Section)\s+\d+/i, // (#+) Page 1 / Slide 1
+  new RegExp(`^\\s*${LEAD}第\\s*\\d+\\s*[\\s.、)：:．\\-—]?\\s*(?:页|部分|章|节)`), // 第 1 页 / 第 1 部分
+  new RegExp(`^\\s*${LEAD}(?:Page|Slide|Section)\\s+\\d+`, "i"), // Page 1 / Slide 1
   /^#+\s*\d+[\s.、)]/, // ## 1. xxx / #### 1) xxx（无「页」字，纯编号标题；这条仍要求 # 前缀避免误命中正文里的「1. xxx」）
   /^---+\s*$/, // 水平分隔线（最弱信号，仅当上面都没命中）
 ];
 
+// 标出 ``` 围栏内的行号（含围栏起止行本身）。代码 / 目录树 / 配置片段里常有以 # - 「第N页」
+// 开头的行（如目录树「├- CLAUDE.md」、注释「# 项目层级」），不剔除会被当成分段标记把代码块切碎。
+// 围栏不配对（奇数个 ```）时退化为「最后一个 ``` 之后全部视作围栏内」——宁可少切也不切碎代码。
+function computeFencedLines(lines: string[]): Set<number> {
+  const fenced = new Set<number>();
+  let inFence = false;
+  for (let i = 0; i < lines.length; i++) {
+    if (/^\s*```/.test(lines[i]!)) {
+      fenced.add(i);
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) fenced.add(i);
+  }
+  return fenced;
+}
+
 // 检测分段：返回切出来的段数组。如果没匹配上任何标记或段数 < 3，返回空数组（让上层退化单次生成）
 export function detectSegments(userMessage: string): PromptSegment[] {
   const lines = userMessage.split("\n");
+  const fenced = computeFencedLines(lines);
 
-  // 找哪条 marker 命中最多次，用它作为分段依据
+  // 找哪条 marker 命中最多次，用它作为分段依据（围栏内的行不计入）
   let bestRegex: RegExp | null = null;
   let bestHits = 0;
   for (const re of MARKERS) {
     let hits = 0;
-    for (const line of lines) if (re.test(line)) hits++;
+    for (let i = 0; i < lines.length; i++) if (!fenced.has(i) && re.test(lines[i]!)) hits++;
     if (hits > bestHits) {
       bestHits = hits;
       bestRegex = re;
@@ -35,12 +55,15 @@ export function detectSegments(userMessage: string): PromptSegment[] {
   if (!bestRegex || bestHits < 3) return autoSegmentFallback(userMessage);
 
   // 用命中的正则切段：标记行作为段起点，前面的内容（如果有）丢弃成 preamble 不入段
+  // 围栏内的行只入 body、不作切点，整块代码随所属段一起保留
   const segments: PromptSegment[] = [];
   let cur: PromptSegment | null = null;
-  for (const line of lines) {
-    if (bestRegex.test(line)) {
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i]!;
+    if (!fenced.has(i) && bestRegex.test(line)) {
       if (cur) segments.push(cur);
-      cur = { title: line.replace(/^#+\s*/, "").trim(), body: line + "\n" };
+      // title 前缀清理对齐 LEAD：标题 #+ 与列表符号 - * + 都剥掉（含缩进列表的行首空白）
+      cur = { title: line.replace(/^\s*(?:#+|[-*+])\s*/, "").trim(), body: line + "\n" };
     } else if (cur) {
       cur.body += line + "\n";
     }
