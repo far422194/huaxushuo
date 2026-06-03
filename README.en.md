@@ -21,7 +21,7 @@ Huaxushuo takes a third path: **LLM emits DSL, runtime renders deterministically
 <table>
 <tr>
 <td width="33%">
-<a href="https://7de549bc.huaxushuo.pages.dev/">
+<a href="https://0e5211ec.huaxushuo.pages.dev/">
 <img src="https://github.com/user-attachments/assets/ab34163d-d8ef-4416-9d16-ae1e1ac6d3f6" alt="Case 1:How to create an interactive demonstration website? " />
 </a>
 </td>
