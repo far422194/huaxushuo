@@ -21,7 +21,7 @@ cd huaxushuo && pnpm dev
 <table>
 <tr>
 <td width="33%">
-<a href="https://7de549bc.huaxushuo.pages.dev/">
+<a href="https://0e5211ec.huaxushuo.pages.dev/">
 <img src="https://github.com/user-attachments/assets/ab34163d-d8ef-4416-9d16-ae1e1ac6d3f6" alt="案例一：交互式演示网站怎么做？" />
 </a>
 </td>
